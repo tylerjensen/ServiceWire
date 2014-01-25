@@ -5,6 +5,8 @@ ServiceWire
 
 ServiceWire is a very fast and light weight services host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP.
 
+Find "how to use" examples in the tests code. Full documentation will soon be available on the [wiki here][].
+
 Get the [NuGet package here][].
 
 ### Using the library is easy. 
@@ -35,10 +37,8 @@ Get the [NuGet package here][].
 
 -   Protocol, serialization and execution strategy extension
 
-Find "how to use" examples in the tests code. Full documentation will soon be available on the [wiki here][].
-
 Portions of this library are a derivative of [RemotingLite][].  
 
   [NuGet package here]: http://www.nuget.org/packages/ServiceWire/
-  [wiki here]: https://github.com/duovia/ServiceWire/wiki
+  [wiki here]: http://www.servicewire.net/
   [RemotingLite]: http://remotinglite.codeplex.com/
