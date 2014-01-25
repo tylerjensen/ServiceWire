@@ -1,0 +1,92 @@
+﻿* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+                  COPYRIGHT NOTICES AND OPEN SOURCE LICENSES
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  Title:        ServiceWire 
+  Description:  Very fast and light weight services host and dynamic client 
+                library that simplifies the development and use of high 
+                performance remote procedure call (RPC) communication between 
+                .NET processes over Named Pipes or TCP/IP.
+  
+  Copyright (C) 2013-2014 DuoVia Inc.
+  
+  Author: Tyler Jensen 
+  
+  Source: https://github.com/duovia/ServiceWire
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at 
+  http://www.apache.org/licenses/LICENSE-2.0
+ 
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  This notice, including the DERIVITIVE WORK NOTCE below, must be included in 
+  compiled and source form of this work whenever distributed.
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  NAME CHANGE NOTICE
+  The code in this work was originally published under the name DuoVia.Net. This 
+  work is a continuation of that project under the same copyright holder and author. 
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  DERIVATIVE WORK NOTICE
+  Some of the source code in this work is derived from RemotingLite version 1.2.5 
+  available at http://remotinglite.codeplex.com. The author of RemotingLite
+  provides no endorsement, explicitly or implied, of this work.
+  
+  The original source is published under the following license terms:
+
+      New BSD License (BSD)
+
+      Copyright (c) 2008, Frank Thomsen
+      All rights reserved.
+
+      Redistribution and use in source and binary forms, with or without 
+      modification, are permitted provided that the following conditions are met:
+
+      * Redistributions of source code must retain the above copyright notice, 
+        this list of conditions and the following disclaimer.
+
+      * Redistributions in binary form must reproduce the above copyright notice, 
+        this list of conditions and the following disclaimer in the documentation 
+        and/or other materials provided with the distribution.
+
+      * Neither the name of Sector 0 nor the names of its contributors may be used 
+        to endorse or promote products derived from this software without specific 
+        prior written permission.
+
+      THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+      AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+      IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+      ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+      LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+      CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+      SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+      INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+      CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+      ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+      THE POSSIBILITY OF SUCH DAMAGE.
+
+  In addition, the following license information was part of the original source
+  files but has been moved here for code brevity:
+
+      RemotingLite
+      ------
+      A light framework for making remote method invocations using TCP/IP. It is based loosely on
+      Windows Communication Foundation, and is meant to provide programmers with the same API
+      regardless of whether they write software for the Microsoft .NET platform or the Mono .NET
+      platform.
+      Consult the documentation and example applications for information about how to use this API.
+      
+      Author       : Frank Thomsen
+      http         : http://sector0.dk
+      Concact      : http://sector0.dk/?q=contact
+      Information  : http://sector0.dk/?q=node/27
+      Licence      : Free. If you use this, please let me know.
+      
+      Please feel free to contact me with ideas, bugs or improvements.
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

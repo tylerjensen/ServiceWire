@@ -1,0 +1,74 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30110.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWire", "ServiceWire\ServiceWire.csproj", "{4F36B450-A225-4D13-9786-8B84AC25A304}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{B4E92D75-EC33-47A0-98B4-F7CB15CC1ECA}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B4BD92DB-D725-4D20-8134-B610CA83F842}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit", "Unit", "{FC6B546C-85D6-4C37-ABB4-E02903AFB564}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{F2EA68D1-E9C5-40C2-8EFA-4D282ACD32D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestHost", "Tests\Integration\ServiceWireTestHost\ServiceWireTestHost.csproj", "{3265DA8B-AD7E-4F2A-BB5B-2D81C5BA500A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestClient2", "Tests\Integration\ServiceWireTestClient2\ServiceWireTestClient2.csproj", "{2AF18F87-5258-4AF4-8441-A67344DD5C13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestClient1", "Tests\Integration\ServiceWireTestClient1\ServiceWireTestClient1.csproj", "{B9FAD2F3-17D4-435D-906B-45175457B294}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTests", "Tests\Unit\ServiceWireTests\ServiceWireTests.csproj", "{0DF0ECE8-6ACA-442B-BBA6-6367F9B8D296}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestCommon", "Tests\ServiceWireTestCommon\ServiceWireTestCommon.csproj", "{4E07F3FB-F17C-4FF8-AA06-59ECE4956F6F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4F36B450-A225-4D13-9786-8B84AC25A304}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F36B450-A225-4D13-9786-8B84AC25A304}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F36B450-A225-4D13-9786-8B84AC25A304}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F36B450-A225-4D13-9786-8B84AC25A304}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3265DA8B-AD7E-4F2A-BB5B-2D81C5BA500A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3265DA8B-AD7E-4F2A-BB5B-2D81C5BA500A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3265DA8B-AD7E-4F2A-BB5B-2D81C5BA500A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3265DA8B-AD7E-4F2A-BB5B-2D81C5BA500A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AF18F87-5258-4AF4-8441-A67344DD5C13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AF18F87-5258-4AF4-8441-A67344DD5C13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AF18F87-5258-4AF4-8441-A67344DD5C13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AF18F87-5258-4AF4-8441-A67344DD5C13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9FAD2F3-17D4-435D-906B-45175457B294}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9FAD2F3-17D4-435D-906B-45175457B294}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9FAD2F3-17D4-435D-906B-45175457B294}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9FAD2F3-17D4-435D-906B-45175457B294}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DF0ECE8-6ACA-442B-BBA6-6367F9B8D296}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DF0ECE8-6ACA-442B-BBA6-6367F9B8D296}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DF0ECE8-6ACA-442B-BBA6-6367F9B8D296}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DF0ECE8-6ACA-442B-BBA6-6367F9B8D296}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E07F3FB-F17C-4FF8-AA06-59ECE4956F6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E07F3FB-F17C-4FF8-AA06-59ECE4956F6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E07F3FB-F17C-4FF8-AA06-59ECE4956F6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E07F3FB-F17C-4FF8-AA06-59ECE4956F6F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FC6B546C-85D6-4C37-ABB4-E02903AFB564} = {B4BD92DB-D725-4D20-8134-B610CA83F842}
+		{F2EA68D1-E9C5-40C2-8EFA-4D282ACD32D4} = {B4BD92DB-D725-4D20-8134-B610CA83F842}
+		{4E07F3FB-F17C-4FF8-AA06-59ECE4956F6F} = {B4BD92DB-D725-4D20-8134-B610CA83F842}
+		{0DF0ECE8-6ACA-442B-BBA6-6367F9B8D296} = {FC6B546C-85D6-4C37-ABB4-E02903AFB564}
+		{3265DA8B-AD7E-4F2A-BB5B-2D81C5BA500A} = {F2EA68D1-E9C5-40C2-8EFA-4D282ACD32D4}
+		{2AF18F87-5258-4AF4-8441-A67344DD5C13} = {F2EA68D1-E9C5-40C2-8EFA-4D282ACD32D4}
+		{B9FAD2F3-17D4-435D-906B-45175457B294} = {F2EA68D1-E9C5-40C2-8EFA-4D282ACD32D4}
+	EndGlobalSection
+EndGlobal
