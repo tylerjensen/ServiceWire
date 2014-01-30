@@ -25,7 +25,6 @@ namespace ServiceWire.TcpIp
             _stream = new BufferedStream(new NetworkStream(_client), 8192); //.GetStream();
             _binReader = new BinaryReader(_stream);
             _binWriter = new BinaryWriter(_stream);
-            _formatter = new BinaryFormatter();
             SyncInterface(_serviceType);
         }
 

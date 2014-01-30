@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
 namespace ServiceWire
@@ -11,13 +10,11 @@ namespace ServiceWire
         protected BinaryReader _binReader;
         protected BinaryWriter _binWriter;
         protected Stream _stream;
-        protected BinaryFormatter _formatter = new BinaryFormatter();
         private ParameterTransferHelper _parameterTransferHelper = new ParameterTransferHelper();
         private ServiceSyncInfo _syncInfo;
 
         // keep cached sync info to avoid redundant wire trips
         private static ConcurrentDictionary<Type, ServiceSyncInfo> _syncInfoCache = new ConcurrentDictionary<Type, ServiceSyncInfo>(); 
-
 
         /// <summary>
         /// Returns true if client is connected to the server.
@@ -37,8 +34,8 @@ namespace ServiceWire
                 _binWriter.Write(serviceType.AssemblyQualifiedName ?? serviceType.FullName);
 
                 //read sync data
-                var ms = new MemoryStream(_binReader.ReadBytes(_binReader.ReadInt32()));
-                _syncInfo = (ServiceSyncInfo)_formatter.Deserialize(ms);
+                var bytes = _binReader.ReadBytes(_binReader.ReadInt32());
+                _syncInfo = (ServiceSyncInfo)bytes.ToDeserializedObject();
 
                 _syncInfoCache.AddOrUpdate(serviceType, _syncInfo, (t, info) => _syncInfo);
             }
