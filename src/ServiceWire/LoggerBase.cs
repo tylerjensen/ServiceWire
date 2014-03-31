@@ -38,7 +38,7 @@ namespace ServiceWire
             WriteBuffer(int.MaxValue);
         }
 
-        protected const string TimeStampPattern = "yyyy-MM-ddThh:mm:ss.fff";
+        protected const string TimeStampPattern = "yyyy-MM-ddTHH:mm:ss.fff";
         protected string GetTimeStamp()
         {
             return _useUtcTimeStamp
@@ -131,7 +131,7 @@ namespace ServiceWire
         }
 
         private const string ToDateOnlyPattern = "yyyyMMdd";
-        private const string ToDateHourPattern = "yyyyMMdd-hh";
+        private const string ToDateHourPattern = "yyyyMMdd-HH";
 
         private int GetCurrentFileOffset()
         {

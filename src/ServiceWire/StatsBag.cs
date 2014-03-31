@@ -28,7 +28,7 @@ namespace ServiceWire
             _bag.Clear();
         }
 
-        protected const string TimeStampPattern = "yyyy-MM-ddThh:mm:ss.fff";
+        protected const string TimeStampPattern = "yyyy-MM-ddTHH:mm:ss.fff";
         protected string GetTimeStamp()
         {
             return _useUtcTime
