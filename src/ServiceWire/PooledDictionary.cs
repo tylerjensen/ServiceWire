@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace ServiceWire
 {
-    public class PooledDictionary<TKey, TValue> 
+    public sealed class PooledDictionary<TKey, TValue> : IDisposable
     {
         private readonly ConcurrentDictionary<TKey, ConcurrentQueue<TValue>> _dq;
         private readonly int _concurrencyLevel;
@@ -58,5 +58,33 @@ namespace ServiceWire
         {
             Add(key, value); //just adds it back to key's queue
         }
+
+        #region IDisposable Members
+
+        protected bool _disposed = false;
+
+        public void Dispose()
+        {
+            //MS recommended dispose pattern - prevents GC from disposing again
+            if (!_disposed)
+            {
+                _disposed = true;
+                foreach(var kvp in _dq)
+                {
+                    while (!kvp.Value.IsEmpty)
+                    {
+                        TValue v;
+                        if (kvp.Value.TryDequeue(out v))
+                        {
+                            var disp = v as IDisposable;
+                            if (null != disp) disp.Dispose();
+                        }
+                    }
+                }
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        #endregion
     }
 }
