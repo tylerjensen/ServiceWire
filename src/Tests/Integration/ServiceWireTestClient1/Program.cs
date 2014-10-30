@@ -34,7 +34,10 @@ namespace ServiceWireTestClient1
                 bool result = client.Proxy.OutDecimal(abc);
             }
 
-            using (var client = new NetTcpTesterProxy(ipEndpoint))
+            var tcpEndpoint = new TcpEndPoint(ipEndpoint, 80);
+
+            //using (var client = new NetTcpTesterProxy(ipEndpoint))
+            using (var client = new NetTcpTesterProxy(tcpEndpoint))
             {
                 var id = client.GetId("test1", 3.314, 42, DateTime.Now);
                 long q = 3;

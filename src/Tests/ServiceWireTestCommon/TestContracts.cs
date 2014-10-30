@@ -39,6 +39,10 @@ namespace ServiceWireTestCommon
 
     public class NetTcpTesterProxy : TcpClient<INetTester>, INetTester
     {
+        public NetTcpTesterProxy(TcpEndPoint endpoint) : base(endpoint)
+        {
+        }
+
         public NetTcpTesterProxy(IPEndPoint endpoint) : base(endpoint)
         {
         }

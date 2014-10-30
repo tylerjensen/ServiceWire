@@ -80,6 +80,7 @@
     <Compile Include="Host.cs" />
     <Compile Include="TcpIp\TcpChannel.cs" />
     <Compile Include="TcpIp\TcpClient.cs" />
+    <Compile Include="TcpIp\TcpEndPoint.cs" />
     <Compile Include="TcpIp\TcpHost.cs" />
     <Compile Include="TcpIp\TcpProxy.cs" />
   </ItemGroup>

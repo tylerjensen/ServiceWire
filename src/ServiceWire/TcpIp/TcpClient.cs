@@ -9,6 +9,11 @@ namespace ServiceWire.TcpIp
 
         public TInterface Proxy { get { return _proxy; } }
 
+        public TcpClient(TcpEndPoint endpoint)
+        {
+            _proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
+        }
+
         public TcpClient(IPEndPoint endpoint)
         {
             _proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
