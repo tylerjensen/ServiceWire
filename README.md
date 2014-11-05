@@ -7,7 +7,9 @@ ServiceWire is a very fast and light weight services host and dynamic client lib
 
 Find "how to use" examples in the tests code. [ServiceWire documentation][] is available on the wiki.
 
-Important: ServiceWire's dynamically generated proxy will NOT run as x86 on an x64 system. This ususally occurs when you use Visual Studio to create a console application with the default "prefer x86" in project properties selected. Just be sure to choose AnyCPU or the specific target (x86 or x64) so that you do not run 32bit in WOW on an x64 machine.
+'''Important'''
+
+ServiceWire's dynamically generated proxy will NOT run as x86 on an x64 system. This ususally occurs when you use Visual Studio to create a console application with the default "prefer x86" in project properties selected. Just be sure to choose AnyCPU or the specific target (x86 or x64) so that you do not run 32bit in WOW on an x64 machine.
 
 Get the [NuGet package here][].
 
