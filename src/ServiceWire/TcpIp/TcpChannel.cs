@@ -54,21 +54,25 @@ namespace ServiceWire.TcpIp
                 {
                     if (!SpinWait.SpinUntil(() => connected, connectTimeoutMs))
                     {
-                        if (null != _client) _client.Dispose();
+                        _client.Dispose();
                         throw new TimeoutException("Unable to connect within " + connectTimeoutMs + "ms");
                     }
                 }
             }
             if (connectEventArgs.SocketError != SocketError.Success)
             {
-                if (null != _client) _client.Dispose();
+                _client.Dispose();
                 throw new SocketException((int)connectEventArgs.SocketError);
             }
 
             //_client.Connect(endpoint);
 
-            if (!_client.Connected) throw new SocketException(); 
-            _stream = new BufferedStream(new NetworkStream(_client), 8192); //.GetStream();
+            if (!_client.Connected)
+            {
+                _client.Dispose();
+                throw new SocketException((int)SocketError.NotConnected);
+            } 
+            _stream = new BufferedStream(new NetworkStream(_client), 8192);
             _binReader = new BinaryReader(_stream);
             _binWriter = new BinaryWriter(_stream);
             SyncInterface(_serviceType);
