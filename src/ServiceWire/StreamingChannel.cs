@@ -34,7 +34,10 @@ namespace ServiceWire
                 _binWriter.Write(serviceType.AssemblyQualifiedName ?? serviceType.FullName);
 
                 //read sync data
-                var bytes = _binReader.ReadBytes(_binReader.ReadInt32());
+                var len = _binReader.ReadInt32();
+                //len is zero when AssemblyQualifiedName not same version or not found
+                if (len == 0) throw new TypeAccessException("SyncInterface failed. Type or version of type unknown.");
+                var bytes = _binReader.ReadBytes(len);
                 _syncInfo = (ServiceSyncInfo)bytes.ToDeserializedObject();
 
                 _syncInfoCache.AddOrUpdate(serviceType, _syncInfo, (t, info) => _syncInfo);
@@ -129,14 +132,11 @@ namespace ServiceWire
                     try
                     {
                         _binWriter.Write((int)MessageType.TerminateConnection);
-                        //_binWriter.Flush();
-                        //_stream.Flush();
                     }
                     finally
                     {
                         if (null != _binWriter) _binWriter.Dispose();
                         if (null != _binReader) _binReader.Dispose();
-                        //if (null != _stream) _stream.Dispose();
                     }
                 }
             }

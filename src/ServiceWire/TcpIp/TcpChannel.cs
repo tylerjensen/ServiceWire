@@ -64,9 +64,6 @@ namespace ServiceWire.TcpIp
                 _client.Dispose();
                 throw new SocketException((int)connectEventArgs.SocketError);
             }
-
-            //_client.Connect(endpoint);
-
             if (!_client.Connected)
             {
                 _client.Dispose();
@@ -75,7 +72,15 @@ namespace ServiceWire.TcpIp
             _stream = new BufferedStream(new NetworkStream(_client), 8192);
             _binReader = new BinaryReader(_stream);
             _binWriter = new BinaryWriter(_stream);
-            SyncInterface(_serviceType);
+            try
+            {
+                SyncInterface(_serviceType);
+            }
+            catch (Exception)
+            {
+                this.Dispose(true);
+                throw;
+            }
         }
 
         public override bool IsConnected { get { return (null != _client) && _client.Connected; } }
@@ -87,11 +92,7 @@ namespace ServiceWire.TcpIp
             base.Dispose(disposing);
             if (disposing)
             {
-                _binReader.Close();
-                _binWriter.Close();
-                _client.Close();
-                ////changed from Close to Dispose to be more complete
-                //((IDisposable)_client).Dispose();
+                _client.Dispose();
             }
         }
 

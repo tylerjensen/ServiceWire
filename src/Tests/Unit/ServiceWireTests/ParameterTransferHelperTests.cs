@@ -1,14 +1,14 @@
 ﻿using System;
 using System.IO;
-using NUnit.Framework;
 using ServiceWire;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ServiceWireTests
 {
-    [TestFixture]
+    [TestClass]
     public class ParameterTransferHelperTests
     {
-        [Test]
+        [TestMethod]
         public void SimpleTypesTest()
         {
             bool b = true;
@@ -47,7 +47,7 @@ namespace ServiceWireTests
             TestSingle(dt);  // DateTime
         }
 
-        [Test]
+        [TestMethod]
         public void SimpleTypesMultipleTest()
         {
             bool b = true;
@@ -74,7 +74,7 @@ namespace ServiceWireTests
             TestMultiple(str, ty, g, dt);
         }
 
-        [Test]
+        [TestMethod]
         public void ArrayOfSimpleTypesTest()
         {
             var bools = new bool[] { true, true, false, true, false };

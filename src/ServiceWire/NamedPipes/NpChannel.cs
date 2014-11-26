@@ -21,7 +21,15 @@ namespace ServiceWire.NamedPipes
             _stream = new BufferedStream(_clientStream);
             _binReader = new BinaryReader(_clientStream);
             _binWriter = new BinaryWriter(_clientStream);
-            SyncInterface(_serviceType);
+            try
+            {
+                SyncInterface(_serviceType);
+            }
+            catch (Exception)
+            {
+                this.Dispose(true);
+                throw;
+            }
         }
 
         public override bool IsConnected { get { return (null != _clientStream) && _clientStream.IsConnected; } }

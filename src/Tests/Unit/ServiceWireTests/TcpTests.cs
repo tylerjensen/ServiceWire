@@ -2,15 +2,13 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-
 using ServiceWire.TcpIp;
-
 using Moq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ServiceWireTests
 {
-    [TestFixture]
+    [TestClass]
     public class TcpTests : IDisposable
     {
         private Mock<INetTester> _tester;
@@ -26,7 +24,7 @@ namespace ServiceWireTests
             return new IPEndPoint(_ipAddress, Port);
         }
 
-        [TestFixtureSetUp]
+        [TestInitialize]
         public void RunHost()
         {
             _tester = new Mock<INetTester>();
@@ -46,7 +44,7 @@ namespace ServiceWireTests
             _tcphost.Open();
         }
 
-        [Test]
+        [TestMethod]
         public void SimpleTest()
         {
             var rnd = new Random();
@@ -64,7 +62,7 @@ namespace ServiceWireTests
             }
         }
 
-        [Test]
+        [TestMethod]
         public void SimpleParallelTest()
         {
             var rnd = new Random();
@@ -84,7 +82,7 @@ namespace ServiceWireTests
                     {
                         Assert.AreEqual(Math.Min(a, b), result, "Wrong response");
                     }
-                    catch (AssertionException)
+                    catch (AssertFailedException)
                     {
                         state.Break();
                         throw;
@@ -93,7 +91,7 @@ namespace ServiceWireTests
             });
         }
 
-        [Test]
+        [TestMethod]
         public void ResponseTest()
         {
             var clientProxy = new Mock<TcpClient<INetTester>>(CreateEndPoint());
@@ -120,7 +118,7 @@ namespace ServiceWireTests
             }
         }
 
-        [Test]
+        [TestMethod]
         public void ResponseParallelTest()
         {
             Parallel.For(0, 50, (index, state) =>
@@ -149,7 +147,7 @@ namespace ServiceWireTests
                             }
                         }
                     }
-                    catch (AssertionException)
+                    catch (AssertFailedException)
                     {
                         state.Break();
                         throw;
@@ -158,7 +156,7 @@ namespace ServiceWireTests
             });
         }
 
-        [TestFixtureTearDown]
+        [TestCleanup]
         public void Dispose()
         {
             _tcphost.Close();

@@ -2,17 +2,16 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ServiceWire.Aspects;
 using System.Diagnostics;
 
 namespace ServiceWireTests
 {
-    [TestFixture]
+    [TestClass]
     public class InterceptionTests
     {
-        [Test]
+        [TestMethod]
         public void SimpleTest()
         {
             var preInvokeInfo = string.Empty;
@@ -34,16 +33,16 @@ namespace ServiceWireTests
             };
             var t = Interceptor.Intercept<ISimpleMath>(new SimpleMath(), cc);
             var a = t.Add(1, 2);
-            Assert.IsNotNullOrEmpty(preInvokeInfo);
-            Assert.IsNotNullOrEmpty(postInvokeInfo);
-            Assert.IsNullOrEmpty(exceptionHandlerInfo);
+            Assert.IsFalse(string.IsNullOrEmpty(preInvokeInfo));
+            Assert.IsFalse(string.IsNullOrEmpty(postInvokeInfo));
+            Assert.IsTrue(string.IsNullOrEmpty(exceptionHandlerInfo));
             var b = t.Divide(4, 0);
-            Assert.IsNotNullOrEmpty(preInvokeInfo);
-            Assert.IsNotNullOrEmpty(postInvokeInfo);
-            Assert.IsNotNullOrEmpty(exceptionHandlerInfo);
+            Assert.IsFalse(string.IsNullOrEmpty(preInvokeInfo));
+            Assert.IsFalse(string.IsNullOrEmpty(postInvokeInfo));
+            Assert.IsFalse(string.IsNullOrEmpty(exceptionHandlerInfo));
         }
     
-        [Test]
+        [TestMethod]
         public void SimpleTimingTest()
         {
             var preInvokeInfo = string.Empty;
@@ -65,9 +64,9 @@ namespace ServiceWireTests
             };
             var t = Interceptor.Intercept<ISimpleMath>(new SimpleMath(), cc);
             var a = t.Add(1, 2);
-            Assert.IsNotNullOrEmpty(preInvokeInfo);
-            Assert.IsNotNullOrEmpty(postInvokeInfo);
-            Assert.IsNullOrEmpty(exceptionHandlerInfo);
+            Assert.IsFalse(string.IsNullOrEmpty(preInvokeInfo));
+            Assert.IsFalse(string.IsNullOrEmpty(postInvokeInfo));
+            Assert.IsTrue(string.IsNullOrEmpty(exceptionHandlerInfo));
 
             var sw = Stopwatch.StartNew();
             var t2 = Interceptor.Intercept<ISimpleMath2>(new SimpleMath2(), cc);

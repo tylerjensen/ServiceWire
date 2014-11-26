@@ -170,7 +170,7 @@
 				// that expectation was not marked as verifiable.
 				this.VerifyAll();
 			</code>
-		</example><exception cref="T:Moq.MockException">At least one expectation was not met.</exception>		
+		</example><exception cref="T:Moq.MockException">At least one expectation was not met.</exception>        
         </member>
         <member name="M:Moq.Mock.GetInterceptor(System.Linq.Expressions.Expression,Moq.Mock)">
             <summary>
@@ -262,6 +262,13 @@
             expressions on the delegate into expressions on the interface proxy.
             </summary>
         </member>
+        <member name="P:Moq.Mock.IsDelegateMock">
+            <summary>
+            Allows to check whether expression conversion to the <see cref="P:Moq.Mock.DelegateInterfaceMethod"/> 
+            must be performed on the mock, without causing unnecessarily early initialization of 
+            the mock instance, which breaks As{T}.
+            </summary>
+        </member>
         <member name="P:Moq.Mock.DefaultValueProvider">
             <summary>
             Specifies the class that will determine the default 
@@ -343,6 +350,11 @@
 		</remarks><example>
 			<code>var mock = new Mock&lt;MyProvider&gt;(someArgument, 25);</code>
 		</example><param name="behavior">Behavior of the mock.</param><param name="args">Optional constructor arguments if the mocked type is a class.</param>
+        </member>
+        <member name="M:Moq.Mock`1.ToString">
+            <summary>
+			Returns the name of the mock
+		</summary>
         </member>
         <member name="M:Moq.Mock`1.OnGetObject">
             <summary>
@@ -861,6 +873,11 @@
 			Exposes the mocked object instance.
 		</summary>
         </member>
+        <member name="P:Moq.Mock`1.Name">
+            <summary>
+			Allows naming of your mocks, so they can be easily identified in error messages (e.g. from failed assertions).
+		</summary>
+        </member>
         <member name="P:Moq.Mock`1.DelegateInterfaceMethod">
             <inheritdoc />
         </member>
@@ -1110,13 +1127,14 @@
             <param name="from">The minimun allowed value for the argument.</param>
             <param name="to">The maximun allowed value for the argument.</param>
         </member>
-        <member name="M:Moq.IInterceptStrategy.HandleIntercept(Moq.Proxy.ICallContext,Moq.InterceptStrategyContext)">
+        <member name="M:Moq.IInterceptStrategy.HandleIntercept(Moq.Proxy.ICallContext,Moq.InterceptorContext,Moq.CurrentInterceptContext)">
             <summary>
             Handle interception
             </summary>
             <param name="invocation">the current invocation context</param>
-            <param name="ctx">shared data among the strategies during an interception</param>
-            <returns>true if further interception has to be processed, otherwise false</returns>
+            <param name="ctx">shared data for the interceptor as a whole</param>
+            <param name="localCtx">shared data among the strategies during a single interception</param>
+            <returns>InterceptionAction.Continue if further interception has to be processed, otherwise InterceptionAction.Stop</returns>
         </member>
         <member name="T:Moq.IMocked`1">
             <summary>
@@ -4508,7 +4526,7 @@
             Obsolete.
             </summary>
         </member>
-        <member name="T:Moq.MockExtensions">
+        <member name="T:Moq.ObsoleteMockExtensions">
             <summary>
             Provides additional methods on mocks.
             </summary>
@@ -4517,7 +4535,7 @@
             with the overloads taking Action.
             </devdoc>
         </member>
-        <member name="M:Moq.MockExtensions.SetupSet``2(Moq.Mock{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}})">
+        <member name="M:Moq.ObsoleteMockExtensions.SetupSet``2(Moq.Mock{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}})">
             <summary>
             Specifies a setup on the mocked type for a call to 
             to a property setter, regardless of its value.
@@ -4540,7 +4558,7 @@
             confusing the compiler with the new Action syntax.
             </devdoc>
         </member>
-        <member name="M:Moq.MockExtensions.VerifySet``2(Moq.Mock{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}})">
+        <member name="M:Moq.ObsoleteMockExtensions.VerifySet``2(Moq.Mock{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}})">
             <summary>
             Verifies that a property has been set on the mock, regarless of its value.
             </summary>
@@ -4563,7 +4581,7 @@
             <typeparam name="TProperty">Type of the property to verify. Typically omitted as it can 
             be inferred from the expression's return type.</typeparam>
         </member>
-        <member name="M:Moq.MockExtensions.VerifySet``2(Moq.Mock{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.String)">
+        <member name="M:Moq.ObsoleteMockExtensions.VerifySet``2(Moq.Mock{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.String)">
             <summary>
             Verifies that a property has been set on the mock, specifying a failure  
             error message. 
@@ -4588,7 +4606,7 @@
             <typeparam name="TProperty">Type of the property to verify. Typically omitted as it can 
             be inferred from the expression's return type.</typeparam>
         </member>
-        <member name="M:Moq.MockExtensions.VerifySet``2(Moq.Mock{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},Moq.Times)">
+        <member name="M:Moq.ObsoleteMockExtensions.VerifySet``2(Moq.Mock{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},Moq.Times)">
             <summary>
             Verifies that a property has been set on the mock, regardless 
             of the value but only the specified number of times.
@@ -4615,7 +4633,7 @@
             <typeparam name="TProperty">Type of the property to verify. Typically omitted as it can 
             be inferred from the expression's return type.</typeparam>
         </member>
-        <member name="M:Moq.MockExtensions.VerifySet``2(Moq.Mock{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},Moq.Times,System.String)">
+        <member name="M:Moq.ObsoleteMockExtensions.VerifySet``2(Moq.Mock{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},Moq.Times,System.String)">
             <summary>
             Verifies that a property has been set on the mock, regardless 
             of the value but only the specified number of times, and specifying a failure  
@@ -5227,6 +5245,43 @@
         </member>
         <member name="M:Moq.Proxy.CastleProxyFactory.GetDelegateProxyInterface(System.Type,System.Reflection.MethodInfo@)">
             <inheritdoc />
+        </member>
+        <member name="T:Moq.Proxy.ProxyMethodHook">
+            <summary>
+            Hook used to tells Castle which methods to proxy in mocked classes.
+            
+            Here we proxy the default methods Castle suggests (everything Object's methods)
+            plus Object.ToString(), so we can give mocks useful default names.
+            
+            This is required to allow Moq to mock ToString on proxy *class* implementations.
+            </summary>
+        </member>
+        <member name="M:Moq.Proxy.ProxyMethodHook.ShouldInterceptMethod(System.Type,System.Reflection.MethodInfo)">
+            <summary>
+            Extends AllMethodsHook.ShouldInterceptMethod to also intercept Object.ToString().
+            </summary>
+        </member>
+        <member name="T:Moq.Proxy.InterfaceProxy">
+            <summary>
+            <para>The base class used for all our interface-inheriting proxies, which overrides the default
+            Object.ToString() behavior, to route it via the mock by default, unless overriden by a
+            real implementation.</para>
+            
+            <para>This is required to allow Moq to mock ToString on proxy *interface* implementations.</para>
+            </summary>
+            <remarks>
+            <para><strong>This is internal to Moq and should not be generally used.</strong></para>
+            
+            <para>Unfortunately it must be public, due to cross-assembly visibility issues with reflection, 
+            see github.com/Moq/moq4/issues/98 for details.</para>
+            </remarks>
+        </member>
+        <member name="M:Moq.Proxy.InterfaceProxy.ToString">
+            <summary>
+            Overrides the default ToString implementation to instead find the mock for this mock.Object,
+            and return MockName + '.Object' as the mocked object's ToString, to make it easy to relate
+            mocks and mock object instances in error messages.
+            </summary>
         </member>
         <member name="T:Moq.Range">
             <summary>
