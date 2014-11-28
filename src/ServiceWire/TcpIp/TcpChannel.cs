@@ -10,6 +10,8 @@ namespace ServiceWire.TcpIp
     public class TcpChannel : StreamingChannel
     {
         private Socket _client;
+        private string _username;
+        private string _password;
 
         /// <summary>
         /// Creates a connection to the concrete object handling method calls on the server side
@@ -18,7 +20,7 @@ namespace ServiceWire.TcpIp
         /// <param name="endpoint"></param>
         public TcpChannel(Type serviceType, IPEndPoint endpoint)
         {
-            Initialize(serviceType, endpoint, 2500);
+            Initialize(null, null, serviceType, endpoint, 2500);
         }
 
         /// <summary>
@@ -28,11 +30,23 @@ namespace ServiceWire.TcpIp
         /// <param name="endpoint"></param>
         public TcpChannel(Type serviceType, TcpEndPoint endpoint)
         {
-            Initialize(serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs);
+            Initialize(null, null, serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs);
         }
 
-        private void Initialize(Type serviceType, IPEndPoint endpoint, int connectTimeoutMs)
+        public TcpChannel(Type serviceType, TcpZkEndPoint endpoint)
         {
+            if (endpoint == null) throw new ArgumentNullException("endpoint");
+            if (endpoint.Username == null) throw new ArgumentNullException("endpoint.Username");
+            if (endpoint.Password == null) throw new ArgumentNullException("endpoint.Password");
+            Initialize(endpoint.Username, endpoint.Password, 
+                serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs);
+        }
+
+        private void Initialize(string username, string password, 
+            Type serviceType, IPEndPoint endpoint, int connectTimeoutMs)
+        {
+            _username = username;
+            _password = password;
             _serviceType = serviceType;
             _client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp); // TcpClient(AddressFamily.InterNetwork);
             _client.LingerState.Enabled = false;
@@ -74,9 +88,9 @@ namespace ServiceWire.TcpIp
             _binWriter = new BinaryWriter(_stream);
             try
             {
-                SyncInterface(_serviceType);
+                SyncInterface(_serviceType, _username, _password);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 this.Dispose(true);
                 throw;

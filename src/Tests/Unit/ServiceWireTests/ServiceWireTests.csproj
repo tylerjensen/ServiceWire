@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="ParameterTransferHelperTests.cs" />
     <Compile Include="InterceptionTests.cs" />
+    <Compile Include="TcpZkTests.cs" />
+    <Compile Include="ZkProtocolTests.cs" />
     <Compile Include="TcpTests.cs" />
     <Compile Include="INetTester.cs" />
     <Compile Include="NpTests.cs" />

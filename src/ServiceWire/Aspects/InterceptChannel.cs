@@ -20,7 +20,8 @@ namespace ServiceWire.Aspects
             CreateMethodMap();
         }
 
-        protected override void SyncInterface(Type interceptedType)
+        protected override void SyncInterface(Type interceptedType,
+            string username = null, string password = null)
         {
             //do nothing in this channel
         }

@@ -4,6 +4,7 @@ using System.Net;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using ServiceWire.ZeroKnowledge;
 
 namespace ServiceWire.TcpIp
 {
@@ -20,9 +21,11 @@ namespace ServiceWire.TcpIp
         /// <param name="port">The port number for incoming requests</param>
         /// <param name="log"></param>
         /// <param name="stats"></param>
-        public TcpHost(int port, ILog log = null, IStats stats = null)
+        /// <param name="zkRepository">Only required to support zero knowledge authentication and encryption.</param>
+        public TcpHost(int port, ILog log = null, IStats stats = null, 
+            IZkRepository zkRepository = null)
         {
-            Initialize(new IPEndPoint(IPAddress.Any, port), log, stats);
+            Initialize(new IPEndPoint(IPAddress.Any, port), log, stats, zkRepository);
         }
 
         /// <summary>
@@ -34,15 +37,18 @@ namespace ServiceWire.TcpIp
         /// <param name="endpoint"></param>
         /// <param name="log"></param>
         /// <param name="stats"></param>
-        public TcpHost(IPEndPoint endpoint, ILog log = null, IStats stats = null)
+        /// <param name="zkRepository">Only required to support zero knowledge authentication and encryption.</param>
+        public TcpHost(IPEndPoint endpoint, ILog log = null, IStats stats = null, 
+            IZkRepository zkRepository = null)
         {
-            Initialize(endpoint, log, stats);
+            Initialize(endpoint, log, stats, zkRepository);
         }
 
-        private void Initialize(IPEndPoint endpoint, ILog log, IStats stats)
+        private void Initialize(IPEndPoint endpoint, ILog log, IStats stats, IZkRepository zkRepository)
         {
             base.Log = log;
             base.Stats = stats;
+            base.ZkRepository = zkRepository ?? new ZkNullRepository();
             _endPoint = endpoint;
             _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
