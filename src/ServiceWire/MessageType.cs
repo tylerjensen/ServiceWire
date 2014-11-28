@@ -9,10 +9,7 @@ namespace ServiceWire
         ThrowException = 4,
         SyncInterface = 5,
 
-        CryptoConnRequest = 20,
-        CryptoConnChallenge = 21,
-        CryptoConnResponse = 22,
-        CryptoConnConfirm = 23,
-        CryptoConnError = 24
+        ZkInitiate = 20,
+        ZkProof = 21
     };
 }

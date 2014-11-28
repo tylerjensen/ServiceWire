@@ -14,6 +14,11 @@ namespace ServiceWire.TcpIp
             _proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
         }
 
+        public TcpClient(TcpZkEndPoint endpoint)
+        {
+            _proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
+        }
+
         public TcpClient(IPEndPoint endpoint)
         {
             _proxy = TcpProxy.CreateProxy<TInterface>(endpoint);

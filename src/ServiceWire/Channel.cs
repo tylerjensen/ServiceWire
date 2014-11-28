@@ -18,8 +18,10 @@ namespace ServiceWire
         /// Channel must implement an interface synchronization method.
         /// This method asks the server for a list of identifiers paired with method
         /// names and -parameter types. This is used when invoking methods server side.
+        /// When username and password supplied, zero knowledge encryption is used.
         /// </summary>
-        protected abstract void SyncInterface(Type serviceType);
+        protected abstract void SyncInterface(Type serviceType, 
+            string username = null, string password = null);
 
         #region IDisposable Members
 

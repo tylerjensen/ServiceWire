@@ -34,6 +34,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Aspects\CrossCuttingConcerns.cs" />
@@ -80,9 +81,17 @@
     <Compile Include="Host.cs" />
     <Compile Include="TcpIp\TcpChannel.cs" />
     <Compile Include="TcpIp\TcpClient.cs" />
+    <Compile Include="TcpIp\TcpZkEndPoint.cs" />
     <Compile Include="TcpIp\TcpEndPoint.cs" />
     <Compile Include="TcpIp\TcpHost.cs" />
     <Compile Include="TcpIp\TcpProxy.cs" />
+    <Compile Include="ZeroKnowledge\ZkExt.cs" />
+    <Compile Include="ZeroKnowledge\IZkRepository.cs" />
+    <Compile Include="ZeroKnowledge\ZkSafePrimes.cs" />
+    <Compile Include="ZeroKnowledge\ZkPasswordHash.cs" />
+    <Compile Include="ZeroKnowledge\ZkCrypto.cs" />
+    <Compile Include="ZeroKnowledge\ZkProtocol.cs" />
+    <Compile Include="ZeroKnowledge\ZkSession.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="_license.txt" />
