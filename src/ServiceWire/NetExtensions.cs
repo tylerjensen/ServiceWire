@@ -4,6 +4,11 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
+#if (NET35)
+using ServiceWire.SvcStkTxt;
+#endif
+using System.Text;
+using ServiceWire.SvcStkTxt;
 
 namespace ServiceWire
 {
@@ -29,41 +34,41 @@ namespace ServiceWire
             return null;
         }
 
-        public static byte[] ToSerializedBytes(this object obj)
+        public static byte[] ToSerializedBytes<T>(this T obj)
         {
             if (null == obj) return null;
-            var ms = new MemoryStream();
-            var formatter = new BinaryFormatter();
-            formatter.Serialize(ms, obj);
-            var bytes = ms.ToArray();
-            return bytes;
+            return Encoding.UTF8.GetBytes(TypeSerializer.SerializeToString(obj));
         }
 
-        public static object ToDeserializedObject(this byte[] bytes)
+        public static T ToDeserializedObject<T>(this byte[] bytes)
         {
-            if (null == bytes || bytes.Length == 0) return null;
-            MemoryStream ms = new MemoryStream(bytes);
-            BinaryFormatter formatter = new BinaryFormatter();
-            var obj = formatter.Deserialize(ms);
-            return obj;
+            if (null == bytes || bytes.Length == 0) return default(T);
+            return TypeSerializer.DeserializeFromString<T>(Encoding.UTF8.GetString(bytes));
         }
 
-        public static string ToSerializedBase64String(this object obj)
+        public static object ToDeserializedObject(this byte[] bytes, string typeFullName)
+        {
+            if (null == typeFullName || null == bytes || bytes.Length == 0) return null;
+            var type = Type.GetType(typeFullName);
+            return TypeSerializer.DeserializeFromString(Encoding.UTF8.GetString(bytes), type);
+        }
+
+        public static string ToSerializedBase64String<T>(this T obj)
         {
             if (null == obj) return null;
             var bytes = obj.ToSerializedBytes();
             return Convert.ToBase64String(bytes);
         }
 
-        public static object ToDeserializedObjectFromBase64String(this string base64String)
+        public static T ToDeserializedObjectFromBase64String<T>(this string base64String)
         {
             try
             {
                 var bytes = Convert.FromBase64String(base64String);
-                return bytes.ToDeserializedObject();
+                return bytes.ToDeserializedObject<T>();
             }
             catch { }
-            return null;
+            return default(T);
         }
 
         /// <summary>

@@ -2,7 +2,6 @@
 
 namespace ServiceWire
 {
-    [Serializable]
     public class MethodSyncInfo
     {
         public int MethodIdent { get; set; }

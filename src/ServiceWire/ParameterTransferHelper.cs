@@ -128,7 +128,7 @@ namespace ServiceWire
                             writer.Write((ushort)parameter);
                             break;
                         case ParameterTypes.Type:
-                            writer.Write(((Type)parameter).AssemblyQualifiedName ?? ((Type)parameter).FullName);
+                            writer.Write(type.FullName);
                             break;
                         case ParameterTypes.Guid:
                             writer.Write(((Guid)parameter).ToByteArray());
@@ -201,7 +201,7 @@ namespace ServiceWire
                             var types = (Type[])parameter;
                             writer.Write(types.Length);
                             foreach (var t in types)
-                                writer.Write(t.AssemblyQualifiedName ?? t.FullName);
+                                writer.Write(t.FullName);
                             break;    
                         case ParameterTypes.ArrayGuid:
                             var guids = (Guid[])parameter;
@@ -215,11 +215,18 @@ namespace ServiceWire
                             break;
 
                         case ParameterTypes.ByteArray:
-                        case ParameterTypes.Unknown:
                         case ParameterTypes.CompressedByteArray:
                         case ParameterTypes.CompressedCharArray:
                         case ParameterTypes.CompressedString:
+                            //write length of data
+                            writer.Write(dataBytes.Length);
+                            //write data
+                            writer.Write(dataBytes);
+                            break;
+                        case ParameterTypes.Unknown:
                         case ParameterTypes.CompressedUnknown:
+                            //write type name as string
+                            writer.Write(type.FullName);
                             //write length of data
                             writer.Write(dataBytes.Length);
                             //write data
@@ -413,12 +420,14 @@ namespace ServiceWire
                             break;
 
                         case ParameterTypes.Unknown:
+                            var typeFullName = reader.ReadString();
                             var bytes = reader.ReadBytes(reader.ReadInt32());
-                            parameters[i] = bytes.ToDeserializedObject();
+                            parameters[i] = bytes.ToDeserializedObject(typeFullName);
                             break;
                         case ParameterTypes.CompressedUnknown:
+                            var cuTypeFullName = reader.ReadString();
                             var cuBytes = reader.ReadBytes(reader.ReadInt32()).FromGZipBytes();
-                            parameters[i] = cuBytes.ToDeserializedObject();
+                            parameters[i] = cuBytes.ToDeserializedObject(cuTypeFullName);
                             break;
                         default:
                             throw new Exception(string.Format("Unknown type byte '0x{0:X}'", typeByte));

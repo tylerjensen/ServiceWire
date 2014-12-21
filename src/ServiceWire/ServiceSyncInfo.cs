@@ -2,7 +2,6 @@
 
 namespace ServiceWire
 {
-    [Serializable]
     public class ServiceSyncInfo
     {
         public int ServiceKeyIndex { get; set; }

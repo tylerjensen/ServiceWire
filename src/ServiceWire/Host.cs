@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using ServiceWire.SvcStkTxt;
 using ServiceWire.ZeroKnowledge;
 
 namespace ServiceWire
@@ -123,8 +124,8 @@ namespace ServiceWire
                 if (_isOpen) throw new Exception("Service cannot be added after the host is opened.");
                 var serviceType = typeof(TService);
                 if (!serviceType.IsInterface) throw new ArgumentException("TService must be an interface.", "TService");
-                serviceType.ValidateServiceInterface(); //throws if one class in the interface or its members is not serializable
-                var serviceKey = serviceType.AssemblyQualifiedName ?? serviceType.FullName;
+                //serviceType.ValidateServiceInterface(); //throws if one class in the interface or its members is not serializable
+                var serviceKey = serviceType.FullName; // serviceType.AssemblyQualifiedName ?? serviceType.FullName;
                 if (_serviceKeys.ContainsKey(serviceKey)) throw new Exception("Service already added. Only one instance allowed.");
                 int keyIndex = _serviceKeys.Count;
                 _serviceKeys.TryAdd(serviceKey, keyIndex);
@@ -211,13 +212,6 @@ namespace ServiceWire
                 MethodInfos = syncSyncInfos.ToArray()
             };
             instance.ServiceSyncInfo = serviceSyncInfo;
-
-            //send the sync data back to the client
-            var formatter = new BinaryFormatter();
-            var ms = new MemoryStream();
-            formatter.Serialize(ms, serviceSyncInfo);
-            ms.Seek(0, SeekOrigin.Begin);
-            instance.SyncInfoBytes = ms.ToArray();
             return instance;
         }
 
@@ -345,16 +339,17 @@ namespace ServiceWire
                 {
                     syncCat = instance.InterfaceType.Name;
                     //Create a list of sync infos from the dictionary
+                    var syncBytes = instance.ServiceSyncInfo.ToSerializedBytes();
                     if (_requireZk)
                     {
-                        var encData = session.Crypto.Encrypt(instance.SyncInfoBytes);
+                        var encData = session.Crypto.Encrypt(syncBytes);
                         binWriter.Write(encData.Length);
                         binWriter.Write(encData);
                     }
                     else
                     {
-                        binWriter.Write(instance.SyncInfoBytes.Length);
-                        binWriter.Write(instance.SyncInfoBytes);
+                        binWriter.Write(syncBytes.Length);
+                        binWriter.Write(syncBytes);
                     }
                 }
             }

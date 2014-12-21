@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Numerics;
 using System.Security.Cryptography;
 
 namespace ServiceWire.ZeroKnowledge
@@ -146,8 +145,8 @@ namespace ServiceWire.ZeroKnowledge
             var rb = new byte[256];
             _random.NextBytes(rb);
             var bigrand = new BigInteger(rb);
-            var crand = BigInteger.ModPow(bigrand, ZkSafePrimes.GetSafePrime(_random.Next(0, 2047)), _n);
-            var bytes = crand.ToByteArray();
+            var crand = (bigrand % ZkSafePrimes.GetSafePrime(_random.Next(0, 2047))) ^  _n;
+            var bytes = BigInteger.ToByteArray(crand);
             if (bits >= 4096) return bytes;
             var count = bits / 8;
             var skip = _random.Next(0, bytes.Length - count);

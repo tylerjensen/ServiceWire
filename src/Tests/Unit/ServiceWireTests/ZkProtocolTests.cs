@@ -7,6 +7,20 @@ namespace ServiceWireTests
     public class ZkProtocolTests
     {
         [TestMethod]
+        public void BigIntegerArrayTest()
+        {
+            var bigint = new BigInteger(ZkSafePrimes.N4);
+            var bytes = BigInteger.ToByteArray(bigint);
+            Assert.AreEqual(ZkSafePrimes.N4.Length, bytes.Length);
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                Assert.AreEqual(ZkSafePrimes.N4[i], bytes[i]);
+            }
+            var big2 = new BigInteger(bytes);
+            Assert.AreEqual(bigint, big2);
+        }
+
+        [TestMethod]
         public void SimpleProtocolTest()
         {
             var sr = new ZkProtocol();

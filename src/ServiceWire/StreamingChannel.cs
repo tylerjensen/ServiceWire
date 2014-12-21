@@ -91,25 +91,29 @@ namespace ServiceWire
                 if (null != _zkCrypto)
                 {
                     //sync interface with encryption
-                    var assemName = serviceType.AssemblyQualifiedName ?? serviceType.FullName;
+                    var assemName = serviceType.FullName;
                     var assemblyNameEncrypted = _zkCrypto.Encrypt(assemName.ConvertToBytes());
                     _binWriter.Write(assemblyNameEncrypted.Length);
                     _binWriter.Write(assemblyNameEncrypted);
                 }
                 else
                 {
-                    _binWriter.Write(serviceType.AssemblyQualifiedName ?? serviceType.FullName);
+                    _binWriter.Write(serviceType.FullName);
                 }
                 //read sync data
                 var len = _binReader.ReadInt32();
                 //len is zero when AssemblyQualifiedName not same version or not found
+#if (!NET35)
                 if (len == 0) throw new TypeAccessException("SyncInterface failed. Type or version of type unknown.");
+#else
+                if (len == 0) throw new Exception("SyncInterface failed. Type or version of type unknown.");
+#endif
                 var bytes = _binReader.ReadBytes(len);
                 if (null != _zkCrypto)
                 {
                     bytes = _zkCrypto.Decrypt(bytes);
                 }
-                _syncInfo = (ServiceSyncInfo)bytes.ToDeserializedObject();
+                _syncInfo = bytes.ToDeserializedObject<ServiceSyncInfo>();
                 _syncInfoCache.AddOrUpdate(serviceType, _syncInfo, (t, info) => _syncInfo);
             }
         }
@@ -242,8 +246,13 @@ namespace ServiceWire
                     }
                     finally
                     {
+#if (!NET35)
                         if (null != _binWriter) _binWriter.Dispose();
                         if (null != _binReader) _binReader.Dispose();
+#else
+                        if (null != _binWriter) _binWriter.Close();
+                        if (null != _binReader) _binReader.Close();
+#endif
                     }
                 }
             }

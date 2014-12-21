@@ -12,6 +12,5 @@ namespace ServiceWire
         public ConcurrentDictionary<int, MethodInfo> InterfaceMethods { get; set; }
         public ConcurrentDictionary<int, bool[]> MethodParametersByRef { get; set; }
         public ServiceSyncInfo ServiceSyncInfo { get; set; }
-        public byte[] SyncInfoBytes { get; set; }
     }
 }
