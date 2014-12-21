@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>ServiceWire</id>
-    <version>3.0.3</version>
+    <version>3.0.4</version>
     <authors>Tyler Jensen</authors>
     <owners>Tyler Jensen</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
