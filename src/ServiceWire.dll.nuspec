@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>ServiceWire</id>
+    <version>3.0.2</version>
+    <authors>Tyler Jensen</authors>
+    <owners>Tyler Jensen</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>https://github.com/tylerjensen/ServiceWire</projectUrl>
+	<iconUrl>http://www.tsjensen.com/blog/image.axd?picture=2014/11/swlogo_sm.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+	<summary>ServiceWire is a fast and easy RPC library that now supports optional zero knowledge authentication and strong encryption.</summary>
+    <description>ServiceWire is a very fast and light weight service host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP. And with the release of 2.0.0, ServiceWire now supports optional use of Zero Knowledge authentication with a fast variation of Secure Remote Password Protocol and strong Rijndael encryption of data across the wire via TCP without the need for public keys going across the wire.</description>
+    <releaseNotes>BREAKING CHANGES: 	
+		1. Added SvcStkTxt from ServiceMq to ServiceWire to eliminate BinaryFormatter and required use of Serializable attribute. See license for source and attribution details.
+
+		2. Relaxed string assembly version matching to allow additive changes without breaking the client or requiring an immediate client update.
+
+		3. Strong name added to allow the library to be used by strong named applications and libraries.
+
+		4. Added .NET 3.5 support to allow legacy applications to use the library. This adds a Framework specific dependency on TaskParallelLibrary 1.0.2856.0.
+
+		5. For the .NET 4.0 and 3.5 versions, changed to "Client Profile" for the target framework.
+
+		6. Removed dependency on System.Numerics in order to support .NET 3.5 and introduced ZkBigInt class taken from Scott Garland's BigInteger class. See license text for full attribution.
+		
+		Fix to dependency specification in 3.0.2</releaseNotes>
+    <copyright>Copyright 2013-2014 Tyler Jensen.</copyright>
+    <tags>WCF Services Host Client NamedPipes TCP Messaging RPC Interception Zero Knowledge Secure Remote Password Protocol Serialization</tags>
+	<dependencies>
+		<group targetFramework="net40" />
+		<group targetFramework="net35">
+			<dependency id="TaskParallelLibrary" version="1.0.2856.0" />
+		</group>
+	</dependencies>
+  </metadata>
+</package>
