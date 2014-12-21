@@ -73,45 +73,45 @@ namespace ServiceWireTests
             sw.Stop();
             var interceptCtorTicks = sw.ElapsedTicks;
             var interceptCtorTs = sw.Elapsed;
-            sw.Restart();
+            sw.Reset();
             var c = t2.Add(2, 3);
             sw.Stop();
             var interceptAddTicks = sw.ElapsedTicks;
             var interceptAddTs = sw.Elapsed;
 
-            sw.Restart();
+            sw.Reset();
             var t3 = Interceptor.Intercept<ISimpleMath2>(new SimpleMath2(), cc);
             sw.Stop();
             var interceptCtorTicks2 = sw.ElapsedTicks;
             var interceptCtorTs2 = sw.Elapsed;
-            sw.Restart();
+            sw.Reset();
             var c2 = t3.Add(2, 3);
             sw.Stop();
             var interceptAddTicks2 = sw.ElapsedTicks;
             var interceptAddTs2 = sw.Elapsed;
 
-            sw.Restart();
+            sw.Reset();
             var t4 = new SimpleMath2();
             sw.Stop();
             var plainCtorTicks = sw.ElapsedTicks;
             var plainCtorTs = sw.Elapsed;
-            sw.Restart();
+            sw.Reset();
             var c3 = t4.Add(2, 3);
             sw.Stop();
             var plainAddTicks = sw.ElapsedTicks;
             var plainAddTs = sw.Elapsed;
 
-            Assert.IsTrue(plainCtorTicks < interceptCtorTicks);
-            Assert.IsTrue(plainAddTicks < interceptAddTicks);
+            Assert.IsTrue(plainCtorTicks <= interceptCtorTicks);
+            Assert.IsTrue(plainAddTicks <= interceptAddTicks);
 
-            Assert.IsTrue(plainCtorTicks < interceptCtorTicks2);
-            Assert.IsTrue(plainAddTicks < interceptAddTicks2);
+            Assert.IsTrue(plainCtorTicks <= interceptCtorTicks2);
+            Assert.IsTrue(plainAddTicks <= interceptAddTicks2);
 
-            Assert.IsTrue(plainCtorTs < interceptCtorTs);
-            Assert.IsTrue(plainAddTs < interceptAddTs);
+            Assert.IsTrue(plainCtorTs <= interceptCtorTs);
+            Assert.IsTrue(plainAddTs <= interceptAddTs);
 
-            Assert.IsTrue(plainCtorTs < interceptCtorTs2);
-            Assert.IsTrue(plainAddTs < interceptAddTs2);
+            Assert.IsTrue(plainCtorTs <= interceptCtorTs2);
+            Assert.IsTrue(plainAddTs <= interceptAddTs2);
         
         }
     }

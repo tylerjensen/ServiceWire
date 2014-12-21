@@ -2,7 +2,6 @@
 
 namespace ServiceWire
 {
-    [Serializable]
     public class MemoryDetail
     {
         public ulong TotalVisibleMemorySize { get; set; }

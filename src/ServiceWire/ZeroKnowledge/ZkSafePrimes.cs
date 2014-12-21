@@ -1,8 +1,8 @@
 ﻿namespace ServiceWire.ZeroKnowledge
 {
-    internal static class ZkSafePrimes
+    public static class ZkSafePrimes
     {
-        internal static byte[] N4
+        public static byte[] N4
         {
             get { return Safe4096BitPrime; }
         }

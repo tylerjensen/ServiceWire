@@ -39,38 +39,44 @@ namespace ServiceWire
 
             if (nonSerializableTypes.Count > 0)
             {
+#if (!NET35)
                 var errorMessage =
                     string.Format("One or more types in {0} are not marked with the Serializable attribute: {1}",
                         type.FullName, string.Join(",", nonSerializableTypes));
+#else
+                var errorMessage =
+                    string.Format("One or more types in {0} are not marked with the Serializable attribute: {1}",
+                        type.FullName, string.Join(",", nonSerializableTypes.ToArray()));
+#endif
                 throw new SerializationException(errorMessage);
             }
         }
-	
+
         private static void AnalyzeType(Type type, List<string> nonSerializableTypes)
         {
-	        if (type.IsValueType || type == typeof(string)) return;
+            if (type.IsValueType || type == typeof(string)) return;
 
-	        if (!IsSerializable(type))
-		        nonSerializableTypes.Add(type.Name);
+            if (!IsSerializable(type))
+                nonSerializableTypes.Add(type.Name);
 
-	        foreach (var propertyInfo in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-	        {
-		        if (propertyInfo.PropertyType.IsGenericType)
-		        {
-			        foreach (var genericArgument in propertyInfo.PropertyType.GetGenericArguments())
-			        {
-				        if (genericArgument == type) continue; // base case for circularly referenced properties
-				        AnalyzeType(genericArgument, nonSerializableTypes);
-			        }
-		        }
-		        else if (propertyInfo.GetType() != type) // base case for circularly referenced properties
-			        AnalyzeType(propertyInfo.PropertyType, nonSerializableTypes);
-	        }
+            foreach (var propertyInfo in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            {
+                if (propertyInfo.PropertyType.IsGenericType)
+                {
+                    foreach (var genericArgument in propertyInfo.PropertyType.GetGenericArguments())
+                    {
+                        if (genericArgument == type) continue; // base case for circularly referenced properties
+                        AnalyzeType(genericArgument, nonSerializableTypes);
+                    }
+                }
+                else if (propertyInfo.GetType() != type) // base case for circularly referenced properties
+                    AnalyzeType(propertyInfo.PropertyType, nonSerializableTypes);
+            }
         }
 
         private static bool IsSerializable(Type type)
         {
-	        return (Attribute.IsDefined(type, typeof(SerializableAttribute)));
+            return (Attribute.IsDefined(type, typeof(SerializableAttribute)));
         }
     }
 }

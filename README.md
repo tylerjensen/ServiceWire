@@ -1,6 +1,20 @@
 ServiceWire
 ===========
 
+### Breaking Changes in version 3.0.0.0
+
+1. Added SvcStkTxt from ServiceMq to ServiceWire to eliminate BinaryFormatter and required use of Serializable attribute. See license for source and attribution details.
+
+2. Relaxed string assembly version matching to allow additive changes without breaking the client or requiring an immediate client update.
+
+3. Strong name added to allow the library to be used by strong named applications and libraries.
+
+4. Added .NET 3.5 support to allow legacy applications to use the library. This adds a Framework specific dependency on TaskParallelLibrary 1.0.2856.0.
+
+5. For the .NET 4.0 and 3.5 versions, changed to "Client Profile" for the target framework.
+
+6. Removed dependency on System.Numerics in order to support .NET 3.5 and introduced ZkBigInt class taken from Scott Garland's BigInteger class. See license text for full attribution.
+
 ### A Lightweight Services Library for .NET.
 
 ServiceWire is a very fast and light weight services host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP.

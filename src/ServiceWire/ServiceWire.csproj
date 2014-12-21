@@ -11,7 +11,7 @@
     <AssemblyName>ServiceWire</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,11 +30,22 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>ServiceWire.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Management" />
-    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Aspects\CrossCuttingConcerns.cs" />
@@ -79,12 +90,90 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProxyFactory.cs" />
     <Compile Include="Host.cs" />
+    <Compile Include="SvcStkTxt\AssemblyUtils.cs" />
+    <Compile Include="SvcStkTxt\CollectionExtensions.cs" />
+    <Compile Include="SvcStkTxt\Common\DateTimeSerializer.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeArray.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeBuiltin.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeCollection.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeDictionary.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeDynamic.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeKeyValuePair.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeListWithElements.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeSpecializedCollections.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeType.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeTypeRef.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeTypeRefJson.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeTypeRefJsv.cs" />
+    <Compile Include="SvcStkTxt\Common\DeserializeTypeUtils.cs" />
+    <Compile Include="SvcStkTxt\Common\ITypeSerializer.cs" />
+    <Compile Include="SvcStkTxt\Common\JsDelegates.cs" />
+    <Compile Include="SvcStkTxt\Common\JsReader.cs" />
+    <Compile Include="SvcStkTxt\Common\JsState.cs" />
+    <Compile Include="SvcStkTxt\Common\JsWriter.cs" />
+    <Compile Include="SvcStkTxt\Common\ParseUtils.cs" />
+    <Compile Include="SvcStkTxt\Common\StaticParseMethod.cs" />
+    <Compile Include="SvcStkTxt\Common\WriteDictionary.cs" />
+    <Compile Include="SvcStkTxt\Common\WriteLists.cs" />
+    <Compile Include="SvcStkTxt\Common\WriteType.cs" />
+    <Compile Include="SvcStkTxt\Controller\CommandProcessor.cs" />
+    <Compile Include="SvcStkTxt\Controller\PathInfo.cs" />
+    <Compile Include="SvcStkTxt\CsvAttribute.cs" />
+    <Compile Include="SvcStkTxt\CsvConfig.cs" />
+    <Compile Include="SvcStkTxt\CsvSerializer.cs" />
+    <Compile Include="SvcStkTxt\CsvStreamExtensions.cs" />
+    <Compile Include="SvcStkTxt\CsvWriter.cs" />
+    <Compile Include="SvcStkTxt\DateTimeExtensions.cs" />
+    <Compile Include="SvcStkTxt\DynamicJson.cs" />
+    <Compile Include="SvcStkTxt\DynamicProxy.cs" />
+    <Compile Include="SvcStkTxt\Env.cs" />
+    <Compile Include="SvcStkTxt\HashSet.cs" />
+    <Compile Include="SvcStkTxt\ITracer.cs" />
+    <Compile Include="SvcStkTxt\ITypeSerializer.Generic.cs" />
+    <Compile Include="SvcStkTxt\JsConfig.cs" />
+    <Compile Include="SvcStkTxt\JsConfigScope.cs" />
+    <Compile Include="SvcStkTxt\JsonObject.cs" />
+    <Compile Include="SvcStkTxt\JsonSerializer.cs" />
+    <Compile Include="SvcStkTxt\JsonSerializer.Generic.cs" />
+    <Compile Include="SvcStkTxt\Json\JsonReader.Generic.cs" />
+    <Compile Include="SvcStkTxt\Json\JsonTypeSerializer.cs" />
+    <Compile Include="SvcStkTxt\Json\JsonUtils.cs" />
+    <Compile Include="SvcStkTxt\Json\JsonWriter.Generic.cs" />
+    <Compile Include="SvcStkTxt\JsvFormatter.cs" />
+    <Compile Include="SvcStkTxt\Jsv\JsvDeserializeType.cs" />
+    <Compile Include="SvcStkTxt\Jsv\JsvReader.Generic.cs" />
+    <Compile Include="SvcStkTxt\Jsv\JsvSerializer.Generic.cs" />
+    <Compile Include="SvcStkTxt\Jsv\JsvTypeSerializer.cs" />
+    <Compile Include="SvcStkTxt\Jsv\JsvWriter.Generic.cs" />
+    <Compile Include="SvcStkTxt\ListExtensions.cs" />
+    <Compile Include="SvcStkTxt\MapExtensions.cs" />
+    <Compile Include="SvcStkTxt\Marc\Link.cs" />
+    <Compile Include="SvcStkTxt\Marc\ObjectAccessor.cs" />
+    <Compile Include="SvcStkTxt\Marc\TypeAccessor.cs" />
+    <Compile Include="SvcStkTxt\QueryStringSerializer.cs" />
+    <Compile Include="SvcStkTxt\ReflectionExtensions.cs" />
+    <Compile Include="SvcStkTxt\Reflection\StaticAccessors.cs" />
+    <Compile Include="SvcStkTxt\StreamExtensions.cs" />
+    <Compile Include="SvcStkTxt\StringExtensions.cs" />
+    <Compile Include="SvcStkTxt\Support\AssemblyTypeDefinition.cs" />
+    <Compile Include="SvcStkTxt\Support\DoubleConverter.cs" />
+    <Compile Include="SvcStkTxt\Support\TypePair.cs" />
+    <Compile Include="SvcStkTxt\SystemTime.cs" />
+    <Compile Include="SvcStkTxt\TextExtensions.cs" />
+    <Compile Include="SvcStkTxt\Tracer.cs" />
+    <Compile Include="SvcStkTxt\TranslateListWithElements.cs" />
+    <Compile Include="SvcStkTxt\TypeConfig.cs" />
+    <Compile Include="SvcStkTxt\TypeSerializer.cs" />
+    <Compile Include="SvcStkTxt\TypeSerializer.Generic.cs" />
+    <Compile Include="SvcStkTxt\WebRequestExtensions.cs" />
+    <Compile Include="SvcStkTxt\XmlSerializer.cs" />
     <Compile Include="TcpIp\TcpChannel.cs" />
     <Compile Include="TcpIp\TcpClient.cs" />
     <Compile Include="TcpIp\TcpZkEndPoint.cs" />
     <Compile Include="TcpIp\TcpEndPoint.cs" />
     <Compile Include="TcpIp\TcpHost.cs" />
     <Compile Include="TcpIp\TcpProxy.cs" />
+    <Compile Include="ZeroKnowledge\ZkBigInt.cs" />
     <Compile Include="ZeroKnowledge\ZkExt.cs" />
     <Compile Include="ZeroKnowledge\IZkRepository.cs" />
     <Compile Include="ZeroKnowledge\ZkSafePrimes.cs" />
@@ -95,6 +184,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="_license.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ServiceWire.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
