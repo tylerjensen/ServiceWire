@@ -34,6 +34,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTests_Net35", "T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".solutionItems", ".solutionItems", "{C6A9C54E-EB6C-403A-AC34-A2E0F4674B61}"
 	ProjectSection(SolutionItems) = preProject
+		ServiceWire.dll.nuspec = ServiceWire.dll.nuspec
 		ServiceWire.snk = ServiceWire.snk
 	EndProjectSection
 EndProject
