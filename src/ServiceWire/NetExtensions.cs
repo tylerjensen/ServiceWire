@@ -1,14 +1,11 @@
-﻿using System;
+﻿using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
-#if (NET35)
-using ServiceWire.SvcStkTxt;
-#endif
 using System.Text;
-using ServiceWire.SvcStkTxt;
 
 namespace ServiceWire
 {
@@ -16,17 +13,23 @@ namespace ServiceWire
     {
         public static string ToConfigName(this Type t)
         {
-            return t.FullName + ", " + t.Assembly.GetName().Name;
+            var name = t.AssemblyQualifiedName;
+            name = Regex.Replace(name, @", Version=\d+.\d+.\d+.\d+", string.Empty);
+            name = Regex.Replace(name, @", Culture=\w+", string.Empty);
+            name = Regex.Replace(name, @", PublicKeyToken=\w+", string.Empty);
+            return name;
+            //return t.FullName + ", " + t.Assembly.GetName().Name;
         }
 
         public static Type ToType(this string configName)
         {
             try
             {
-                var parts = (from n in configName.Split(',') select n.Trim()).ToArray();
-                var assembly = Assembly.Load(new AssemblyName(parts[1]));
-                var type = assembly.GetType(parts[0]);
-                return type;
+                return Type.GetType(configName);
+                //var parts = (from n in configName.Split(',') select n.Trim()).ToArray();
+                //var assembly = Assembly.Load(new AssemblyName(parts[1]));
+                //var type = assembly.GetType(parts[0]);
+                //return type;
             }
             catch (Exception)
             {
@@ -34,23 +37,37 @@ namespace ServiceWire
             return null;
         }
 
+        private static JsonSerializerSettings settings = new JsonSerializerSettings
+        {
+            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+        };
+
         public static byte[] ToSerializedBytes<T>(this T obj)
         {
             if (null == obj) return null;
-            return Encoding.UTF8.GetBytes(TypeSerializer.SerializeToString(obj));
+            var json = JsonConvert.SerializeObject(obj, settings);
+            return Encoding.UTF8.GetBytes(json);
+        }
+
+        public static byte[] ToSerializedBytes(this object obj, string typeConfigName)
+        {
+            if (null == obj) return null;
+            var type = typeConfigName.ToType();
+            var json = JsonConvert.SerializeObject(obj, type, settings);
+            return Encoding.UTF8.GetBytes(json);
         }
 
         public static T ToDeserializedObject<T>(this byte[] bytes)
         {
             if (null == bytes || bytes.Length == 0) return default(T);
-            return TypeSerializer.DeserializeFromString<T>(Encoding.UTF8.GetString(bytes));
+            return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(bytes), settings);
         }
 
-        public static object ToDeserializedObject(this byte[] bytes, string typeFullName)
+        public static object ToDeserializedObject(this byte[] bytes, string typeConfigName)
         {
-            if (null == typeFullName || null == bytes || bytes.Length == 0) return null;
-            var type = Type.GetType(typeFullName);
-            return TypeSerializer.DeserializeFromString(Encoding.UTF8.GetString(bytes), type);
+            if (null == typeConfigName || null == bytes || bytes.Length == 0) return null;
+            var type = typeConfigName.ToType();
+            return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(bytes), type, settings);
         }
 
         public static string ToSerializedBase64String<T>(this T obj)
@@ -108,6 +125,19 @@ namespace ServiceWire
                 return msCompressed.ToArray();
             }
         }
+
+#if (NET35)
+        public static void CopyTo(this Stream input, Stream output)
+        {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+
+            while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, bytesRead);
+            }
+        }
+#endif
 
         public static byte[] FromGZipBytes(this byte[] compressedBytes)
         {

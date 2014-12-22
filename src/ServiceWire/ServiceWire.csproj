@@ -12,6 +12,8 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,6 +39,10 @@
     <AssemblyOriginatorKeyFile>ServiceWire.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -90,83 +96,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProxyFactory.cs" />
     <Compile Include="Host.cs" />
-    <Compile Include="SvcStkTxt\AssemblyUtils.cs" />
-    <Compile Include="SvcStkTxt\CollectionExtensions.cs" />
-    <Compile Include="SvcStkTxt\Common\DateTimeSerializer.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeArray.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeBuiltin.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeCollection.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeDictionary.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeDynamic.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeKeyValuePair.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeListWithElements.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeSpecializedCollections.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeType.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeTypeRef.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeTypeRefJson.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeTypeRefJsv.cs" />
-    <Compile Include="SvcStkTxt\Common\DeserializeTypeUtils.cs" />
-    <Compile Include="SvcStkTxt\Common\ITypeSerializer.cs" />
-    <Compile Include="SvcStkTxt\Common\JsDelegates.cs" />
-    <Compile Include="SvcStkTxt\Common\JsReader.cs" />
-    <Compile Include="SvcStkTxt\Common\JsState.cs" />
-    <Compile Include="SvcStkTxt\Common\JsWriter.cs" />
-    <Compile Include="SvcStkTxt\Common\ParseUtils.cs" />
-    <Compile Include="SvcStkTxt\Common\StaticParseMethod.cs" />
-    <Compile Include="SvcStkTxt\Common\WriteDictionary.cs" />
-    <Compile Include="SvcStkTxt\Common\WriteLists.cs" />
-    <Compile Include="SvcStkTxt\Common\WriteType.cs" />
-    <Compile Include="SvcStkTxt\Controller\CommandProcessor.cs" />
-    <Compile Include="SvcStkTxt\Controller\PathInfo.cs" />
-    <Compile Include="SvcStkTxt\CsvAttribute.cs" />
-    <Compile Include="SvcStkTxt\CsvConfig.cs" />
-    <Compile Include="SvcStkTxt\CsvSerializer.cs" />
-    <Compile Include="SvcStkTxt\CsvStreamExtensions.cs" />
-    <Compile Include="SvcStkTxt\CsvWriter.cs" />
-    <Compile Include="SvcStkTxt\DateTimeExtensions.cs" />
-    <Compile Include="SvcStkTxt\DynamicJson.cs" />
-    <Compile Include="SvcStkTxt\DynamicProxy.cs" />
-    <Compile Include="SvcStkTxt\Env.cs" />
-    <Compile Include="SvcStkTxt\HashSet.cs" />
-    <Compile Include="SvcStkTxt\ITracer.cs" />
-    <Compile Include="SvcStkTxt\ITypeSerializer.Generic.cs" />
-    <Compile Include="SvcStkTxt\JsConfig.cs" />
-    <Compile Include="SvcStkTxt\JsConfigScope.cs" />
-    <Compile Include="SvcStkTxt\JsonObject.cs" />
-    <Compile Include="SvcStkTxt\JsonSerializer.cs" />
-    <Compile Include="SvcStkTxt\JsonSerializer.Generic.cs" />
-    <Compile Include="SvcStkTxt\Json\JsonReader.Generic.cs" />
-    <Compile Include="SvcStkTxt\Json\JsonTypeSerializer.cs" />
-    <Compile Include="SvcStkTxt\Json\JsonUtils.cs" />
-    <Compile Include="SvcStkTxt\Json\JsonWriter.Generic.cs" />
-    <Compile Include="SvcStkTxt\JsvFormatter.cs" />
-    <Compile Include="SvcStkTxt\Jsv\JsvDeserializeType.cs" />
-    <Compile Include="SvcStkTxt\Jsv\JsvReader.Generic.cs" />
-    <Compile Include="SvcStkTxt\Jsv\JsvSerializer.Generic.cs" />
-    <Compile Include="SvcStkTxt\Jsv\JsvTypeSerializer.cs" />
-    <Compile Include="SvcStkTxt\Jsv\JsvWriter.Generic.cs" />
-    <Compile Include="SvcStkTxt\ListExtensions.cs" />
-    <Compile Include="SvcStkTxt\MapExtensions.cs" />
-    <Compile Include="SvcStkTxt\Marc\Link.cs" />
-    <Compile Include="SvcStkTxt\Marc\ObjectAccessor.cs" />
-    <Compile Include="SvcStkTxt\Marc\TypeAccessor.cs" />
-    <Compile Include="SvcStkTxt\QueryStringSerializer.cs" />
-    <Compile Include="SvcStkTxt\ReflectionExtensions.cs" />
-    <Compile Include="SvcStkTxt\Reflection\StaticAccessors.cs" />
-    <Compile Include="SvcStkTxt\StreamExtensions.cs" />
-    <Compile Include="SvcStkTxt\StringExtensions.cs" />
-    <Compile Include="SvcStkTxt\Support\AssemblyTypeDefinition.cs" />
-    <Compile Include="SvcStkTxt\Support\DoubleConverter.cs" />
-    <Compile Include="SvcStkTxt\Support\TypePair.cs" />
-    <Compile Include="SvcStkTxt\SystemTime.cs" />
-    <Compile Include="SvcStkTxt\TextExtensions.cs" />
-    <Compile Include="SvcStkTxt\Tracer.cs" />
-    <Compile Include="SvcStkTxt\TranslateListWithElements.cs" />
-    <Compile Include="SvcStkTxt\TypeConfig.cs" />
-    <Compile Include="SvcStkTxt\TypeSerializer.cs" />
-    <Compile Include="SvcStkTxt\TypeSerializer.Generic.cs" />
-    <Compile Include="SvcStkTxt\WebRequestExtensions.cs" />
-    <Compile Include="SvcStkTxt\XmlSerializer.cs" />
     <Compile Include="TcpIp\TcpChannel.cs" />
     <Compile Include="TcpIp\TcpClient.cs" />
     <Compile Include="TcpIp\TcpZkEndPoint.cs" />
@@ -186,9 +115,17 @@
     <EmbeddedResource Include="_license.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="ServiceWire.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>ServiceWire</id>
-    <version>3.0.4</version>
+    <version>4.0.0</version>
     <authors>Tyler Jensen</authors>
     <owners>Tyler Jensen</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
@@ -11,13 +11,16 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
 	<summary>ServiceWire is a fast and easy RPC library that now supports optional zero knowledge authentication and strong encryption.</summary>
     <description>ServiceWire is a very fast and light weight service host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP. And with the release of 2.0.0, ServiceWire now supports optional use of Zero Knowledge authentication with a fast variation of Secure Remote Password Protocol and strong Rijndael encryption of data across the wire via TCP without the need for public keys going across the wire.</description>
-    <releaseNotes>v3.0+ contains BREAKING CHANGES. See project home page for details. 3.0.4 contains a minor fix to logging for net35.</releaseNotes>
+    <releaseNotes>BREAKING CHANGES. Switched to JSON.Net for improved serialization support. This version cannot interact with previsou versions.</releaseNotes>
     <copyright>Copyright 2013-2014 Tyler Jensen.</copyright>
     <tags>WCF Services Host Client NamedPipes TCP Messaging RPC Interception Zero Knowledge Secure Remote Password Protocol Serialization</tags>
 	<dependencies>
-		<group targetFramework="net40" />
+    <group targetFramework="net40">
+      <dependency id="Newtonsoft.Json" version="6.0.6" />
+    </group>  
 		<group targetFramework="net35">
-			<dependency id="TaskParallelLibrary" version="1.0.2856.0" />
+      <dependency id="Newtonsoft.Json" version="6.0.6" />
+      <dependency id="TaskParallelLibrary" version="1.0.2856.0" />
 		</group>
 	</dependencies>
   </metadata>

@@ -38,6 +38,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".solutionItems", ".solution
 		ServiceWire.snk = ServiceWire.snk
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestCommon_Net35", "Tests\ServiceWireTestCommon_Net35\ServiceWireTestCommon_Net35.csproj", "{BFB84581-0DA2-4937-9C52-47A32BEDAA03}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +78,10 @@ Global
 		{03F461B0-ADFB-4570-A1AD-21B6D4B59066}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03F461B0-ADFB-4570-A1AD-21B6D4B59066}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03F461B0-ADFB-4570-A1AD-21B6D4B59066}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFB84581-0DA2-4937-9C52-47A32BEDAA03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFB84581-0DA2-4937-9C52-47A32BEDAA03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFB84581-0DA2-4937-9C52-47A32BEDAA03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFB84581-0DA2-4937-9C52-47A32BEDAA03}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -89,5 +95,6 @@ Global
 		{0DF0ECE8-6ACA-442B-BBA6-6367F9B8D296} = {FC6B546C-85D6-4C37-ABB4-E02903AFB564}
 		{4E07F3FB-F17C-4FF8-AA06-59ECE4956F6F} = {B4BD92DB-D725-4D20-8134-B610CA83F842}
 		{03F461B0-ADFB-4570-A1AD-21B6D4B59066} = {FC6B546C-85D6-4C37-ABB4-E02903AFB564}
+		{BFB84581-0DA2-4937-9C52-47A32BEDAA03} = {B4BD92DB-D725-4D20-8134-B610CA83F842}
 	EndGlobalSection
 EndGlobal

@@ -61,12 +61,12 @@ namespace ServiceWire
                                 if (total > compressionThreshold)
                                 {
                                     typeByte = ParameterTypes.Unknown;
-                                    dataBytes = array.ToSerializedBytes().ToGZipBytes();
+                                    dataBytes = array.ToSerializedBytes(type.ToConfigName()).ToGZipBytes();
                                 }
                             }
                             break;
                         case ParameterTypes.Unknown:
-                            dataBytes = parameter.ToSerializedBytes(); ;
+                            dataBytes = parameter.ToSerializedBytes(type.ToConfigName());
                             if (useCompression && dataBytes.Length > compressionThreshold)
                             {
                                 typeByte = ParameterTypes.CompressedUnknown;
@@ -226,7 +226,7 @@ namespace ServiceWire
                         case ParameterTypes.Unknown:
                         case ParameterTypes.CompressedUnknown:
                             //write type name as string
-                            writer.Write(type.FullName);
+                            writer.Write(type.ToConfigName());
                             //write length of data
                             writer.Write(dataBytes.Length);
                             //write data
@@ -420,14 +420,14 @@ namespace ServiceWire
                             break;
 
                         case ParameterTypes.Unknown:
-                            var typeFullName = reader.ReadString();
+                            var typeConfigName = reader.ReadString();
                             var bytes = reader.ReadBytes(reader.ReadInt32());
-                            parameters[i] = bytes.ToDeserializedObject(typeFullName);
+                            parameters[i] = bytes.ToDeserializedObject(typeConfigName);
                             break;
                         case ParameterTypes.CompressedUnknown:
-                            var cuTypeFullName = reader.ReadString();
+                            var cuTypeConfigName = reader.ReadString();
                             var cuBytes = reader.ReadBytes(reader.ReadInt32()).FromGZipBytes();
-                            parameters[i] = cuBytes.ToDeserializedObject(cuTypeFullName);
+                            parameters[i] = cuBytes.ToDeserializedObject(cuTypeConfigName);
                             break;
                         default:
                             throw new Exception(string.Format("Unknown type byte '0x{0:X}'", typeByte));

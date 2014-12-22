@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using ServiceWire.SvcStkTxt;
 using ServiceWire.ZeroKnowledge;
 
 namespace ServiceWire
