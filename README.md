@@ -1,11 +1,11 @@
 ServiceWire
 ===========
 
-### Breaking Changes in version 3.0.0.0
+### Breaking Changes in version 4.0.1
 
-1. Added SvcStkTxt from ServiceMq to ServiceWire to eliminate BinaryFormatter and required use of Serializable attribute. See license for source and attribution details.
+1. Switched ServiceWire (and ServiceMq) to Newtonsoft.Json for serialization. Eliminates use of BinaryFormatter and its required Serializable attribute. Also eliminates ServiceStack.Text 3 dependency which has problems serializing structs.
 
-2. Relaxed string assembly version matching to allow additive changes without breaking the client or requiring an immediate client update.
+2. Relaxed assembly version matching to allow additive changes without breaking the client or requiring an immediate client update.
 
 3. Strong name added to allow the library to be used by strong named applications and libraries.
 
