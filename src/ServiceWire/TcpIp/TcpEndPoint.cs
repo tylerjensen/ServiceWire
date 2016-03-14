@@ -1,16 +1,39 @@
-﻿using System.Net;
+﻿#region File Creator
+
+// This File Created By Ersin Tarhan
+// For Project : ServiceWire - ServiceWire
+// On 2016 03 14 04:36
+
+#endregion
+
+
+#region Usings
+
+using System.Net;
+
+#endregion
+
 
 namespace ServiceWire.TcpIp
 {
     public class TcpEndPoint
     {
+        #region Constractor
+
+        public TcpEndPoint(IPEndPoint endPoint,int connectTimeOutMs=2500)
+        {
+            EndPoint=endPoint;
+            ConnectTimeOutMs=connectTimeOutMs;
+        }
+
+        #endregion
+
+
+        #region  Proporties
+
         public IPEndPoint EndPoint { get; set; }
         public int ConnectTimeOutMs { get; set; }
 
-        public TcpEndPoint(IPEndPoint endPoint, int connectTimeOutMs = 2500)
-        {
-            this.EndPoint = endPoint;
-            this.ConnectTimeOutMs = connectTimeOutMs;
-        }
+        #endregion
     }
 }

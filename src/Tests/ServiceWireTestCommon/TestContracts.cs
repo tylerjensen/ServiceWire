@@ -1,32 +1,81 @@
-﻿using ServiceWire.NamedPipes;
-using ServiceWire.TcpIp;
+﻿#region File Creator
+
+// This File Created By Ersin Tarhan
+// For Project : ServiceWire - ServiceWireTestCommon
+// On 2016 03 14 04:36
+
+#endregion
+
+
+#region Usings
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
+
+using ServiceWire.NamedPipes;
+using ServiceWire.TcpIp;
+
+#endregion
+
 
 namespace ServiceWireTestCommon
 {
     public interface IValTypes
     {
+        #region Methods
+
+
+        #region Public Methods
+
         decimal GetDecimal(decimal input);
+
         bool OutDecimal(decimal val);
+
+        #endregion
+
+
+        #endregion
     }
-    
+
     public interface INetTester
     {
-        Guid GetId(string source, double weight, int quantity, DateTime dt);
-        TestResponse Get(Guid id, string label, double weight, out long quantity);
-        long TestLong(out long id1, out long id2);
+        #region Methods
+
+
+        #region Public Methods
+
+        Guid GetId(string source,double weight,int quantity,DateTime dt);
+
+        TestResponse Get(Guid id,string label,double weight,out long quantity);
+
+        long TestLong(out long id1,out long id2);
+
         List<string> GetItems(Guid id);
+
+        #endregion
+
+
+        #endregion
     }
 
     public interface IMyTester
     {
-        Guid GetId(string source, double weight, int quantity);
-        TestResponse Get(Guid id, string label, double weight, out int quantity);
-        List<string> GetItems(Guid id, int[] vals);
+        #region Methods
+
+
+        #region Public Methods
+
+        Guid GetId(string source,double weight,int quantity);
+
+        TestResponse Get(Guid id,string label,double weight,out int quantity);
+
+        List<string> GetItems(Guid id,int[] vals);
+
+        #endregion
+
+
+        #endregion
     }
 
     public struct TestResponse
@@ -36,24 +85,34 @@ namespace ServiceWireTestCommon
         public long Quantity { get; set; }
     }
 
-    public class NetTcpTesterProxy : TcpClient<INetTester>, INetTester
+    public class NetTcpTesterProxy:TcpClient<INetTester>,INetTester
     {
-        public NetTcpTesterProxy(TcpEndPoint endpoint) : base(endpoint)
+        #region Constractor
+
+        public NetTcpTesterProxy(TcpEndPoint endpoint):base(endpoint)
         {
         }
 
-        public NetTcpTesterProxy(IPEndPoint endpoint) : base(endpoint)
+        public NetTcpTesterProxy(IPEndPoint endpoint):base(endpoint)
         {
         }
 
-        public Guid GetId(string source, double weight, int quantity, DateTime dt)
+        #endregion
+
+
+        #region Methods
+
+
+        #region Public Methods
+
+        public Guid GetId(string source,double weight,int quantity,DateTime dt)
         {
-            return Proxy.GetId(source, weight, quantity, dt);
+            return Proxy.GetId(source,weight,quantity,dt);
         }
 
-        public TestResponse Get(Guid id, string label, double weight, out long quantity)
+        public TestResponse Get(Guid id,string label,double weight,out long quantity)
         {
-            return Proxy.Get(id, label, weight, out quantity);
+            return Proxy.Get(id,label,weight,out quantity);
         }
 
         public List<string> GetItems(Guid id)
@@ -61,28 +120,43 @@ namespace ServiceWireTestCommon
             return Proxy.GetItems(id);
         }
 
-        public long TestLong(out long id1, out long id2)
+        public long TestLong(out long id1,out long id2)
         {
-            id1 = 23;
-            id2 = 24;
+            id1=23;
+            id2=24;
             return 25;
         }
+
+        #endregion
+
+
+        #endregion
     }
 
-    public class NetNpTesterProxy : NpClient<INetTester>, INetTester
+    public class NetNpTesterProxy:NpClient<INetTester>,INetTester
     {
-        public NetNpTesterProxy(NpEndPoint npAddress) : base(npAddress)
+        #region Constractor
+
+        public NetNpTesterProxy(NpEndPoint npAddress):base(npAddress)
         {
         }
 
-        public Guid GetId(string source, double weight, int quantity, DateTime dt)
+        #endregion
+
+
+        #region Methods
+
+
+        #region Public Methods
+
+        public Guid GetId(string source,double weight,int quantity,DateTime dt)
         {
-            return Proxy.GetId(source, weight, quantity, dt);
+            return Proxy.GetId(source,weight,quantity,dt);
         }
 
-        public TestResponse Get(Guid id, string label, double weight, out long quantity)
+        public TestResponse Get(Guid id,string label,double weight,out long quantity)
         {
-            return Proxy.Get(id, label, weight, out quantity);
+            return Proxy.Get(id,label,weight,out quantity);
         }
 
         public List<string> GetItems(Guid id)
@@ -90,55 +164,88 @@ namespace ServiceWireTestCommon
             return Proxy.GetItems(id);
         }
 
-        public long TestLong(out long id1, out long id2)
+        public long TestLong(out long id1,out long id2)
         {
-            return Proxy.TestLong(out id1, out id2);
+            return Proxy.TestLong(out id1,out id2);
         }
+
+        #endregion
+
+
+        #endregion
     }
 
-    public class NetTcpMyTesterProxy : TcpClient<IMyTester>, IMyTester
+    public class NetTcpMyTesterProxy:TcpClient<IMyTester>,IMyTester
     {
-        public NetTcpMyTesterProxy(IPEndPoint endpoint)
-            : base(endpoint)
+        #region Constractor
+
+        public NetTcpMyTesterProxy(IPEndPoint endpoint):base(endpoint)
         {
         }
 
-        public Guid GetId(string source, double weight, int quantity)
+        #endregion
+
+
+        #region Methods
+
+
+        #region Public Methods
+
+        public Guid GetId(string source,double weight,int quantity)
         {
-            return Proxy.GetId(source, weight, quantity);
+            return Proxy.GetId(source,weight,quantity);
         }
 
-        public TestResponse Get(Guid id, string label, double weight, out int quantity)
+        public TestResponse Get(Guid id,string label,double weight,out int quantity)
         {
-            return Proxy.Get(id, label, weight, out quantity);
+            return Proxy.Get(id,label,weight,out quantity);
         }
 
-        public List<string> GetItems(Guid id, int[] vals)
+        public List<string> GetItems(Guid id,int[] vals)
         {
-            return Proxy.GetItems(id, vals);
+            return Proxy.GetItems(id,vals);
         }
+
+        #endregion
+
+
+        #endregion
     }
 
-    public class NetNpMyTesterProxy : NpClient<IMyTester>, IMyTester
+    public class NetNpMyTesterProxy:NpClient<IMyTester>,IMyTester
     {
-        public NetNpMyTesterProxy(NpEndPoint npAddress)
-            : base(npAddress)
+        #region Constractor
+
+        public NetNpMyTesterProxy(NpEndPoint npAddress):base(npAddress)
         {
         }
 
-        public Guid GetId(string source, double weight, int quantity)
+        #endregion
+
+
+        #region Methods
+
+
+        #region Public Methods
+
+        public Guid GetId(string source,double weight,int quantity)
         {
-            return Proxy.GetId(source, weight, quantity);
+            return Proxy.GetId(source,weight,quantity);
         }
 
-        public TestResponse Get(Guid id, string label, double weight, out int quantity)
+        public TestResponse Get(Guid id,string label,double weight,out int quantity)
         {
-            return Proxy.Get(id, label, weight, out quantity);
+            return Proxy.Get(id,label,weight,out quantity);
         }
 
-        public List<string> GetItems(Guid id, int[] vals)
+        public List<string> GetItems(Guid id,int[] vals)
         {
-            return Proxy.GetItems(id, vals);
+            return Proxy.GetItems(id,vals);
         }
+
+        #endregion
+
+
+        #endregion
     }
 }

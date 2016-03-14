@@ -1,128 +1,165 @@
-﻿using System.Text.RegularExpressions;
-using Newtonsoft.Json;
+﻿#region File Creator
+
+// This File Created By Ersin Tarhan
+// For Project : ServiceWire - ServiceWire
+// On 2016 03 14 04:36
+
+#endregion
+
+
+#region Usings
+
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
+
+using Newtonsoft.Json;
+
+#endregion
+
 
 namespace ServiceWire
 {
     public static class NetExtensions
     {
-        public static string ToConfigName(this Type t)
+        public static string ToConfigName(this Type pT)
         {
-            var name = t.AssemblyQualifiedName;
-            name = Regex.Replace(name, @", Version=\d+.\d+.\d+.\d+", string.Empty);
-            name = Regex.Replace(name, @", Culture=\w+", string.Empty);
-            name = Regex.Replace(name, @", PublicKeyToken=\w+", string.Empty);
-            return name;
+            var mName=pT.AssemblyQualifiedName;
+            if(mName==null)
+            {
+                throw new ArgumentNullException(nameof(mName));
+            }
+            mName=Regex.Replace(mName,@", Version=\d+.\d+.\d+.\d+",string.Empty);
+            mName=Regex.Replace(mName,@", Culture=\w+",string.Empty);
+            mName=Regex.Replace(mName,@", PublicKeyToken=\w+",string.Empty);
+            return mName;
+
             //return t.FullName + ", " + t.Assembly.GetName().Name;
         }
 
-        public static Type ToType(this string configName)
+        public static Type ToType(this string pConfigName)
         {
             try
             {
-                return Type.GetType(configName);
+                return Type.GetType(pConfigName);
+
                 //var parts = (from n in configName.Split(',') select n.Trim()).ToArray();
                 //var assembly = Assembly.Load(new AssemblyName(parts[1]));
                 //var type = assembly.GetType(parts[0]);
                 //return type;
             }
-            catch (Exception)
+            catch(Exception)
             {
+                // ignored
             }
             return null;
         }
 
-        private static JsonSerializerSettings settings = new JsonSerializerSettings
-        {
-            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
-        };
+        private static readonly JsonSerializerSettings settings=new JsonSerializerSettings {ReferenceLoopHandling=ReferenceLoopHandling.Ignore};
 
         public static byte[] ToSerializedBytes<T>(this T obj)
         {
-            if (null == obj) return null;
-            var json = JsonConvert.SerializeObject(obj, settings);
-            return Encoding.UTF8.GetBytes(json);
+            if(null==obj)
+            {
+                return null;
+            }
+            var mJson=JsonConvert.SerializeObject(obj,settings);
+            return Encoding.UTF8.GetBytes(mJson);
         }
 
-        public static byte[] ToSerializedBytes(this object obj, string typeConfigName)
+        public static byte[] ToSerializedBytes(this object pObj,string typeConfigName)
         {
-            if (null == obj) return null;
-            var type = typeConfigName.ToType();
-            var json = JsonConvert.SerializeObject(obj, type, settings);
+            if(null==pObj)
+            {
+                return null;
+            }
+            var type=typeConfigName.ToType();
+            var json=JsonConvert.SerializeObject(pObj,type,settings);
             return Encoding.UTF8.GetBytes(json);
         }
 
         public static T ToDeserializedObject<T>(this byte[] bytes)
         {
-            if (null == bytes || bytes.Length == 0) return default(T);
-            return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(bytes), settings);
+            if(null==bytes||bytes.Length==0)
+            {
+                return default(T);
+            }
+            return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(bytes),settings);
         }
 
-        public static object ToDeserializedObject(this byte[] bytes, string typeConfigName)
+        public static object ToDeserializedObject(this byte[] bytes,string typeConfigName)
         {
-            if (null == typeConfigName || null == bytes || bytes.Length == 0) return null;
-            var type = typeConfigName.ToType();
-            return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(bytes), type, settings);
+            if(null==typeConfigName||null==bytes||bytes.Length==0)
+            {
+                return null;
+            }
+            var mType=typeConfigName.ToType();
+            return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(bytes),mType,settings);
         }
 
         public static string ToSerializedBase64String<T>(this T obj)
         {
-            if (null == obj) return null;
-            var bytes = obj.ToSerializedBytes();
-            return Convert.ToBase64String(bytes);
+            if(null==obj)
+            {
+                return null;
+            }
+            var mBytes=obj.ToSerializedBytes();
+            return Convert.ToBase64String(mBytes);
         }
 
         public static T ToDeserializedObjectFromBase64String<T>(this string base64String)
         {
             try
             {
-                var bytes = Convert.FromBase64String(base64String);
+                var bytes=Convert.FromBase64String(base64String);
                 return bytes.ToDeserializedObject<T>();
             }
-            catch { }
+            catch
+            {
+            }
             return default(T);
         }
 
         /// <summary>
-        /// Returns true if Type inherits from baseType.
+        ///     Returns true if Type inherits from baseType.
         /// </summary>
-        /// <param name="t">The Type extended by this method.</param>
-        /// <param name="baseType">The base type to find in the inheritance hierarchy.</param>
+        /// <param name="pT">The Type extended by this method.</param>
+        /// <param name="pBaseType">The base type to find in the inheritance hierarchy.</param>
         /// <returns>True if baseType is found. False if not.</returns>
-        public static bool InheritsFrom(this Type t, Type baseType)
+        public static bool InheritsFrom(this Type pT,Type pBaseType)
         {
-            Type cur = t.BaseType;
-            while (cur != null)
+            var mCur=pT.BaseType;
+            while(mCur!=null)
             {
-                if (cur.Equals(baseType)) return true;
-                cur = cur.BaseType;
+                if(mCur==pBaseType)
+                {
+                    return true;
+                }
+                mCur=mCur.BaseType;
             }
             return false;
         }
 
         public static object GetDefault(this Type t)
         {
-            var tm = new DefaultTypeMaker();
+            var tm=new DefaultTypeMaker();
             return tm.GetDefault(t);
         }
 
         public static byte[] ToGZipBytes(this byte[] data)
         {
-            using (var msCompressed = new MemoryStream())
+            using(var mSCompressed=new MemoryStream())
             {
-                using (var msObj = new MemoryStream(data))
+                using(var msObj=new MemoryStream(data))
                 {
-                    using (GZipStream gzs = new GZipStream(msCompressed, CompressionMode.Compress))
+                    using(var gzs=new GZipStream(mSCompressed,CompressionMode.Compress))
                     {
                         msObj.CopyTo(gzs);
                     }
                 }
-                return msCompressed.ToArray();
+                return mSCompressed.ToArray();
             }
         }
 
@@ -141,21 +178,23 @@ namespace ServiceWire
 
         public static byte[] FromGZipBytes(this byte[] compressedBytes)
         {
-            using (var msObj = new MemoryStream())
+            using(var msObj=new MemoryStream())
             {
-                using (var msCompressed = new MemoryStream(compressedBytes))
-                using (var gzs = new GZipStream(msCompressed, CompressionMode.Decompress))
+                using(var msCompressed=new MemoryStream(compressedBytes))
                 {
-                    gzs.CopyTo(msObj);
+                    using(var mGzs=new GZipStream(msCompressed,CompressionMode.Decompress))
+                    {
+                        mGzs.CopyTo(msObj);
+                    }
                 }
-                msObj.Seek(0, SeekOrigin.Begin);
+                msObj.Seek(0,SeekOrigin.Begin);
                 return msObj.ToArray();
             }
         }
 
         public static string Flatten(this string src)
         {
-            return src.Replace("\r", ":").Replace("\n", ":");
+            return src.Replace("\r",":").Replace("\n",":"); // Not L10N
         }
     }
 }

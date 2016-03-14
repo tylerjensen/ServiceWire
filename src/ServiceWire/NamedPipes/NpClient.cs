@@ -1,29 +1,53 @@
+#region File Creator
+
+// This File Created By Ersin Tarhan
+// For Project : ServiceWire - ServiceWire
+// On 2016 03 14 04:36
+
+#endregion
+
+
+#region Usings
+
 using System;
+
+#endregion
+
 
 namespace ServiceWire.NamedPipes
 {
-    public class NpClient<TInterface> : IDisposable where TInterface : class
+    public class NpClient<TInterface>:IDisposable where TInterface : class
     {
-        private TInterface _proxy;
-
-        public TInterface Proxy { get { return _proxy; } }
-
-        public bool IsConnected
-        {
-            get
-            {
-                return (_proxy != null) && (_proxy as NpChannel).IsConnected;
-            }
-        }
+        #region Constractor
 
         public NpClient(NpEndPoint npAddress)
         {
-            _proxy = NpProxy.CreateProxy<TInterface>(npAddress);
+            Proxy=NpProxy.CreateProxy<TInterface>(npAddress);
         }
+
+        #endregion
+
+
+        #region  Proporties
+
+        public TInterface Proxy { get; }
+
+        #endregion
+
+
+        #region  Others
+
+        public bool IsConnected
+        {
+            get { return (Proxy!=null)&&(Proxy as NpChannel).IsConnected; }
+        }
+
+        #endregion
+
 
         #region IDisposable Members
 
-        private bool _disposed = false;
+        private bool _disposed;
 
         public void Dispose()
         {
@@ -34,12 +58,12 @@ namespace ServiceWire.NamedPipes
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!_disposed)
+            if(!_disposed)
             {
-                _disposed = true; //prevent second call to Dispose
-                if (disposing)
+                _disposed=true; //prevent second call to Dispose
+                if(disposing)
                 {
-                    (_proxy as NpChannel).Dispose();
+                    (Proxy as NpChannel).Dispose();
                 }
             }
         }
