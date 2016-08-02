@@ -187,12 +187,12 @@ namespace ServiceWire
             //declare and assign string literal
             LocalBuilder metaLB = mIL.DeclareLocal(typeof(string));
             metaLB.SetLocalSymInfo("metaData", 1, 2);
-            mIL.Emit(OpCodes.Dup);
+            //mIL.Emit(OpCodes.Dup);  //causes InvalidProgramException - Common Language Runtime detected an invalid program.
             mIL.Emit(OpCodes.Ldstr, metadata);
             mIL.Emit(OpCodes.Stloc_1); //load into metaData local variable
 
             //load metadata into first param for invokeMethodMI
-            mIL.Emit(OpCodes.Dup);
+            //mIL.Emit(OpCodes.Dup);  //causes InvalidProgramException - Common Language Runtime detected an invalid program.
             mIL.Emit(OpCodes.Ldloc_1);
 
             mIL.Emit(OpCodes.Ldc_I4, nofArgs); //push the number of arguments
