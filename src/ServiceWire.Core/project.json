@@ -1,0 +1,50 @@
+{
+  "title": "ServiceWire",
+  "copyright": "Tyler Jensen 2013-2016",
+  "description": "ServiceWire is a very fast and light weight service host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP.",
+  "version": "5.0.0.0",
+
+  "dependencies": {
+    "NETStandard.Library": "1.6.0",
+    "Newtonsoft.Json": "9.0.1"
+  },
+
+  "frameworks": {
+    "netstandard1.6": {
+      "imports": "dnxcore50",
+      "dependencies": {
+        "System.IO.Pipes": "4.0.0",
+        "System.Reflection.Emit": "4.0.1",
+        "System.Threading.Thread": "4.0.0"
+      }
+    },
+    "net45": {
+      "dependencies": {
+        "System.Reflection.Emit": "4.0.1"
+      },
+      "frameworkAssemblies": {
+        "System.Management": "4.0.0.0"
+      }
+    },
+    "net461": {
+      "dependencies": {
+        "System.IO.Pipes": "4.0.0",
+        "System.Reflection.Emit": "4.0.1",
+        "System.Threading.Thread": "4.0.0"
+      },
+      "frameworkAssemblies": {
+        "System.Management": "4.0.0.0"
+      }
+    },
+    "net40": {
+      "frameworkAssemblies": {
+        "System.Management": "4.0.0.0"
+      }
+    },
+    "net35": {
+      "dependencies": {
+        "TaskParallelLibrary": "1.0.2856"
+      }
+    }
+  }
+}
