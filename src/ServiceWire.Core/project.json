@@ -13,7 +13,6 @@
     "netstandard1.6": {
       "imports": "dnxcore50",
       "dependencies": {
-        "System.IO.Pipes": "4.0.0",
         "System.Reflection.Emit": "4.0.1",
         "System.Threading.Thread": "4.0.0"
       }
