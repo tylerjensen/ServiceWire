@@ -1,16 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWire", "ServiceWire\ServiceWire.csproj", "{4F36B450-A225-4D13-9786-8B84AC25A304}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{B4E92D75-EC33-47A0-98B4-F7CB15CC1ECA}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B4BD92DB-D725-4D20-8134-B610CA83F842}"
 EndProject
@@ -34,11 +27,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTests_Net35", "T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".solutionItems", ".solutionItems", "{C6A9C54E-EB6C-403A-AC34-A2E0F4674B61}"
 	ProjectSection(SolutionItems) = preProject
+		NuGet.config = NuGet.config
+		..\README.md = ..\README.md
 		ServiceWire.dll.nuspec = ServiceWire.dll.nuspec
 		ServiceWire.snk = ServiceWire.snk
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestCommon_Net35", "Tests\ServiceWireTestCommon_Net35\ServiceWireTestCommon_Net35.csproj", "{BFB84581-0DA2-4937-9C52-47A32BEDAA03}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWire_40-client", "ServiceWire_40-client\ServiceWire_40-client.csproj", "{0A183A33-1FF1-4920-B70C-DE7F627FF217}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -82,6 +79,10 @@ Global
 		{BFB84581-0DA2-4937-9C52-47A32BEDAA03}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFB84581-0DA2-4937-9C52-47A32BEDAA03}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFB84581-0DA2-4937-9C52-47A32BEDAA03}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A183A33-1FF1-4920-B70C-DE7F627FF217}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A183A33-1FF1-4920-B70C-DE7F627FF217}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A183A33-1FF1-4920-B70C-DE7F627FF217}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A183A33-1FF1-4920-B70C-DE7F627FF217}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
