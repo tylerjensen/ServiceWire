@@ -1,1 +1,15 @@
 #:D:\Code\GitHub\ServiceWire\src\ServiceWire.Core\ServiceWire.Core.xproj
+#:D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestHost\CoreTestHost.xproj
+D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestHost\CoreTestHost.xproj|D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestCommon\CoreTestCommon.xproj
+D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestHost\CoreTestHost.xproj|D:\Code\GitHub\ServiceWire\src\ServiceWire.Core\ServiceWire.Core.xproj
+D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestCommon\CoreTestCommon.xproj|D:\Code\GitHub\ServiceWire\src\ServiceWire.Core\ServiceWire.Core.xproj
+#:D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestClient1\CoreTestClient1.xproj
+D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestClient1\CoreTestClient1.xproj|D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestCommon\CoreTestCommon.xproj
+D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestClient1\CoreTestClient1.xproj|D:\Code\GitHub\ServiceWire\src\ServiceWire.Core\ServiceWire.Core.xproj
+D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestCommon\CoreTestCommon.xproj|D:\Code\GitHub\ServiceWire\src\ServiceWire.Core\ServiceWire.Core.xproj
+#:D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestClient2\CoreTestClient2.xproj
+D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestClient2\CoreTestClient2.xproj|D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestCommon\CoreTestCommon.xproj
+D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestClient2\CoreTestClient2.xproj|D:\Code\GitHub\ServiceWire\src\ServiceWire.Core\ServiceWire.Core.xproj
+D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestCommon\CoreTestCommon.xproj|D:\Code\GitHub\ServiceWire\src\ServiceWire.Core\ServiceWire.Core.xproj
+#:D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestCommon\CoreTestCommon.xproj
+D:\Code\GitHub\ServiceWire\src\Tests\Core\CoreTestCommon\CoreTestCommon.xproj|D:\Code\GitHub\ServiceWire\src\ServiceWire.Core\ServiceWire.Core.xproj
