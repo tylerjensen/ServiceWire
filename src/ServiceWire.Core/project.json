@@ -1,8 +1,19 @@
 {
+  "name": "ServiceWire",
   "title": "ServiceWire",
-  "copyright": "Tyler Jensen 2013-2016",
-  "description": "ServiceWire is a very fast and light weight service host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP.",
-  "version": "5.0.0.0",
+  "authors": [ "Tyler Jensen" ],
+  "description": "ServiceWire is a very fast and light weight service host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP. And with the release of 2.0.0, ServiceWire now supports optional use of Zero Knowledge authentication with a fast variation of Secure Remote Password Protocol and strong Rijndael encryption of data across the wire via TCP without the need for public keys going across the wire.",
+  "projectUrl": "https://github.com/tylerjensen/ServiceWire",
+  "packOptions": {
+    "iconUrl": "http://www.tsjensen.com/blog/image.axd?picture=2014/11/swlogo_sm.png",
+    "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0",
+    "copyright": "Tyler Jensen 2013-2016",
+    "owners": [ "Tyler Jense" ],
+    "summary": "ServiceWire is a fast and easy RPC library that now supports optional zero knowledge authentication and strong encryption.",
+    "releaseNotes": "BREAKING CHANGES: Ported to .NET Core netstandard1.6. Removed NamedPipes for netstandard1.6. Tested on Windows and Linux.",
+    "tags": [ "WCF", "Services", "Host", "Client", "NamedPipes", "TCP", "Messaging", "RPC", "Interception", "Zero Knowledge", "Secure Remote Password Protocol", "Serialization" ]
+  },
+  "version": "5.0.0-*",
 
   "dependencies": {
     "NETStandard.Library": "1.6.0",
