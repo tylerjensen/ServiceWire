@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DemoHost</RootNamespace>
     <AssemblyName>DemoHost</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
@@ -54,6 +54,10 @@
     <ProjectReference Include="..\..\ServiceWire.Core\ServiceWire.Core.xproj">
       <Project>{a7eec6e1-3d01-4365-b0f8-f26c637e773e}</Project>
       <Name>ServiceWire.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\ServiceWire_40-client\ServiceWire_40-client.csproj">
+      <Project>{0A183A33-1FF1-4920-B70C-DE7F627FF217}</Project>
+      <Name>ServiceWire_40-client</Name>
     </ProjectReference>
     <ProjectReference Include="..\DemoCommon\DemoCommon.csproj">
       <Project>{d871ab84-61bc-474b-80dd-2b75e149cc90}</Project>

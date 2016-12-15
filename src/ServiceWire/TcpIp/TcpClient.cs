@@ -24,6 +24,15 @@ namespace ServiceWire.TcpIp
             _proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
         }
 
+        public void InjectLoggerStats(ILog logger, IStats stats)
+        {
+            if (_proxy != null)
+            {
+                var channel = _proxy as Channel;
+                if (channel != null) channel.InjectLoggerStats(logger, stats);
+            };
+        }
+
         public bool IsConnected
         {
             get

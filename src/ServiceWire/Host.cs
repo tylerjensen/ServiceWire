@@ -269,7 +269,7 @@ namespace ServiceWire
                         switch (messageType)
                         {
                             case MessageType.ZkInitiate:
-                                zkSession = new ZkSession(_zkRepository);
+                                zkSession = new ZkSession(_zkRepository, _log, _stats);
                                 doContinue = zkSession.ProcessZkInitiation(binReader, binWriter, sw);
                                 break;
                             case MessageType.ZkProof:
@@ -340,9 +340,11 @@ namespace ServiceWire
                     var syncBytes = instance.ServiceSyncInfo.ToSerializedBytes();
                     if (_requireZk)
                     {
+                        _log.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(syncBytes));
                         var encData = session.Crypto.Encrypt(syncBytes);
                         binWriter.Write(encData.Length);
                         binWriter.Write(encData);
+                        _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
                     }
                     else
                     {
@@ -387,7 +389,9 @@ namespace ServiceWire
                     {
                         var len = binReader.ReadInt32();
                         var encData = binReader.ReadBytes(len);
+                        _log.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
                         var data = session.Crypto.Decrypt(encData);
+                        _log.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
                         using (var ms = new MemoryStream(data))
                         using (var br = new BinaryReader(ms))
                         {
@@ -436,7 +440,9 @@ namespace ServiceWire
                                 returnParameters);
                             data = ms.ToArray();
                         }
+                        _log.Debug("Unencrypted data sent server: {0}", Convert.ToBase64String(data));
                         var encData = session.Crypto.Encrypt(data);
+                        _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
                         binWriter.Write(encData.Length);
                         binWriter.Write(encData);
                     }

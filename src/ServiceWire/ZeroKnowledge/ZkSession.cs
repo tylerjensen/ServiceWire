@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace ServiceWire.ZeroKnowledge
@@ -10,6 +11,9 @@ namespace ServiceWire.ZeroKnowledge
         private ZkPasswordHash _zkPasswordHash = null;
         private ZkCrypto _zkCrypto = null;
 
+        private readonly ILog _logger;
+        private readonly IStats _stats;
+
         private string _username = null;
         private byte[] _aEphemeral = null;
         private byte[] _bEphemeral = null;
@@ -19,9 +23,11 @@ namespace ServiceWire.ZeroKnowledge
         private byte[] _clientSessionHash = null;
         private byte[] _serverSessionHash = null;
 
-        public ZkSession(IZkRepository respository)
+        public ZkSession(IZkRepository respository, ILog logger, IStats stats)
         {
             _repository = respository;
+            _logger = logger ?? new NullLogger();
+            _stats = stats ?? new NullStats();
         }
 
         public ZkCrypto Crypto { get { return _zkCrypto; } }
@@ -29,10 +35,12 @@ namespace ServiceWire.ZeroKnowledge
         public bool ProcessZkProof(BinaryReader binReader, BinaryWriter binWriter, Stopwatch sw)
         {
             _clientSessionHash = binReader.ReadBytes(32);
+            _logger.Debug("ZkProof client session hash received: {0}", Convert.ToBase64String(_clientSessionHash));
             var serverClientSessionHash = _zkProtocol.ClientCreateSessionHash(_username, _zkPasswordHash.Salt, 
                 _aEphemeral, _bEphemeral, _serverSessionKey);
             if (!_clientSessionHash.IsEqualTo(serverClientSessionHash))
             {
+                _logger.Debug("ZkProof session hash does not match. Authentication failed. Server session hash: {0}", Convert.ToBase64String(_serverSessionHash));
                 binWriter.Write(false);
                 return false;
             }
@@ -40,6 +48,7 @@ namespace ServiceWire.ZeroKnowledge
             _zkCrypto = new ZkCrypto(_serverSessionKey, _scramble);
             binWriter.Write(true);
             binWriter.Write(_serverSessionHash);
+            _logger.Debug("ZkProof session hash sent to client: {0}", Convert.ToBase64String(_serverSessionHash));
             return true;
         }
 
@@ -47,9 +56,12 @@ namespace ServiceWire.ZeroKnowledge
         {
             _username = binReader.ReadString();
             _aEphemeral = binReader.ReadBytes(32);
+            _logger.Debug("ZkInitiation client username received: {0}", _username);
+            _logger.Debug("ZkInitiation client Ephemeral received: {0}", Convert.ToBase64String(_aEphemeral));
             _zkPasswordHash = _repository.GetPasswordHashSet(_username);
             if (null == _zkPasswordHash)
             {
+                _logger.Debug("ZkInitiation client username not found. Authentication failed.");
                 binWriter.Write(false);
                 return false;
             }
@@ -61,9 +73,10 @@ namespace ServiceWire.ZeroKnowledge
 
             binWriter.Write(true);
             binWriter.Write(_zkPasswordHash.Salt);
+            _logger.Debug("ZkInitiation hash salt sent to client: {0}", Convert.ToBase64String(_zkPasswordHash.Salt));
             binWriter.Write(_bEphemeral);
+            _logger.Debug("ZkInitiation server Ephemeral sent to client: {0}", Convert.ToBase64String(_bEphemeral));
             return true;
         }
-
     }
 }

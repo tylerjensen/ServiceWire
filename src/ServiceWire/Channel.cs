@@ -6,6 +6,15 @@ namespace ServiceWire
     {
         protected Type _serviceType;
 
+        protected ILog _logger = new NullLogger();
+        protected IStats _stats = new NullStats();
+
+        public void InjectLoggerStats(ILog logger, IStats stats)
+        {
+            _logger = logger;
+            _stats = stats;
+        }
+
         /// <summary>
         /// Invokes the method with the specified parameters.
         /// </summary>

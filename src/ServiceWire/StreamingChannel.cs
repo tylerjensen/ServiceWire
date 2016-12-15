@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Security.Authentication;
 using ServiceWire.ZeroKnowledge;
+using System.Diagnostics;
 
 namespace ServiceWire
 {
@@ -33,6 +34,8 @@ namespace ServiceWire
         {
             if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
             {
+                var sw = Stopwatch.StartNew();
+                _logger.Debug("Zk authentiation started for: {0}, {1}", username, password);
                 //do zk protocol authentication
                 var sr = new ZkProtocol();
 
@@ -43,16 +46,22 @@ namespace ServiceWire
                 // send username and aClientEphemeral to server
                 _binWriter.Write((int)MessageType.ZkInitiate);
                 _binWriter.Write(username);
+                _logger.Debug("username sent to server: {0}", username);
+
                 _binWriter.Write(aClientEphemeral); //always 32 bytes
-                
+                _logger.Debug("ClientEphemeral (A) sent to server: {0}", Convert.ToBase64String(aClientEphemeral));
+
                 // get response from server
                 var userFound = _binReader.ReadBoolean();
                 if (!userFound)
                 {
+                    _logger.Debug("User not found. InvalidCredentialException thrown.");
                     throw new InvalidCredentialException("authentication failed");
                 }
                 var salt = _binReader.ReadBytes(32);
+                _logger.Debug("Salt received from server: {0}", Convert.ToBase64String(salt));
                 var bServerEphemeral = _binReader.ReadBytes(32);
+                _logger.Debug("ServerEphemeral (B) received from server: {0}", Convert.ToBase64String(bServerEphemeral));
 
                 // Step 3. Client and server calculate random scramble of ephemeral hash values exchanged.
                 var clientScramble = sr.CalculateRandomScramble(aClientEphemeral, bServerEphemeral);
@@ -68,10 +77,13 @@ namespace ServiceWire
                 _binWriter.Write((int)MessageType.ZkProof);
                 _binWriter.Write(clientSessionHash); //always 32 bytes
 
+                _logger.Debug("ClientSessionKey Hash sent to server: {0}", Convert.ToBase64String(clientSessionHash));
+
                 // get response
                 var serverVerified = _binReader.ReadBoolean();
                 if (!serverVerified)
                 {
+                    _logger.Debug("Server verification failed. InvalidCredentialException thrown.");
                     throw new InvalidCredentialException("authentication failed");
                 }
                 var serverSessionHash = _binReader.ReadBytes(32);
@@ -79,9 +91,14 @@ namespace ServiceWire
                     clientSessionHash, clientSessionKey);
                 if (!serverSessionHash.IsEqualTo(clientServerSessionHash))
                 {
+                    _logger.Debug("Server hash mismatch. InvalidCredentialException thrown. Has received: {0}", Convert.ToBase64String(serverSessionHash));
                     throw new InvalidCredentialException("authentication failed");
                 }
+                _logger.Debug("Server Hash match. Received from server: {0}", Convert.ToBase64String(serverSessionHash));
                 _zkCrypto = new ZkCrypto(clientSessionKey, clientScramble);
+                _logger.Debug("Zk authentiation completed successfully.");
+                sw.Stop();
+                _stats.Log("ZkAuthentication", sw.ElapsedMilliseconds);
             }
             
             if (!_syncInfoCache.TryGetValue(serviceType, out _syncInfo))
@@ -111,7 +128,9 @@ namespace ServiceWire
                 var bytes = _binReader.ReadBytes(len);
                 if (null != _zkCrypto)
                 {
+                    _logger.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(bytes));
                     bytes = _zkCrypto.Decrypt(bytes);
+                    _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(bytes));
                 }
                 _syncInfo = bytes.ToDeserializedObject<ServiceSyncInfo>();
                 _syncInfoCache.AddOrUpdate(serviceType, _syncInfo, (t, info) => _syncInfo);
@@ -186,9 +205,11 @@ namespace ServiceWire
                             parameters);
                         callData = ms.ToArray();
                     }
+                    _logger.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(callData));
                     var encData = _zkCrypto.Encrypt(callData);
                     _binWriter.Write(encData.Length);
                     _binWriter.Write(encData);
+                    _logger.Debug("Encrypted data sent to server: {0}", Convert.ToBase64String(encData));
                 }
                 else
                 {
@@ -212,7 +233,11 @@ namespace ServiceWire
                 {
                     var len = _binReader.ReadInt32();
                     var encData = _binReader.ReadBytes(len);
+
+                    _logger.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
                     var data = _zkCrypto.Decrypt(encData);
+                    _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
+
                     using (var ms = new MemoryStream(data))
                     using (var br = new BinaryReader(ms))
                     {
