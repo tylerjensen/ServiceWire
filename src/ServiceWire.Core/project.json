@@ -13,7 +13,7 @@
     "releaseNotes": "BREAKING CHANGES: Ported to .NET Core netstandard1.6. Removed NamedPipes for netstandard1.6. Tested on Windows and Linux.",
     "tags": [ "WCF", "Services", "Host", "Client", "NamedPipes", "TCP", "Messaging", "RPC", "Interception", "Zero Knowledge", "Secure Remote Password Protocol", "Serialization" ]
   },
-  "version": "5.0.0-*",
+  "version": "5.0.1-*",
 
   "dependencies": {
     "NETStandard.Library": "1.6.0",
@@ -31,6 +31,16 @@
     "net45": {
       "dependencies": {
         "System.Reflection.Emit": "4.0.1"
+      },
+      "frameworkAssemblies": {
+        "System.Management": "4.0.0.0"
+      }
+    },
+    "net462": {
+      "dependencies": {
+        "System.IO.Pipes": "4.0.0",
+        "System.Reflection.Emit": "4.0.1",
+        "System.Threading.Thread": "4.0.0"
       },
       "frameworkAssemblies": {
         "System.Management": "4.0.0.0"

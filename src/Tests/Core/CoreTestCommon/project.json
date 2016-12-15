@@ -3,7 +3,7 @@
 
   "dependencies": {
     "NETStandard.Library": "1.6.0",
-    "ServiceWire.Core": "5.0.0.0"
+    "ServiceWire.Core": "5.0.1-*"
   },
 
   "frameworks": {
