@@ -52,7 +52,9 @@ namespace ServiceWire.TcpIp
             _endPoint = endpoint;
             _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+#if !NETSTANDARD1_6
             _listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+#endif
         }
 
         /// <summary>
