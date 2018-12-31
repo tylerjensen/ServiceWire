@@ -186,9 +186,6 @@ namespace ServiceWire
             }
             //declare and assign string literal
             LocalBuilder metaLB = mIL.DeclareLocal(typeof(string));
-//#if !NETCOREAPP2_2
-//            metaLB.SetLocalSymInfo("metaData", 1, 2);
-//#endif
             //mIL.Emit(OpCodes.Dup);  //causes InvalidProgramException - Common Language Runtime detected an invalid program.
             mIL.Emit(OpCodes.Ldstr, metadata);
             mIL.Emit(OpCodes.Stloc_1); //load into metaData local variable

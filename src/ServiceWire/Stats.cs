@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-#if !NETCOREAPP2_2
+#if NET462
 using System.Management;
 #endif
 using System.Reflection;
@@ -27,7 +27,7 @@ namespace ServiceWire
             int rollMaxMegaBytes = 1024,
             bool useUtcTimeStamp = false)
         {
-#if !NETCOREAPP2_2
+#if NET462
             _logDirectory = statsDirectory ?? Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "logs");
 #else
             _logDirectory = statsDirectory ?? Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "logs");
@@ -129,7 +129,7 @@ namespace ServiceWire
 
         private MemoryDetail GetSystemMemory()
         {
-#if !NETCOREAPP2_2
+#if NET462
             var winQuery = new ObjectQuery(WinObjQuery);
             var searcher = new ManagementObjectSearcher(winQuery);
             foreach (ManagementObject item in searcher.Get())
