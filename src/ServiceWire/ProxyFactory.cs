@@ -60,10 +60,10 @@ namespace ServiceWire
         {
             AppDomain domain = Thread.GetDomain();
             // create a new assembly for the proxy
-            AssemblyBuilder assemblyBuilder = domain.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
+            AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
 
             // create a new module for the proxy
-            ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule(PROXY_MODULE, true);
+            ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule(PROXY_MODULE);
 
             // Set the class to be public and sealed
             TypeAttributes typeAttributes = TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed;
@@ -186,7 +186,9 @@ namespace ServiceWire
             }
             //declare and assign string literal
             LocalBuilder metaLB = mIL.DeclareLocal(typeof(string));
-            metaLB.SetLocalSymInfo("metaData", 1, 2);
+//#if !NETCOREAPP2_2
+//            metaLB.SetLocalSymInfo("metaData", 1, 2);
+//#endif
             //mIL.Emit(OpCodes.Dup);  //causes InvalidProgramException - Common Language Runtime detected an invalid program.
             mIL.Emit(OpCodes.Ldstr, metadata);
             mIL.Emit(OpCodes.Stloc_1); //load into metaData local variable

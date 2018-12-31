@@ -1,6 +1,19 @@
 ServiceWire
 ===========
 
+### Changes including some breaking changes in version 5.0.0
+
+1. Dropped strong named assembly.
+
+2. Support for NetStandard 2.0 and .NET Framework 4.62. Dropped support for .NET 3.5.
+
+3. Modified projects and NuGet package generation from Visual Studio 2017.
+
+4. Dropped separate projects used to build different targets.
+
+5. Converted test projects to XUnit with multiple targets to allow "dotnet test" run of all targets.
+
+
 ### Breaking Changes in version 4.0.1
 
 1. Switched ServiceWire (and ServiceMq) to Newtonsoft.Json for serialization. Eliminates use of BinaryFormatter and its required Serializable attribute. Also eliminates ServiceStack.Text 3 dependency which has problems serializing structs.

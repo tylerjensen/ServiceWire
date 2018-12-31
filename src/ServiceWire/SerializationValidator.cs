@@ -39,15 +39,9 @@ namespace ServiceWire
 
             if (nonSerializableTypes.Count > 0)
             {
-#if (!NET35)
                 var errorMessage =
                     string.Format("One or more types in {0} are not marked with the Serializable attribute: {1}",
                         type.FullName, string.Join(",", nonSerializableTypes));
-#else
-                var errorMessage =
-                    string.Format("One or more types in {0} are not marked with the Serializable attribute: {1}",
-                        type.FullName, string.Join(",", nonSerializableTypes.ToArray()));
-#endif
                 throw new SerializationException(errorMessage);
             }
         }

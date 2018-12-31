@@ -82,11 +82,7 @@ namespace ServiceWire
                 try
                 {
                     var fileName = GetFileName();
-#if (!NET35)
                     File.AppendAllLines(fileName, lines);
-#else
-                    File.AppendAllText(fileName, string.Join("\r\n", lines));
-#endif
                 }
                 catch (Exception e)
                 {

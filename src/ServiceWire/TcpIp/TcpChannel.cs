@@ -68,31 +68,19 @@ namespace ServiceWire.TcpIp
                 {
                     if (!SpinWait.SpinUntil(() => connected, connectTimeoutMs))
                     {
-#if (!NET35)
                         _client.Dispose();
-#else
-                        _client.Close();
-#endif
                         throw new TimeoutException("Unable to connect within " + connectTimeoutMs + "ms");
                     }
                 }
             }
             if (connectEventArgs.SocketError != SocketError.Success)
             {
-#if (!NET35)
                 _client.Dispose();
-#else
-                _client.Close();
-#endif
                 throw new SocketException((int)connectEventArgs.SocketError);
             }
             if (!_client.Connected)
             {
-#if (!NET35)
                 _client.Dispose();
-#else
-                _client.Close();
-#endif
                 throw new SocketException((int)SocketError.NotConnected);
             } 
             _stream = new BufferedStream(new NetworkStream(_client), 8192);
@@ -118,11 +106,7 @@ namespace ServiceWire.TcpIp
             base.Dispose(disposing);
             if (disposing)
             {
-#if (!NET35)
                 _client.Dispose();
-#else
-                _client.Close();
-#endif
             }
         }
 

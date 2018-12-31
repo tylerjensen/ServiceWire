@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+#if !NETCOREAPP2_2
 using System.Management;
+#endif
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +27,11 @@ namespace ServiceWire
             int rollMaxMegaBytes = 1024,
             bool useUtcTimeStamp = false)
         {
+#if !NETCOREAPP2_2
             _logDirectory = statsDirectory ?? Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "logs");
+#else
+            _logDirectory = statsDirectory ?? Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "logs");
+#endif
             Directory.CreateDirectory(_logDirectory); //will throw if unable - does not throw if already exists
             _logFilePrefix = statsFilePrefix ?? StatFilePrefixDefault;
             _logFileExtension = statsFileExtension ?? StatFileExtensionDefault;
@@ -123,6 +129,7 @@ namespace ServiceWire
 
         private MemoryDetail GetSystemMemory()
         {
+#if !NETCOREAPP2_2
             var winQuery = new ObjectQuery(WinObjQuery);
             var searcher = new ManagementObjectSearcher(winQuery);
             foreach (ManagementObject item in searcher.Get())
@@ -141,6 +148,9 @@ namespace ServiceWire
                 return result;
             }
             return new MemoryDetail();
+#else
+            return null;
+#endif
         }
 
     }

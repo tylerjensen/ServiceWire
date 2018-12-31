@@ -1,0 +1,62 @@
+Build started, please wait...
+Build started, please wait...
+Build started, please wait...
+Build started, please wait...
+Build started, please wait...
+Build started, please wait...
+Build started, please wait...
+Build started, please wait...
+Build started, please wait...
+Build completed.
+
+Skipping running test for project D:\code\Github\ServiceWire\src\Demo\DemoCommon\DemoCommon.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Skipping running test for project D:\code\Github\ServiceWire\src\Demo\DemoCommon\DemoCommon.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Build completed.
+
+Skipping running test for project D:\code\Github\ServiceWire\src\ServiceWire\ServiceWire.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Skipping running test for project D:\code\Github\ServiceWire\src\ServiceWire\ServiceWire.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Build completed.
+
+Skipping running test for project D:\code\Github\ServiceWire\src\Tests\ServiceWireTestCommon\ServiceWireTestCommon.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Skipping running test for project D:\code\Github\ServiceWire\src\Tests\ServiceWireTestCommon\ServiceWireTestCommon.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Build completed.
+
+Build completed.
+
+Build completed.
+
+Skipping running test for project D:\code\Github\ServiceWire\src\Demo\DemoHost\DemoHost.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Build completed.
+
+Test run for D:\code\Github\ServiceWire\src\Tests\Unit\ServiceWireTests\bin\Debug\netcoreapp2.2\ServiceWireTests.dll(.NETCoreApp,Version=v2.2)
+Skipping running test for project D:\code\Github\ServiceWire\src\Demo\DemoHost\DemoHost.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Skipping running test for project D:\code\Github\ServiceWire\src\Tests\Integration\ServiceWireTestHost\ServiceWireTestHost.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Skipping running test for project D:\code\Github\ServiceWire\src\Tests\Integration\ServiceWireTestClient2\ServiceWireTestClient2.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Skipping running test for project D:\code\Github\ServiceWire\src\Tests\Integration\ServiceWireTestHost\ServiceWireTestHost.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Skipping running test for project D:\code\Github\ServiceWire\src\Tests\Integration\ServiceWireTestClient2\ServiceWireTestClient2.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Build completed.
+
+Build completed.
+
+Microsoft (R) Test Execution Command Line Tool Version 15.9.0
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Skipping running test for project D:\code\Github\ServiceWire\src\Demo\DemoClient\DemoClient.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Skipping running test for project D:\code\Github\ServiceWire\src\Tests\Integration\ServiceWireTestClient1\ServiceWireTestClient1.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Skipping running test for project D:\code\Github\ServiceWire\src\Demo\DemoClient\DemoClient.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Skipping running test for project D:\code\Github\ServiceWire\src\Tests\Integration\ServiceWireTestClient1\ServiceWireTestClient1.csproj. To run tests with dotnet test add "<IsTestProject>true<IsTestProject>" property to project file.
+Starting test execution, please wait...
+Attempting to cancel the build...
+Attempting to cancel the build...
+Attempting to cancel the build...
+Attempting to cancel the build...
+Attempting to cancel the build...
+Attempting to cancel the build...
+Attempting to cancel the build...
+Attempting to cancel the build...
+C:\Program Files\dotnet\sdk\2.2.101\Microsoft.TestPlatform.targets(33,5): error MSB4018: The "Microsoft.TestPlatform.Build.Tasks.VSTestTask" task failed unexpectedly. [D:\code\Github\ServiceWire\src\Tests\Unit\ServiceWireTests\ServiceWireTests.csproj]
+C:\Program Files\dotnet\sdk\2.2.101\Microsoft.TestPlatform.targets(33,5): error MSB4018: System.ComponentModel.Win32Exception (5): Access is denied [D:\code\Github\ServiceWire\src\Tests\Unit\ServiceWireTests\ServiceWireTests.csproj]
+C:\Program Files\dotnet\sdk\2.2.101\Microsoft.TestPlatform.targets(33,5): error MSB4018:    at System.Diagnostics.Process.Kill() [D:\code\Github\ServiceWire\src\Tests\Unit\ServiceWireTests\ServiceWireTests.csproj]
+C:\Program Files\dotnet\sdk\2.2.101\Microsoft.TestPlatform.targets(33,5): error MSB4018:    at Microsoft.TestPlatform.Build.Tasks.VSTestForwardingApp.Cancel() [D:\code\Github\ServiceWire\src\Tests\Unit\ServiceWireTests\ServiceWireTests.csproj]
+C:\Program Files\dotnet\sdk\2.2.101\Microsoft.TestPlatform.targets(33,5): error MSB4018:    at Microsoft.TestPlatform.Build.Tasks.VSTestTask.Cancel() [D:\code\Github\ServiceWire\src\Tests\Unit\ServiceWireTests\ServiceWireTests.csproj]
+C:\Program Files\dotnet\sdk\2.2.101\Microsoft.TestPlatform.targets(33,5): error MSB4018:    at Microsoft.Build.BackEnd.TaskExecutionHost.Cancel() [D:\code\Github\ServiceWire\src\Tests\Unit\ServiceWireTests\ServiceWireTests.csproj]

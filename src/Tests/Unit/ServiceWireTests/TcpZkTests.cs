@@ -3,13 +3,12 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using ServiceWire.TcpIp;
-using Moq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ServiceWire.ZeroKnowledge;
+using Xunit;
 
 namespace ServiceWireTests
 {
-    public class MockRep : IZkRepository
+    public class FakeZkRepository : IZkRepository
     {
         private string password = "cc3a6a12-0e5b-47fb-ae45-3485e34582d4";
         private ZkProtocol _protocol = new ZkProtocol();
@@ -22,20 +21,16 @@ namespace ServiceWireTests
         }
     }
     
-    [TestClass]
     public class TcpZkTests : IDisposable
     {
-        private Mock<INetTester> _tester;
-        private MockRep _repo = new MockRep();
+        private INetTester _tester;
+        private FakeZkRepository _repo = new FakeZkRepository();
 
         private string username = "myuser@userdomain.com";
         private string password = "cc3a6a12-0e5b-47fb-ae45-3485e34582d4";
 
-
         private TcpHost _tcphost;
-
         private IPAddress _ipAddress;
-
         private const int Port = 8098;
 
         private IPEndPoint CreateEndPoint()
@@ -48,27 +43,17 @@ namespace ServiceWireTests
             return new TcpZkEndPoint(username, password, new IPEndPoint(_ipAddress, Port));
         }
 
-        [TestInitialize]
-        public void RunHost()
+        public TcpZkTests()
         {
-            _tester = new Mock<INetTester>();
-
-            _tester
-                .Setup(o => o.Min(It.IsAny<int>(), It.IsAny<int>()))
-                .Returns((int a, int b) => Math.Min(a, b));
-
-            _tester
-                .Setup(o => o.Range(It.IsAny<int>(), It.IsAny<int>()))
-                .Returns((int a, int b) => Enumerable.Range(a, b).ToDictionary(key => key, el => el));
-
+            _tester = new NetTester();
             _ipAddress = IPAddress.Parse("127.0.0.1");
 
             _tcphost = new TcpHost(CreateEndPoint(), zkRepository: _repo);
-            _tcphost.AddService<INetTester>(_tester.Object);
+            _tcphost.AddService<INetTester>(_tester);
             _tcphost.Open();
         }
 
-        [TestMethod]
+        [Fact]
         public void SimpleZkTest()
         {
             var rnd = new Random();
@@ -76,18 +61,15 @@ namespace ServiceWireTests
             var a = rnd.Next(0, 100);
             var b = rnd.Next(0, 100);
 
-            var endpoint = CreateZkClientEndPoint();
-            var clientProxy = new Mock<TcpClient<INetTester>>(endpoint);
-
-            using (clientProxy.Object)
+            using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
             {
-                var result = clientProxy.Object.Proxy.Min(a, b);
+                var result = clientProxy.Proxy.Min(a, b);
 
-                Assert.AreEqual(Math.Min(a, b), result, "Wrong response");
+                Assert.Equal<int>(Math.Min(a, b), result);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void SimpleParallelZkTest()
         {
             var rnd = new Random();
@@ -97,91 +79,74 @@ namespace ServiceWireTests
                 var a = rnd.Next(0, 100);
                 var b = rnd.Next(0, 100);
 
-                var clientProxy = new Mock<TcpClient<INetTester>>(CreateZkClientEndPoint());
-
-                using (clientProxy.Object)
+                using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
                 {
-                    var result = clientProxy.Object.Proxy.Min(a, b);
+                    var result = clientProxy.Proxy.Min(a, b);
 
-                    try
-                    {
-                        Assert.AreEqual(Math.Min(a, b), result, "Wrong response");
-                    }
-                    catch (AssertFailedException)
+                    if (Math.Min(a, b) != result)
                     {
                         state.Break();
-                        throw;
+                        Assert.Equal(Math.Min(a, b), result);
                     }
                 }
             });
         }
 
-        [TestMethod]
+        [Fact]
         public void ResponseZkTest()
         {
-            var clientProxy = new Mock<TcpClient<INetTester>>(CreateZkClientEndPoint());
-
-            using (clientProxy.Object)
+            using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
             {
                 const int count = 50;
                 const int start = 0;
 
-                var result = clientProxy.Object.Proxy.Range(start, count);
+                var result = clientProxy.Proxy.Range(start, count);
 
                 for (var i = start; i < count; i++)
                 {
                     int temp;
                     if (result.TryGetValue(i, out temp))
                     {
-                        Assert.AreEqual(i, temp, "Wrong value index: {0}; expected: {0}; has {1}.", i, temp);
+                        Assert.Equal(i, temp);
                     }
                     else
                     {
-                        Assert.Fail("Can't find value with {0} index.", i);
+                        Assert.True(false);
                     }
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void ResponseParallelTest()
         {
             Parallel.For(0, 50, (index, state) =>
             {
-                var clientProxy = new Mock<TcpClient<INetTester>>(CreateZkClientEndPoint());
-
-                using (clientProxy.Object)
+                using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
                 {
                     const int count = 50;
                     const int start = 0;
 
-                    var result = clientProxy.Object.Proxy.Range(start, count);
+                    var result = clientProxy.Proxy.Range(start, count);
 
-                    try
+                    for (var i = start; i < count; i++)
                     {
-                        for (var i = start; i < count; i++)
+                        int temp;
+                        if (result.TryGetValue(i, out temp))
                         {
-                            int temp;
-                            if (result.TryGetValue(i, out temp))
-                            {
-                                Assert.AreEqual(i, temp, "Wrong value index: {0}; expected: {0}; has {1}.", i, temp);
-                            }
-                            else
-                            {
-                                Assert.Fail("Can't find value with {0} index.", i);
-                            }
+                            if(i != temp) state.Break();
+                            Assert.Equal(i, temp);
                         }
-                    }
-                    catch (AssertFailedException)
-                    {
-                        state.Break();
-                        throw;
+                        else
+                        {
+                            state.Break();
+                            Assert.True(false);
+                        }
                     }
                 }
             });
         }
 
-        [TestCleanup]
         public void Dispose()
         {
             _tcphost.Close();

@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "CoreTestHost": {
-      "commandName": "Project",
-      "commandLineArgs": "192.168.20.155:8098"
-    }
-  }
-}

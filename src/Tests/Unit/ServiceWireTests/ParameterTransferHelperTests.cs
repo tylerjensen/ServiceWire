@@ -1,14 +1,13 @@
 ﻿using System;
 using System.IO;
 using ServiceWire;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace ServiceWireTests
 {
-    [TestClass]
     public class ParameterTransferHelperTests
     {
-        [TestMethod]
+        [Fact]
         public void SimpleTypesTest()
         {
             bool b = true;
@@ -47,7 +46,7 @@ namespace ServiceWireTests
             TestSingle(dt);  // DateTime
         }
 
-        [TestMethod]
+        [Fact]
         public void SimpleTypesMultipleTest()
         {
             bool b = true;
@@ -74,7 +73,7 @@ namespace ServiceWireTests
             TestMultiple(str, ty, g, dt);
         }
 
-        [TestMethod]
+        [Fact]
         public void ArrayOfSimpleTypesTest()
         {
             var bools = new bool[] { true, true, false, true, false };
@@ -134,27 +133,27 @@ namespace ServiceWireTests
             var result = RunInAndOut(obj);
             var arr = obj as Array;
             var rarr = result[0] as Array;
-            Assert.IsNotNull(result);
-            Assert.AreEqual(arr.Length, rarr.Length);
+            Assert.NotNull(result);
+            Assert.Equal(arr.Length, rarr.Length);
         }
 
         private void TestMultiple(params object[] obj)
         {
             var result = RunInAndOut(obj);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(obj.Length, result.Length);
+            Assert.NotNull(result);
+            Assert.Equal(obj.Length, result.Length);
             for (int i = 0; i < obj.Length; i++)
             {
-                Assert.AreEqual(obj[i], result[i]);
+                Assert.Equal(obj[i], result[i]);
             }
         }
 
         private void TestSingle(object obj)
         {
             var result = RunInAndOut(obj);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Length);
-            Assert.AreEqual(obj, result[0]);
+            Assert.NotNull(result);
+            Assert.Single(result);
+            Assert.Equal(obj, result[0]);
         }
 
         private object[] RunInAndOut(params object[] obj)

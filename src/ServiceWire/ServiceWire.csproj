@@ -1,138 +1,34 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4F36B450-A225-4D13-9786-8B84AC25A304}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ServiceWire</RootNamespace>
-    <AssemblyName>ServiceWire</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
+    <TargetFrameworks>net462;netcoreapp2.2</TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Tyler Jensen</Authors>
+    <Company />
+    <PackageIconUrl>http://www.tsjensen.com/blog/image.axd?picture=2014/11/swlogo_sm.png</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/tylerjensen/ServiceWire</PackageProjectUrl>
+    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <Copyright>Tyler Jensen 2013-2018</Copyright>
+    <Version>5.0.0</Version>
+    <Description>ServiceWire is a very fast and light weight service host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP. And with the release of 2.0.0, ServiceWire now supports optional use of Zero Knowledge authentication with a fast variation of Secure Remote Password Protocol and strong Rijndael encryption of data across the wire via TCP without the need for public keys going across the wire.</Description>
+    <PackageTags>WCF Services Host Client NamedPipes TCP Messaging RPC Interception Zero Knowledge Secure Remote Password Protocol Serialization</PackageTags>
+    <PackageReleaseNotes>Updated to NetCoreApp 2.2 and .NET Framework 4.62 with some bug fixes for those targets and XUnit tests that test each target and consolidated demo examples. Named PIpes supported on .NET Core on Linux now.</PackageReleaseNotes>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <CodeAnalysisRuleSet />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <CodeAnalysisRuleSet />
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyOriginatorKeyFile>ServiceWire.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data.Linq" />
-    <Reference Include="System.Management" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.XML" />
-    <Reference Include="System.Xml.Linq" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="System.IO.Pipes" Version="4.3.0" />
+    <PackageReference Include="System.Management" Version="4.5.0" />
+    <PackageReference Include="System.Reflection" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.DispatchProxy" Version="4.5.1" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Extensions" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Metadata" Version="1.6.0" />
+    <PackageReference Include="System.Reflection.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.1" />
+    <PackageReference Include="System.Threading" Version="4.3.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Aspects\CrossCuttingConcerns.cs" />
-    <Compile Include="Aspects\InterceptChannel.cs" />
-    <Compile Include="Aspects\Interceptor.cs" />
-    <Compile Include="Aspects\InterceptPoint.cs" />
-    <Compile Include="Channel.cs" />
-    <Compile Include="DefaultTypeMaker.cs" />
-    <Compile Include="IDvChannel.cs" />
-    <Compile Include="ILog.cs" />
-    <Compile Include="IStats.cs" />
-    <Compile Include="Logger.cs" />
-    <Compile Include="LoggerBase.cs" />
-    <Compile Include="LogLevel.cs" />
-    <Compile Include="LogOptions.cs" />
-    <Compile Include="LogRollOptions.cs" />
-    <Compile Include="MemoryDetail.cs" />
-    <Compile Include="NamedPipes\NpEndPoint.cs" />
-    <Compile Include="NamedPipes\PipeClientConnectionEventArgs.cs" />
-    <Compile Include="NamedPipes\ReadFileToStream.cs" />
-    <Compile Include="NamedPipes\StreamString.cs" />
-    <Compile Include="NullLogger.cs" />
-    <Compile Include="NullStats.cs" />
-    <Compile Include="ParameterTypes.cs" />
-    <Compile Include="PooledDictionary.cs" />
-    <Compile Include="ProxyBuilder.cs" />
-    <Compile Include="SerializationValidator.cs" />
-    <Compile Include="ServiceInstance.cs" />
-    <Compile Include="ServiceSyncInfo.cs" />
-    <Compile Include="Stats.cs" />
-    <Compile Include="StatsBag.cs" />
-    <Compile Include="StreamingChannel.cs" />
-    <Compile Include="MessageType.cs" />
-    <Compile Include="MethodSyncInfo.cs" />
-    <Compile Include="NamedPipes\NpChannel.cs" />
-    <Compile Include="NamedPipes\NpClient.cs" />
-    <Compile Include="NamedPipes\NpHost.cs" />
-    <Compile Include="NamedPipes\NpListener.cs" />
-    <Compile Include="NamedPipes\NpProxy.cs" />
-    <Compile Include="NetExtensions.cs" />
-    <Compile Include="ParameterTransferHelper.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ProxyFactory.cs" />
-    <Compile Include="Host.cs" />
-    <Compile Include="TcpIp\TcpChannel.cs" />
-    <Compile Include="TcpIp\TcpClient.cs" />
-    <Compile Include="TcpIp\TcpZkEndPoint.cs" />
-    <Compile Include="TcpIp\TcpEndPoint.cs" />
-    <Compile Include="TcpIp\TcpHost.cs" />
-    <Compile Include="TcpIp\TcpProxy.cs" />
-    <Compile Include="ZeroKnowledge\ZkBigInt.cs" />
-    <Compile Include="ZeroKnowledge\ZkExt.cs" />
-    <Compile Include="ZeroKnowledge\IZkRepository.cs" />
-    <Compile Include="ZeroKnowledge\ZkSafePrimes.cs" />
-    <Compile Include="ZeroKnowledge\ZkPasswordHash.cs" />
-    <Compile Include="ZeroKnowledge\ZkCrypto.cs" />
-    <Compile Include="ZeroKnowledge\ZkProtocol.cs" />
-    <Compile Include="ZeroKnowledge\ZkSession.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="_license.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="ServiceWire.snk" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>del $(SolutionDir)pack\lib\net461\*.*
-copy $(TargetDir)ServiceWire.* $(SolutionDir)pack\lib\net461</PostBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

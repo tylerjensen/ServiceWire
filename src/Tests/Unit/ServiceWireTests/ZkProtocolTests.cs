@@ -1,26 +1,25 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ServiceWire.ZeroKnowledge;
+﻿using ServiceWire.ZeroKnowledge;
+using Xunit;
 
 namespace ServiceWireTests
 {
-    [TestClass]
     public class ZkProtocolTests
     {
-        [TestMethod]
+        [Fact]
         public void BigIntegerArrayTest()
         {
             var bigint = new BigInteger(ZkSafePrimes.N4);
             var bytes = BigInteger.ToByteArray(bigint);
-            Assert.AreEqual(ZkSafePrimes.N4.Length, bytes.Length);
+            Assert.Equal(ZkSafePrimes.N4.Length, bytes.Length);
             for (int i = 0; i < bytes.Length; i++)
             {
-                Assert.AreEqual(ZkSafePrimes.N4[i], bytes[i]);
+                Assert.Equal(ZkSafePrimes.N4[i], bytes[i]);
             }
             var big2 = new BigInteger(bytes);
-            Assert.AreEqual(bigint, big2);
+            Assert.Equal(bigint, big2);
         }
 
-        [TestMethod]
+        [Fact]
         public void SimpleProtocolTest()
         {
             var sr = new ZkProtocol();
@@ -75,17 +74,17 @@ namespace ServiceWireTests
             var serverEqualToClient = serverSessionHash.IsEqualTo(clientServerSessionHash);
 
             //proof
-            Assert.IsTrue(sessionKeysSame);
-            Assert.IsTrue(scrambleSame);
-            Assert.IsTrue(clientEqualToServer);
-            Assert.IsTrue(serverEqualToClient);
+            Assert.True(sessionKeysSame);
+            Assert.True(scrambleSame);
+            Assert.True(clientEqualToServer);
+            Assert.True(serverEqualToClient);
 
             var data = sr.Combine(sr.CryptRand(), sr.CryptRand(), sr.CryptRand());
             var crypto = new ZkCrypto(clientSessionKey, clientScramble);
             var encrypted = crypto.Encrypt(data);
             var decrypted = crypto.Decrypt(encrypted);
             var cryptSame = data.IsEqualTo(decrypted);
-            Assert.IsTrue(cryptSame);
+            Assert.True(cryptSame);
         }
     }
 }

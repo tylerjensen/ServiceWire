@@ -3,48 +3,33 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using ServiceWire.TcpIp;
-using Moq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace ServiceWireTests
 {
-    [TestClass]
     public class TcpTests : IDisposable
     {
-        private Mock<INetTester> _tester;
-
+        private INetTester _tester;
         private TcpHost _tcphost;
-
         private IPAddress _ipAddress;
-
-        private const int Port = 8098;
-
+        private const int Port = 8099;
         private IPEndPoint CreateEndPoint()
         {
             return new IPEndPoint(_ipAddress, Port);
         }
 
-        [TestInitialize]
-        public void RunHost()
+        public TcpTests()
         {
-            _tester = new Mock<INetTester>();
-
-            _tester
-                .Setup(o => o.Min(It.IsAny<int>(), It.IsAny<int>()))
-                .Returns((int a, int b) => Math.Min(a, b));
-
-            _tester
-                .Setup(o => o.Range(It.IsAny<int>(), It.IsAny<int>()))
-                .Returns((int a, int b) => Enumerable.Range(a, b).ToDictionary(key => key, el => el));
+            _tester = new NetTester();
 
             _ipAddress = IPAddress.Parse("127.0.0.1");
 
             _tcphost = new TcpHost(CreateEndPoint());
-            _tcphost.AddService<INetTester>(_tester.Object);
+            _tcphost.AddService<INetTester>(_tester);
             _tcphost.Open();
         }
 
-        [TestMethod]
+        [Fact]
         public void SimpleTest()
         {
             var rnd = new Random();
@@ -52,17 +37,15 @@ namespace ServiceWireTests
             var a = rnd.Next(0, 100);
             var b = rnd.Next(0, 100);
 
-            var clientProxy = new Mock<TcpClient<INetTester>>(CreateEndPoint());
-
-            using (clientProxy.Object)
+            using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
             {
-                var result = clientProxy.Object.Proxy.Min(a, b);
+                var result = clientProxy.Proxy.Min(a, b);
 
-                Assert.AreEqual(Math.Min(a, b), result, "Wrong response");
+                Assert.Equal(Math.Min(a, b), result);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void SimpleParallelTest()
         {
             var rnd = new Random();
@@ -72,91 +55,67 @@ namespace ServiceWireTests
                 var a = rnd.Next(0, 100);
                 var b = rnd.Next(0, 100);
 
-                var clientProxy = new Mock<TcpClient<INetTester>>(CreateEndPoint());
-
-                using (clientProxy.Object)
+                using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
                 {
-                    var result = clientProxy.Object.Proxy.Min(a, b);
+                    var result = clientProxy.Proxy.Min(a, b);
 
-                    try
-                    {
-                        Assert.AreEqual(Math.Min(a, b), result, "Wrong response");
-                    }
-                    catch (AssertFailedException)
+                    if (Math.Min(a, b) != result)
                     {
                         state.Break();
-                        throw;
+                        Assert.Equal(Math.Min(a, b), result);
                     }
                 }
             });
         }
 
-        [TestMethod]
+        [Fact]
         public void ResponseTest()
         {
-            var clientProxy = new Mock<TcpClient<INetTester>>(CreateEndPoint());
-
-            using (clientProxy.Object)
+            using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
             {
                 const int count = 50;
                 const int start = 0;
 
-                var result = clientProxy.Object.Proxy.Range(start, count);
+                var result = clientProxy.Proxy.Range(start, count);
 
                 for (var i = start; i < count; i++)
                 {
                     int temp;
-                    if (result.TryGetValue(i, out temp))
-                    {
-                        Assert.AreEqual(i, temp, "Wrong value index: {0}; expected: {0}; has {1}.", i, temp);
-                    }
-                    else
-                    {
-                        Assert.Fail("Can't find value with {0} index.", i);
-                    }
+                    Assert.True(result.TryGetValue(i, out temp));
+                    Assert.Equal(i, temp);
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void ResponseParallelTest()
         {
             Parallel.For(0, 50, (index, state) =>
             {
-                var clientProxy = new Mock<TcpClient<INetTester>>(CreateEndPoint());
-
-                using (clientProxy.Object)
+                using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
                 {
                     const int count = 50;
                     const int start = 0;
 
-                    var result = clientProxy.Object.Proxy.Range(start, count);
-
-                    try
+                    var result = clientProxy.Proxy.Range(start, count);
+                    for (var i = start; i < count; i++)
                     {
-                        for (var i = start; i < count; i++)
+                        int temp;
+                        if (result.TryGetValue(i, out temp))
                         {
-                            int temp;
-                            if (result.TryGetValue(i, out temp))
-                            {
-                                Assert.AreEqual(i, temp, "Wrong value index: {0}; expected: {0}; has {1}.", i, temp);
-                            }
-                            else
-                            {
-                                Assert.Fail("Can't find value with {0} index.", i);
-                            }
+                            if (i != temp) state.Break();
+                            Assert.Equal(i, temp);
                         }
-                    }
-                    catch (AssertFailedException)
-                    {
-                        state.Break();
-                        throw;
+                        else
+                        {
+                            state.Break();
+                            Assert.True(false);
+                        }
                     }
                 }
             });
         }
 
-        [TestCleanup]
         public void Dispose()
         {
             _tcphost.Close();

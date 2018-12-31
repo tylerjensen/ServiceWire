@@ -120,11 +120,7 @@ namespace ServiceWire
                 //read sync data
                 var len = _binReader.ReadInt32();
                 //len is zero when AssemblyQualifiedName not same version or not found
-#if (!NET35)
                 if (len == 0) throw new TypeAccessException("SyncInterface failed. Type or version of type unknown.");
-#else
-                if (len == 0) throw new Exception("SyncInterface failed. Type or version of type unknown.");
-#endif
                 var bytes = _binReader.ReadBytes(len);
                 if (null != _zkCrypto)
                 {
@@ -271,13 +267,8 @@ namespace ServiceWire
                     }
                     finally
                     {
-#if (!NET35)
                         if (null != _binWriter) _binWriter.Dispose();
                         if (null != _binReader) _binReader.Dispose();
-#else
-                        if (null != _binWriter) _binWriter.Close();
-                        if (null != _binReader) _binReader.Close();
-#endif
                     }
                 }
             }

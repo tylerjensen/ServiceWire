@@ -126,19 +126,6 @@ namespace ServiceWire
             }
         }
 
-#if (NET35)
-        public static void CopyTo(this Stream input, Stream output)
-        {
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-
-            while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                output.Write(buffer, 0, bytesRead);
-            }
-        }
-#endif
-
         public static byte[] FromGZipBytes(this byte[] compressedBytes)
         {
             using (var msObj = new MemoryStream())
