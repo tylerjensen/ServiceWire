@@ -2,9 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-#if NET462
-using System.Management;
-#endif
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -106,52 +103,5 @@ namespace ServiceWire
                 WriteBag(bag);
             }
         }
-
-        private const string SysCategory = "_sys";
-        public void LogSys()
-        {
-            var md = GetSystemMemory();
-            int p = _period;
-            var bag = _bag.GetOrAdd(p, new StatsBag(_useUtcTimeStamp));
-            bag.Add(SysCategory, "TotalVisibleMemoryMB", md.TotalVisibleMemorySize / 1024f / 1024f);
-            bag.Add(SysCategory, "FreePhysicalMemoryMB", md.FreePhysicalMemory / 1024f / 1024f);
-            if (bag.Count >= _statsBufferSize)
-            {
-                WriteBag(bag);
-            }
-        }
-
-        private const string WinObjQuery = "SELECT * FROM CIM_OperatingSystem";
-        private const string TotalVisibleMemorySize = "TotalVisibleMemorySize";
-        private const string TotalVirtualMemorySize = "TotalVirtualMemorySize";
-        private const string FreePhysicalMemory = "FreePhysicalMemory";
-        private const string FreeVirtualMemory = "FreeVirtualMemory";
-
-        private MemoryDetail GetSystemMemory()
-        {
-#if NET462
-            var winQuery = new ObjectQuery(WinObjQuery);
-            var searcher = new ManagementObjectSearcher(winQuery);
-            foreach (ManagementObject item in searcher.Get())
-            {
-                var totalVisibleMemorySize = Convert.ToUInt64(item[TotalVisibleMemorySize]);
-                var totalVirtualMemorySize = Convert.ToUInt64(item[TotalVirtualMemorySize]);
-                var freePhysicalMemory = Convert.ToUInt64(item[FreePhysicalMemory]);
-                var freeVirtualMemory = Convert.ToUInt64(item[FreeVirtualMemory]);
-                var result = new MemoryDetail()
-                {
-                    TotalVisibleMemorySize = totalVisibleMemorySize,
-                    TotalVirtualMemorySize = totalVirtualMemorySize,
-                    FreePhysicalMemory = freePhysicalMemory,
-                    FreeVirtualMemory = freeVirtualMemory
-                };
-                return result;
-            }
-            return new MemoryDetail();
-#else
-            return null;
-#endif
-        }
-
     }
 }
