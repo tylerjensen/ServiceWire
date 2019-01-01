@@ -1,7 +1,7 @@
 ServiceWire
 ===========
 
-### Changes including some breaking changes in version 5.0.0
+### Changes including some breaking changes in version 5.1.0
 
 1. Dropped strong named assembly.
 
