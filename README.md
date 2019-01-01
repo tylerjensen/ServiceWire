@@ -5,7 +5,7 @@ ServiceWire
 
 1. Dropped strong named assembly.
 
-2. Support for NetStandard 2.0 and .NET Framework 4.62. Dropped support for .NET 3.5.
+2. Support for NetCoreApp 2.0, 2.2 and .NET Framework 4.62. Dropped support for .NET 3.5.
 
 3. Modified projects and NuGet package generation from Visual Studio 2017.
 
