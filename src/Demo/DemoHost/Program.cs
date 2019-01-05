@@ -17,7 +17,7 @@ namespace DemoHost
         {
             var logger = new Logger(logLevel: LogLevel.Debug);
             var stats = new Stats();
-
+			 
             var addr = new[] { "127.0.0.1", "8098" }; //defaults
             if (null != args && args.Length > 0)
             {
@@ -38,11 +38,14 @@ namespace DemoHost
             tcphost.UseCompression = useCompression;
             tcphost.CompressionThreshold = compressionThreshold;
 
-            var simpleContract = new DataContractImpl();
-            tcphost.AddService<IDataContract>(simpleContract);
+			var simpleContract = new DataContractImpl();
+			tcphost.AddService<IDataContract>(simpleContract);
 
-            var complexContract = new ComplexDataContractImpl();
-            tcphost.AddService<IComplexDataContract>(complexContract);
+			var complexContract = new ComplexDataContractImpl();
+			tcphost.AddService<IComplexDataContract>(complexContract);
+
+			var test = new Test();
+			tcphost.AddService<ITest>(test);
 
             tcphost.Open();
 
@@ -54,6 +57,19 @@ namespace DemoHost
             Console.WriteLine("Press Enter to quit.");
             Console.ReadLine();
         }
+    }
+
+    public class Test : ITest
+    {
+	    public Task SetAsync(int a)
+	    {
+			return Task.CompletedTask;
+		}
+
+	    public Task<int> GetAsync()
+	    {
+			return Task.FromResult(1);
+		}
     }
 
     public class DataContractImpl : IDataContract

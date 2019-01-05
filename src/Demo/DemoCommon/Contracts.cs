@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DemoCommon
 {
+	public interface ITest
+	{
+		Task SetAsync(int a);
+		Task<int> GetAsync();
+	}
+
     public interface IDataContract
     {
         decimal GetDecimal(decimal input);

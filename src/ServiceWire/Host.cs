@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.IO;
+using System.Threading.Tasks;
 using ServiceWire.ZeroKnowledge;
 
 namespace ServiceWire
@@ -198,6 +199,7 @@ namespace ServiceWire
                 {
                     MethodIdent = kvp.Key, 
                     MethodName = kvp.Value.Name, 
+                    MethodReturnType = kvp.Value.ReturnType, 
                     ParameterTypes = parameterTypes
                 });
             }
@@ -409,6 +411,12 @@ namespace ServiceWire
                     try
                     {
                         object returnValue = method.Invoke(invokedInstance.SingletonInstance, parameters);
+                        if (returnValue is Task task)
+                        {
+	                        task.GetAwaiter().GetResult();
+	                        var prop = task.GetType().GetProperty("Result");
+	                        returnValue = prop?.GetValue(task);
+						}
                         //the result to the client is the return value (null if void) and the input parameters
                         returnParameters = new object[1 + parameters.Length];
                         returnParameters[0] = returnValue;
@@ -479,23 +487,18 @@ namespace ServiceWire
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!_disposed)
+	        if (_disposed) return;
+	        _disposed = true; //prevent second call to Dispose
+            if (disposing)
             {
-                _disposed = true; //prevent second call to Dispose
-                if (disposing)
-                {
-                    var log = _log as Logger;
-                    if (null != log) log.FlushLog();
-                    var stat = _stats as Stats;
-                    if (null != stat) stat.FlushLog();
-                    _isOpen = false;
-                    Continue = false;
-                    foreach (var instance in _services)
-                    {
-                        var disposable = instance.Value.SingletonInstance as IDisposable;
-                        if (null != disposable) disposable.Dispose();
-                    }
-                }
+	            if (_log is Logger log) log.FlushLog();
+	            if (_stats is Stats stat) stat.FlushLog();
+	            _isOpen = false;
+	            Continue = false;
+	            foreach (var instance in _services)
+	            {
+		            if (instance.Value.SingletonInstance is IDisposable disposable) disposable.Dispose();
+	            }
             }
         }
 

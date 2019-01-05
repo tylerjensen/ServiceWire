@@ -2,16 +2,17 @@
 using ServiceWire.TcpIp;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace ServiceWireTestCommon
 {
     public interface IValTypes
     {
         decimal GetDecimal(decimal input);
+        Task<decimal> GetDecimalAsync(decimal input);
         bool OutDecimal(decimal val);
+        Task<bool> OutDecimalAsync(decimal val);
     }
     
     public interface INetTester
@@ -20,6 +21,7 @@ namespace ServiceWireTestCommon
         TestResponse Get(Guid id, string label, double weight, out long quantity);
         long TestLong(out long id1, out long id2);
         List<string> GetItems(Guid id);
+        Task<List<string>> GetItemsAsync(Guid id);
     }
 
     public interface IMyTester
@@ -61,6 +63,11 @@ namespace ServiceWireTestCommon
             return Proxy.GetItems(id);
         }
 
+        public Task<List<string>> GetItemsAsync(Guid id)
+        {
+	        return Task.FromResult(Proxy.GetItems(id));
+        }
+
         public long TestLong(out long id1, out long id2)
         {
             id1 = 23;
@@ -88,6 +95,11 @@ namespace ServiceWireTestCommon
         public List<string> GetItems(Guid id)
         {
             return Proxy.GetItems(id);
+        }
+
+        public Task<List<string>> GetItemsAsync(Guid id)
+        {
+	        return Task.FromResult(Proxy.GetItems(id));
         }
 
         public long TestLong(out long id1, out long id2)

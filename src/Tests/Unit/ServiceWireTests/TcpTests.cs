@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using ServiceWire.TcpIp;
@@ -46,6 +45,21 @@ namespace ServiceWireTests
         }
 
         [Fact]
+        public async Task CalculateAsyncTest()
+        {
+	        var rnd = new Random();
+
+	        var a = rnd.Next(0, 100);
+	        var b = rnd.Next(0, 100);
+
+	        using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
+	        {
+		        var result = await clientProxy.Proxy.CalculateAsync(a, b);
+		        Assert.Equal(a + b, result);
+	        }
+        }
+
+		[Fact]
         public void SimpleParallelTest()
         {
             var rnd = new Random();
