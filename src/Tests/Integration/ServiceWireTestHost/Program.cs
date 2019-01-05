@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using ServiceWire;
 using ServiceWire.NamedPipes;
 using ServiceWire.TcpIp;
@@ -63,10 +64,20 @@ namespace ServiceWireTestHost
             return input += 456.44m;
         }
 
+        public Task<decimal> GetDecimalAsync(decimal input)
+        {
+			return Task.FromResult(GetDecimal(input));
+		}
+
         public bool OutDecimal(decimal val)
         {
             val = 45.66m;
             return true;
+        }
+
+        public Task<bool> OutDecimalAsync(decimal val)
+        {
+	        return Task.FromResult(OutDecimal(val));
         }
     }
 
@@ -92,7 +103,12 @@ namespace ServiceWireTestHost
 			return list;
 		}
 
-        public long TestLong(out long id1, out long id2)
+		public Task<List<string>> GetItemsAsync(Guid id)
+		{
+			return Task.FromResult(GetItems(id));
+		}
+
+		public long TestLong(out long id1, out long id2)
         {
             id1 = 23;
             id2 = 24;
