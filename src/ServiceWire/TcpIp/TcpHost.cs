@@ -52,7 +52,9 @@ namespace ServiceWire.TcpIp
             _endPoint = endpoint;
             _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+#if NET462
             _listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+#endif
         }
 
         /// <summary>
@@ -176,7 +178,7 @@ namespace ServiceWire.TcpIp
             }
         }
 
-        #region IDisposable Members
+#region IDisposable Members
 
         private bool _disposed = false;
 
@@ -196,6 +198,6 @@ namespace ServiceWire.TcpIp
             base.Dispose(disposing);
         }
 
-        #endregion
+#endregion
     }
 }
