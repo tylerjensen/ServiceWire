@@ -4,26 +4,28 @@ using System.IO;
 using System.Security.Authentication;
 using ServiceWire.ZeroKnowledge;
 using System.Diagnostics;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace ServiceWire
 {
     public class StreamingChannel : Channel, IDvChannel
     {
-        private object _syncRoot = new object();
+        private readonly object _syncRoot = new object();
         protected BinaryReader _binReader;
         protected BinaryWriter _binWriter;
         protected Stream _stream;
-        private ParameterTransferHelper _parameterTransferHelper = new ParameterTransferHelper();
+        private readonly ParameterTransferHelper _parameterTransferHelper = new ParameterTransferHelper();
         private ServiceSyncInfo _syncInfo;
-        private ZkCrypto _zkCrypto = null;
+        private ZkCrypto _zkCrypto;
 
         // keep cached sync info to avoid redundant wire trips
-        private static ConcurrentDictionary<Type, ServiceSyncInfo> _syncInfoCache = new ConcurrentDictionary<Type, ServiceSyncInfo>(); 
+        private static readonly ConcurrentDictionary<Type, ServiceSyncInfo> SyncInfoCache = new ConcurrentDictionary<Type, ServiceSyncInfo>(); 
 
         /// <summary>
         /// Returns true if client is connected to the server.
         /// </summary>
-        public virtual bool IsConnected { get { return false; } }
+        public virtual bool IsConnected => false;
 
         /// <summary>
         /// This method asks the server for a list of identifiers paired with method
@@ -101,7 +103,7 @@ namespace ServiceWire
                 _stats.Log("ZkAuthentication", sw.ElapsedMilliseconds);
             }
             
-            if (!_syncInfoCache.TryGetValue(serviceType, out _syncInfo))
+            if (!SyncInfoCache.TryGetValue(serviceType, out _syncInfo))
             {
                 //write the message type
                 _binWriter.Write((int)MessageType.SyncInterface);
@@ -129,7 +131,7 @@ namespace ServiceWire
                     _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(bytes));
                 }
                 _syncInfo = bytes.ToDeserializedObject<ServiceSyncInfo>();
-                _syncInfoCache.AddOrUpdate(serviceType, _syncInfo, (t, info) => _syncInfo);
+                SyncInfoCache.AddOrUpdate(serviceType, _syncInfo, (t, info) => _syncInfo);
             }
         }
 
@@ -245,12 +247,38 @@ namespace ServiceWire
                     outParams = _parameterTransferHelper.ReceiveParameters(_binReader);
                 }
 
-                if (messageType == MessageType.ThrowException)
+                MethodSyncInfo methodSyncInfo = _syncInfo.MethodInfos[ident];
+                if (IsTaskType(methodSyncInfo.MethodReturnType) && outParams.Length > 0)
+                {
+	                if (methodSyncInfo.MethodReturnType.IsGenericType)
+	                {
+		                MethodInfo methodInfo = typeof(Task).GetMethod(nameof(Task.FromResult))
+			                .MakeGenericMethod(new[] { methodSyncInfo.MethodReturnType.GenericTypeArguments[0] });
+		                outParams[0] = methodInfo.Invoke(null, new[] { outParams[0] });
+					}
+	                else
+	                {
+		                outParams[0] = Task.CompletedTask;
+	                }
+				}
+				
+				if (messageType == MessageType.ThrowException)
                     throw (Exception)outParams[0];
 
                 return outParams;
             }
         }
+
+        private static bool IsTaskType(Type type)
+		{
+			if (type == typeof(Task))
+				return true;
+
+			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>))
+				return true;
+
+			return false;
+		}
 
         #region IDisposable Members
 

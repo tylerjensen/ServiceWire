@@ -5,45 +5,34 @@ namespace ServiceWire.TcpIp
 {
     public class TcpClient<TInterface> : IDisposable where TInterface : class
     {
-        private TInterface _proxy;
+		public TInterface Proxy { get; }
 
-        public TInterface Proxy { get { return _proxy; } }
-
-        public TcpClient(TcpEndPoint endpoint)
+		public TcpClient(TcpEndPoint endpoint)
         {
-            _proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
         }
 
         public TcpClient(TcpZkEndPoint endpoint)
         {
-            _proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
         }
 
         public TcpClient(IPEndPoint endpoint)
         {
-            _proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
         }
 
         public void InjectLoggerStats(ILog logger, IStats stats)
         {
-            if (_proxy != null)
-            {
-                var channel = _proxy as Channel;
-                if (channel != null) channel.InjectLoggerStats(logger, stats);
-            };
+	        var channel = Proxy as Channel;
+	        channel?.InjectLoggerStats(logger, stats);
         }
 
-        public bool IsConnected
-        {
-            get
-            {
-                return (_proxy != null) && (_proxy as TcpChannel).IsConnected;
-            }
-        }
+        public bool IsConnected => (Proxy as TcpChannel)?.IsConnected == true;
 
         #region IDisposable Members
 
-        private bool _disposed = false;
+        private bool _disposed;
 
         public void Dispose()
         {
@@ -59,7 +48,7 @@ namespace ServiceWire.TcpIp
                 _disposed = true; //prevent second call to Dispose
                 if (disposing)
                 {
-                    (_proxy as TcpChannel).Dispose();
+                    (Proxy as TcpChannel)?.Dispose();
                 }
             }
         }

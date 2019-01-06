@@ -39,28 +39,35 @@ namespace DemoClient
             Console.ReadLine();
         }
 
-        private static void RunTest(TcpZkEndPoint zkEndpoint, string ip, Logger logger, Stats stats)
+        private static async Task RunTest(TcpZkEndPoint zkEndpoint, string ip, Logger logger, Stats stats)
         {
             var sw = Stopwatch.StartNew();
-            using (var client = new TcpClient<IDataContract>(zkEndpoint))
-            {
-                client.InjectLoggerStats(logger, stats);
+			using (var client = new TcpClient<ITest>(zkEndpoint))
+			{
+				client.InjectLoggerStats(logger, stats);
+				await client.Proxy.SetAsync(1);
+				int value = await client.Proxy.GetAsync();
+			}
 
-                decimal abc = client.Proxy.GetDecimal(4.5m);
-                bool result = client.Proxy.OutDecimal(abc);
-            }
+			using (var client = new TcpClient<IDataContract>(zkEndpoint))
+			{
+				client.InjectLoggerStats(logger, stats);
 
-            using (var client = new TcpClient<IComplexDataContract>(zkEndpoint))
-            {
-                client.InjectLoggerStats(logger, stats);
+				decimal abc = client.Proxy.GetDecimal(4.5m);
+				bool result = client.Proxy.OutDecimal(abc);
+			}
 
-                var id = client.Proxy.GetId("test1", 3.314, 42, DateTime.Now);
-                long q = 3;
-                var response = client.Proxy.Get(id, "mirror", 4.123, out q);
-                var list = client.Proxy.GetItems(id);
-            }
+			using (var client = new TcpClient<IComplexDataContract>(zkEndpoint))
+			{
+				client.InjectLoggerStats(logger, stats);
 
-            Console.WriteLine("elapsed ms: {0}", sw.ElapsedMilliseconds);
+				var id = client.Proxy.GetId("test1", 3.314, 42, DateTime.Now);
+				long q = 3;
+				var response = client.Proxy.Get(id, "mirror", 4.123, out q);
+				var list = client.Proxy.GetItems(id);
+			}
+
+			Console.WriteLine("elapsed ms: {0}", sw.ElapsedMilliseconds);
         }
     }
 }

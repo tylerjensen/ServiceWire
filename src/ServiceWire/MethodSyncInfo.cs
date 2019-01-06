@@ -6,6 +6,7 @@ namespace ServiceWire
     {
         public int MethodIdent { get; set; }
         public string MethodName { get; set; }
-        public Type[] ParameterTypes { get; set; }
+        public Type MethodReturnType { get; set; }
+		public Type[] ParameterTypes { get; set; }
     }
 }

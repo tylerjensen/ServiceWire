@@ -43,6 +43,7 @@ namespace ServiceWireTestClient1
                 long q = 3;
                 var response = client.Get(id, "mirror", 4.123, out q);
                 var list = client.GetItems(id);
+                var listFromAsync = client.GetItemsAsync(id).GetAwaiter().GetResult();
             }
             using (var client = new NetTcpMyTesterProxy(ipEndpoint))
             {
@@ -65,7 +66,8 @@ namespace ServiceWireTestClient1
                         long q = 2;
                         var response = client.Get(id, "mirror", 4.123, out q);
                         var list = client.GetItems(id);
-                    }
+                        var listFromAsync = client.GetItemsAsync(id).GetAwaiter().GetResult();
+					}
                 }
 
                 using (var client = new NetTcpMyTesterProxy(ipEndpoint))
@@ -92,7 +94,8 @@ namespace ServiceWireTestClient1
                     long q = 2;
                     var response = client.Get(id, "mirror", 4.123, out q);
                     var list = client.GetItems(id);
-                }
+                    var listFromAsync = client.GetItemsAsync(id).GetAwaiter().GetResult();
+				}
 
                 sw = Stopwatch.StartNew();
                 Parallel.For(from, to, index =>
@@ -105,8 +108,9 @@ namespace ServiceWireTestClient1
                             long q = 4;
                             var response = client.Get(id, "mirror", 4.123, out q);
                             var list = client.GetItems(id);
+                            var listFromAsync = client.GetItemsAsync(id).GetAwaiter().GetResult();
 
-                            long id1;
+							long id1;
                             long id2;
                             long id3 = client.TestLong(out id1, out id2);
                         }

@@ -22,7 +22,7 @@ namespace ServiceWireTestClient2
             Console.ReadLine();
         }
 
-        private static void RunTest(IPEndPoint ipEndpoint, string ip)
+        private static async Task RunTest(IPEndPoint ipEndpoint, string ip)
         {
             using (var client = new TcpClient<IValTypes>(ipEndpoint))
             {
@@ -30,12 +30,19 @@ namespace ServiceWireTestClient2
                 bool result = client.Proxy.OutDecimal(abc);
             }
 
-            using (var client = new NetTcpTesterProxy(ipEndpoint))
+            using (var client = new TcpClient<IValTypes>(ipEndpoint))
+            {
+	            decimal abc = await client.Proxy.GetDecimalAsync(4.5m);
+	            bool result = await client.Proxy.OutDecimalAsync(abc);
+            }
+
+			using (var client = new NetTcpTesterProxy(ipEndpoint))
             {
                 var id = client.GetId("test1", 3.314, 42, DateTime.Now);
                 long q = 3;
                 var response = client.Get(id, "mirror", 4.123, out q);
                 var list = client.GetItems(id);
+                var listFromAsync = await client.GetItemsAsync(id);
             }
             using (var client = new NetTcpMyTesterProxy(ipEndpoint))
             {
