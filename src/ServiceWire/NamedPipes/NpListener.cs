@@ -21,7 +21,7 @@ namespace ServiceWire.NamedPipes
 
         public string PipeName { get; set; }
         public event EventHandler<PipeClientConnectionEventArgs> RequestReieved;
-        
+
         public NpListener(string pipeName, int maxConnections = 254, ILog log = null, IStats stats = null)
         {
             _log = log ?? _log;
@@ -31,7 +31,8 @@ namespace ServiceWire.NamedPipes
             this.PipeName = pipeName;
 #if NET462
             _pipeSecurity = new PipeSecurity();
-            _pipeSecurity.AddAccessRule(new PipeAccessRule(@"Everyone", PipeAccessRights.ReadWrite, AccessControlType.Allow));
+            SecurityIdentifier everyone = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
+            _pipeSecurity.AddAccessRule(new PipeAccessRule(everyone, PipeAccessRights.ReadWrite, AccessControlType.Allow));
             _pipeSecurity.AddAccessRule(new PipeAccessRule(WindowsIdentity.GetCurrent().User, PipeAccessRights.FullControl, AccessControlType.Allow));
             _pipeSecurity.AddAccessRule(new PipeAccessRule(@"SYSTEM", PipeAccessRights.FullControl, AccessControlType.Allow));
 #endif
