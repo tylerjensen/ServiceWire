@@ -13,10 +13,11 @@ namespace ServiceWire.Aspects
 
         public InterceptPoint InterceptPoint { get { return _interceptPoint; } }
 
-        public InterceptChannel(Type interceptedType, InterceptPoint interceptPoint)
+        public InterceptChannel(Type interceptedType, InterceptPoint interceptPoint, ISerializer serializer)
         {
             _serviceType = interceptedType;
             _interceptPoint = interceptPoint;
+            _serializer = serializer;
             CreateMethodMap();
         }
 
@@ -79,9 +80,9 @@ namespace ServiceWire.Aspects
             foreach (var kvp in _serviceInstance.InterfaceMethods)
             {
                 var parameters = kvp.Value.GetParameters();
-                var parameterTypes = new Type[parameters.Length];
+                var parameterTypes = new string[parameters.Length];
                 for (var i = 0; i < parameters.Length; i++)
-                    parameterTypes[i] = parameters[i].ParameterType;
+                    parameterTypes[i] = parameters[i].ParameterType.FullName;
                 syncSyncInfos.Add(new MethodSyncInfo
                 {
                     MethodIdent = kvp.Key,
@@ -119,7 +120,7 @@ namespace ServiceWire.Aspects
                         {
                             var matchingParameterTypes = true;
                             for (int i = 0; i < si.ParameterTypes.Length; i++)
-                                if (!mdata[i + 1].Equals(si.ParameterTypes[i].FullName))
+                                if (!mdata[i + 1].Equals(si.ParameterTypes[i]))
                                 {
                                     matchingParameterTypes = false;
                                     break;

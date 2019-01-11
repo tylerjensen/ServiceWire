@@ -15,12 +15,18 @@ namespace ServiceWire
         protected BinaryReader _binReader;
         protected BinaryWriter _binWriter;
         protected Stream _stream;
-        private readonly ParameterTransferHelper _parameterTransferHelper = new ParameterTransferHelper();
+        private readonly ParameterTransferHelper _parameterTransferHelper;
         private ServiceSyncInfo _syncInfo;
         private ZkCrypto _zkCrypto;
 
         // keep cached sync info to avoid redundant wire trips
         private static readonly ConcurrentDictionary<Type, ServiceSyncInfo> SyncInfoCache = new ConcurrentDictionary<Type, ServiceSyncInfo>(); 
+
+        public StreamingChannel()
+        {
+            if (null == _serializer) _serializer = new DefaultSerializer();
+            _parameterTransferHelper = new ParameterTransferHelper(_serializer);
+        }
 
         /// <summary>
         /// Returns true if client is connected to the server.
@@ -130,7 +136,7 @@ namespace ServiceWire
                     bytes = _zkCrypto.Decrypt(bytes);
                     _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(bytes));
                 }
-                _syncInfo = bytes.ToDeserializedObject<ServiceSyncInfo>();
+                _syncInfo = _serializer.Deserialize<ServiceSyncInfo>(bytes);
                 SyncInfoCache.AddOrUpdate(serviceType, _syncInfo, (t, info) => _syncInfo);
             }
         }
@@ -166,7 +172,7 @@ namespace ServiceWire
                         {
                             var matchingParameterTypes = true;
                             for (int i = 0; i < si.ParameterTypes.Length; i++)
-                                if (!mdata[i + 1].Equals(si.ParameterTypes[i].FullName))
+                                if (!mdata[i + 1].Equals(si.ParameterTypes[i]))
                                 {
                                     matchingParameterTypes = false;
                                     break;
@@ -248,12 +254,13 @@ namespace ServiceWire
                 }
 
                 MethodSyncInfo methodSyncInfo = _syncInfo.MethodInfos[ident];
-                if (IsTaskType(methodSyncInfo.MethodReturnType) && outParams.Length > 0)
+                var returnType = methodSyncInfo.MethodReturnType.ToType();
+                if (IsTaskType(returnType) && outParams.Length > 0)
                 {
-	                if (methodSyncInfo.MethodReturnType.IsGenericType)
+	                if (returnType.IsGenericType)
 	                {
 		                MethodInfo methodInfo = typeof(Task).GetMethod(nameof(Task.FromResult))
-			                .MakeGenericMethod(new[] { methodSyncInfo.MethodReturnType.GenericTypeArguments[0] });
+			                .MakeGenericMethod(new[] { returnType.GenericTypeArguments[0] });
 		                outParams[0] = methodInfo.Invoke(null, new[] { outParams[0] });
 					}
 	                else

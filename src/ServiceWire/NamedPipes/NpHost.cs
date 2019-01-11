@@ -32,10 +32,12 @@ namespace ServiceWire.NamedPipes
         /// <param name="pipeName">The pipe name for incoming requests</param>
         /// <param name="log"></param>
         /// <param name="stats"></param>
-        public NpHost(string pipeName, ILog log = null, IStats stats = null)
+        /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
+        public NpHost(string pipeName, ILog log = null, IStats stats = null, ISerializer serializer = null)
         {
             base.Log = log;
             base.Stats = stats;
+            _serializer = serializer ?? new DefaultSerializer();
             _pipeName = pipeName;
             _listener = new NpListener(_pipeName, log: base.Log, stats: base.Stats);
             _listener.RequestReieved += ClientConnectionMade;

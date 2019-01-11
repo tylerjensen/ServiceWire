@@ -22,10 +22,11 @@ namespace ServiceWire.TcpIp
         /// <param name="log"></param>
         /// <param name="stats"></param>
         /// <param name="zkRepository">Only required to support zero knowledge authentication and encryption.</param>
+        /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         public TcpHost(int port, ILog log = null, IStats stats = null, 
-            IZkRepository zkRepository = null)
+            IZkRepository zkRepository = null, ISerializer serializer = null)
         {
-            Initialize(new IPEndPoint(IPAddress.Any, port), log, stats, zkRepository);
+            Initialize(new IPEndPoint(IPAddress.Any, port), log, stats, zkRepository, serializer);
         }
 
         /// <summary>
@@ -38,17 +39,19 @@ namespace ServiceWire.TcpIp
         /// <param name="log"></param>
         /// <param name="stats"></param>
         /// <param name="zkRepository">Only required to support zero knowledge authentication and encryption.</param>
+        /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         public TcpHost(IPEndPoint endpoint, ILog log = null, IStats stats = null, 
-            IZkRepository zkRepository = null)
+            IZkRepository zkRepository = null, ISerializer serializer = null)
         {
-            Initialize(endpoint, log, stats, zkRepository);
+            Initialize(endpoint, log, stats, zkRepository, serializer);
         }
 
-        private void Initialize(IPEndPoint endpoint, ILog log, IStats stats, IZkRepository zkRepository)
+        private void Initialize(IPEndPoint endpoint, ILog log, IStats stats, IZkRepository zkRepository, ISerializer serializer)
         {
             base.Log = log;
             base.Stats = stats;
             base.ZkRepository = zkRepository ?? new ZkNullRepository();
+            _serializer = serializer ?? new DefaultSerializer();
             _endPoint = endpoint;
             _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);

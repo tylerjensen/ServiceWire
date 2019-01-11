@@ -18,9 +18,10 @@ namespace ServiceWire.TcpIp
         /// </summary>
         /// <param name="serviceType"></param>
         /// <param name="endpoint"></param>
-        public TcpChannel(Type serviceType, IPEndPoint endpoint)
+        /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
+        public TcpChannel(Type serviceType, IPEndPoint endpoint, ISerializer serializer)
         {
-            Initialize(null, null, serviceType, endpoint, 2500);
+            Initialize(null, null, serviceType, endpoint, 2500, serializer);
         }
 
         /// <summary>
@@ -28,28 +29,36 @@ namespace ServiceWire.TcpIp
         /// </summary>
         /// <param name="serviceType"></param>
         /// <param name="endpoint"></param>
-        public TcpChannel(Type serviceType, TcpEndPoint endpoint)
+        /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
+        public TcpChannel(Type serviceType, TcpEndPoint endpoint, ISerializer serializer)
         {
-            Initialize(null, null, serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs);
+            Initialize(null, null, serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs, serializer);
         }
 
-        public TcpChannel(Type serviceType, TcpZkEndPoint endpoint)
+        /// <summary>
+        /// Creates a secure connection to the concrete object handling method calls on the server side
+        /// </summary>
+        /// <param name="serviceType"></param>
+        /// <param name="endpoint"></param>
+        /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
+        public TcpChannel(Type serviceType, TcpZkEndPoint endpoint, ISerializer serializer)
         {
             if (endpoint == null) throw new ArgumentNullException("endpoint");
             if (endpoint.Username == null) throw new ArgumentNullException("endpoint.Username");
             if (endpoint.Password == null) throw new ArgumentNullException("endpoint.Password");
             Initialize(endpoint.Username, endpoint.Password, 
-                serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs);
+                serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs, serializer);
         }
 
         private void Initialize(string username, string password, 
-            Type serviceType, IPEndPoint endpoint, int connectTimeoutMs)
+            Type serviceType, IPEndPoint endpoint, int connectTimeoutMs, ISerializer serializer)
         {
             _username = username;
             _password = password;
             _serviceType = serviceType;
             _client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp); // TcpClient(AddressFamily.InterNetwork);
             _client.LingerState.Enabled = false;
+            _serializer = serializer ?? new DefaultSerializer();
 
             var connected = false;
             var connectEventArgs = new SocketAsyncEventArgs
