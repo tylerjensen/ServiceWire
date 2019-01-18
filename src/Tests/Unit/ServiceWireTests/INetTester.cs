@@ -10,7 +10,6 @@ namespace ServiceWireTests
         int Min(int a, int b);
         Dictionary<int, int> Range(int start, int count);
         Task<int> CalculateAsync(int a, int b);
-
     }
 
     public class NetTester : INetTester

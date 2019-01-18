@@ -7,19 +7,22 @@ namespace ServiceWire.TcpIp
     {
 		public TInterface Proxy { get; }
 
-		public TcpClient(TcpEndPoint endpoint)
+		public TcpClient(TcpEndPoint endpoint, ISerializer serializer = null)
         {
-            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
+            if (null == serializer) serializer = new DefaultSerializer();
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer);
         }
 
-        public TcpClient(TcpZkEndPoint endpoint)
+        public TcpClient(TcpZkEndPoint endpoint, ISerializer serializer = null)
         {
-            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
+            if (null == serializer) serializer = new DefaultSerializer();
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer);
         }
 
-        public TcpClient(IPEndPoint endpoint)
+        public TcpClient(IPEndPoint endpoint, ISerializer serializer = null)
         {
-            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint);
+            if (null == serializer) serializer = new DefaultSerializer();
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer);
         }
 
         public void InjectLoggerStats(ILog logger, IStats stats)

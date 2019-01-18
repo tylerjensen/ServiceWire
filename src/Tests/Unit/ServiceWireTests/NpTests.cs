@@ -43,6 +43,48 @@ namespace ServiceWireTests
         }
 
         [Fact]
+        public void SimpleNewtonsoftSerializerTest()
+        {
+            using (var nphost = new NpHost(PipeName + "Json", serializer: new NewtonsoftSerializer()))
+            {
+                nphost.AddService<INetTester>(_tester);
+                nphost.Open();
+
+                var rnd = new Random();
+
+                var a = rnd.Next(0, 100);
+                var b = rnd.Next(0, 100);
+
+                using (var clientProxy = new NpClient<INetTester>(new NpEndPoint(PipeName + "Json"), new NewtonsoftSerializer()))
+                {
+                    var result = clientProxy.Proxy.Min(a, b);
+                    Assert.Equal(Math.Min(a, b), result);
+                }
+            }
+        }
+
+        [Fact]
+        public void SimpleProtobufSerializerTest()
+        {
+            using (var nphost = new NpHost(PipeName + "Proto", serializer: new ProtobufSerializer()))
+            {
+                nphost.AddService<INetTester>(_tester);
+                nphost.Open();
+
+                var rnd = new Random();
+
+                var a = rnd.Next(0, 100);
+                var b = rnd.Next(0, 100);
+
+                using (var clientProxy = new NpClient<INetTester>(new NpEndPoint(PipeName + "Proto"), new ProtobufSerializer()))
+                {
+                    var result = clientProxy.Proxy.Min(a, b);
+                    Assert.Equal(Math.Min(a, b), result);
+                }
+            }
+        }
+
+        [Fact]
         public async Task CalculateAsyncTest()
         {
 	        var rnd = new Random();

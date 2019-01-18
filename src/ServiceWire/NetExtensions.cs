@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -35,57 +34,6 @@ namespace ServiceWire
             {
             }
             return null;
-        }
-
-        private static JsonSerializerSettings settings = new JsonSerializerSettings
-        {
-            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
-        };
-
-        public static byte[] ToSerializedBytes<T>(this T obj)
-        {
-            if (null == obj) return null;
-            var json = JsonConvert.SerializeObject(obj, settings);
-            return Encoding.UTF8.GetBytes(json);
-        }
-
-        public static byte[] ToSerializedBytes(this object obj, string typeConfigName)
-        {
-            if (null == obj) return null;
-            var type = typeConfigName.ToType();
-            var json = JsonConvert.SerializeObject(obj, type, settings);
-            return Encoding.UTF8.GetBytes(json);
-        }
-
-        public static T ToDeserializedObject<T>(this byte[] bytes)
-        {
-            if (null == bytes || bytes.Length == 0) return default(T);
-            return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(bytes), settings);
-        }
-
-        public static object ToDeserializedObject(this byte[] bytes, string typeConfigName)
-        {
-            if (null == typeConfigName || null == bytes || bytes.Length == 0) return null;
-            var type = typeConfigName.ToType();
-            return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(bytes), type, settings);
-        }
-
-        public static string ToSerializedBase64String<T>(this T obj)
-        {
-            if (null == obj) return null;
-            var bytes = obj.ToSerializedBytes();
-            return Convert.ToBase64String(bytes);
-        }
-
-        public static T ToDeserializedObjectFromBase64String<T>(this string base64String)
-        {
-            try
-            {
-                var bytes = Convert.FromBase64String(base64String);
-                return bytes.ToDeserializedObject<T>();
-            }
-            catch { }
-            return default(T);
         }
 
         /// <summary>

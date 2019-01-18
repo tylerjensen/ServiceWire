@@ -1,6 +1,18 @@
 ServiceWire
 ===========
 
+### BREAKING CHANGES in version 5.3.0
+
+1. Injectable serialization (see project library tests for examples). 
+
+2. Removes dependency on Newtonsoft.Json and uses BinaryFormatter for default serialization which means wire data classes must be marked [Serializable]. 
+
+3. Internal classes are attributed to support protobuf-net serialization as well.
+
+### Changes in version 5.2.0
+
+1. Adds support for return types of Task and Task<T> to support async / await across the wire.
+
 ### Changes including some breaking changes in version 5.1.0
 
 1. Dropped strong named assembly.

@@ -16,9 +16,15 @@ namespace ServiceWire.NamedPipes
             }
         }
 
-        public NpClient(NpEndPoint npAddress)
+        /// <summary>
+        /// Create a named pipes client.
+        /// </summary>
+        /// <param name="npAddress"></param>
+        /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
+        public NpClient(NpEndPoint npAddress, ISerializer serializer = null)
         {
-            _proxy = NpProxy.CreateProxy<TInterface>(npAddress);
+            if (null == serializer) serializer = new DefaultSerializer();
+            _proxy = NpProxy.CreateProxy<TInterface>(npAddress, serializer);
         }
 
         #region IDisposable Members

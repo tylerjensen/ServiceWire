@@ -17,12 +17,18 @@ namespace ServiceWire
         protected int _compressionThreshold = 131072; //128KB
         protected ILog _log = new NullLogger();
         protected IStats _stats = new NullStats();
+        protected ISerializer _serializer;
         protected IZkRepository _zkRepository = new ZkNullRepository();
         private volatile bool _requireZk = false;
 
         protected ConcurrentDictionary<string, int> _serviceKeys = new ConcurrentDictionary<string, int>(); 
         protected ConcurrentDictionary<int, ServiceInstance> _services = new ConcurrentDictionary<int, ServiceInstance>();
-        protected ParameterTransferHelper _parameterTransferHelper = new ParameterTransferHelper();
+        protected readonly ParameterTransferHelper _parameterTransferHelper;
+
+        public Host()
+        {
+            _parameterTransferHelper = new ParameterTransferHelper(_serializer);
+        }
 
         public IZkRepository ZkRepository
         {
@@ -192,14 +198,14 @@ namespace ServiceWire
             foreach (var kvp in instance.InterfaceMethods)
             {
                 var parameters = kvp.Value.GetParameters();
-                var parameterTypes = new Type[parameters.Length];
+                var parameterTypes = new string[parameters.Length];
                 for (var i = 0; i < parameters.Length; i++)
-                    parameterTypes[i] = parameters[i].ParameterType;
+                    parameterTypes[i] = parameters[i].ParameterType.FullName;
                 syncSyncInfos.Add(new MethodSyncInfo
                 {
                     MethodIdent = kvp.Key, 
                     MethodName = kvp.Value.Name, 
-                    MethodReturnType = kvp.Value.ReturnType, 
+                    MethodReturnType = kvp.Value.ReturnType.FullName, 
                     ParameterTypes = parameterTypes
                 });
             }
@@ -339,7 +345,7 @@ namespace ServiceWire
                 {
                     syncCat = instance.InterfaceType.Name;
                     //Create a list of sync infos from the dictionary
-                    var syncBytes = instance.ServiceSyncInfo.ToSerializedBytes();
+                    var syncBytes = _serializer.Serialize(instance.ServiceSyncInfo);
                     if (_requireZk)
                     {
                         _log.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(syncBytes));

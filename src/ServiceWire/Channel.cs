@@ -8,6 +8,12 @@ namespace ServiceWire
 
         protected ILog _logger = new NullLogger();
         protected IStats _stats = new NullStats();
+        internal ISerializer _serializer;
+
+        public Channel()
+        {
+            if (null == _serializer) _serializer = new DefaultSerializer();
+        }
 
         public void InjectLoggerStats(ILog logger, IStats stats)
         {
