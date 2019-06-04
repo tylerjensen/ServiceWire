@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace ServiceWireTestClient2
 {
@@ -14,11 +15,13 @@ namespace ServiceWireTestClient2
     {
         private static void Main(string[] args)
         {
+            Thread.Sleep(1200);
             var ip = ConfigurationManager.AppSettings["ip"];
             var port = Convert.ToInt32(ConfigurationManager.AppSettings["port"]);
             var ipEndpoint = new IPEndPoint(IPAddress.Parse(ip), port);
-            for (int i = 0; i < 1; i++) RunTest(ipEndpoint, ip);
-
+            var tasks = new List<Task>();
+            for (int i = 0; i < 1; i++) tasks.Add(RunTest(ipEndpoint, ip));
+            Task.WaitAll(tasks.ToArray());
             Console.ReadLine();
         }
 

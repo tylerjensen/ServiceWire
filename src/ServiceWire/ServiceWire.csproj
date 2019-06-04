@@ -8,11 +8,11 @@
     <PackageIconUrl>http://www.tsjensen.com/blog/image.axd?picture=2014/11/swlogo_sm.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/tylerjensen/ServiceWire</PackageProjectUrl>
     <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
-    <Copyright>Tyler Jensen 2013-2018</Copyright>
-    <Version>5.3.0</Version>
+    <Copyright>Tyler Jensen 2013-2019</Copyright>
+    <Version>5.3.1</Version>
     <Description>ServiceWire is a very fast and light weight service host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP. And with the release of 2.0.0, ServiceWire now supports optional use of Zero Knowledge authentication with a fast variation of Secure Remote Password Protocol and strong Rijndael encryption of data across the wire via TCP without the need for public keys going across the wire.</Description>
     <PackageTags>WCF Services Host Client NamedPipes TCP Messaging RPC Interception Zero Knowledge Secure Remote Password Protocol Serialization</PackageTags>
-    <PackageReleaseNotes>BREAKING CHANGES. Injectable serialization (see project library tests for examples). Removes dependency on Newtonsoft.Json and uses BinaryFormatter for default serialization which means wire data classes must be marked [Serializable]. Internal classes are attributed to support protobuf-net serialization as well.</PackageReleaseNotes>
+    <PackageReleaseNotes>Bug fixes to complex type serialization and output parameter handling.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

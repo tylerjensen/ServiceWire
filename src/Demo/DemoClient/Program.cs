@@ -12,7 +12,7 @@ namespace DemoClient
 {
     class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var logger = new Logger(logLevel: LogLevel.Debug);
             var stats = new Stats();
@@ -31,10 +31,10 @@ namespace DemoClient
                 new IPEndPoint(IPAddress.Parse(ip), port), connectTimeOutMs: 2500);
 
             Console.WriteLine("Iteration 1");
-            RunTest(zkEndpoint, ip, logger, stats);
+            await RunTest(zkEndpoint, ip, logger, stats);
 
             Console.WriteLine("Iteration 2");
-            RunTest(zkEndpoint, ip, logger, stats);
+            await RunTest(zkEndpoint, ip, logger, stats);
 
             Console.ReadLine();
         }

@@ -136,7 +136,7 @@ namespace ServiceWire
                             writer.Write((ushort)parameter);
                             break;
                         case ParameterTypes.Type:
-                            writer.Write(type.FullName);
+                            writer.Write(type.ToConfigName());
                             break;
                         case ParameterTypes.Guid:
                             writer.Write(((Guid)parameter).ToByteArray());
@@ -209,7 +209,7 @@ namespace ServiceWire
                             var types = (Type[])parameter;
                             writer.Write(types.Length);
                             foreach (var t in types)
-                                writer.Write(t.FullName);
+                                writer.Write(t.ToConfigName());
                             break;    
                         case ParameterTypes.ArrayGuid:
                             var guids = (Guid[])parameter;

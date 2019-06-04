@@ -31,6 +31,7 @@ namespace ServiceWireTestCommon
         List<string> GetItems(Guid id, int[] vals);
     }
 
+    [Serializable]
     public struct TestResponse
     {
         public Guid Id { get; set; }

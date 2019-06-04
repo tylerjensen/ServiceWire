@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Collections.Generic;
 
 namespace ServiceWire
 {
@@ -17,21 +18,22 @@ namespace ServiceWire
             name = Regex.Replace(name, @", Culture=\w+", string.Empty);
             name = Regex.Replace(name, @", PublicKeyToken=\w+", string.Empty);
             return name;
-            //return t.FullName + ", " + t.Assembly.GetName().Name;
         }
 
         public static Type ToType(this string configName)
         {
             try
             {
-                return Type.GetType(configName);
+                var result = Type.GetType(configName);
+                return result;
                 //var parts = (from n in configName.Split(',') select n.Trim()).ToArray();
                 //var assembly = Assembly.Load(new AssemblyName(parts[1]));
                 //var type = assembly.GetType(parts[0]);
                 //return type;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Console.WriteLine(e);
             }
             return null;
         }

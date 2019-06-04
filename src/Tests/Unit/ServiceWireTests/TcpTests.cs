@@ -130,6 +130,19 @@ namespace ServiceWireTests
             });
         }
 
+        [Fact]
+        public void ResponseWithOutParameterTest()
+        {
+            using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
+            {
+                int quantity = 0;
+                var result = clientProxy.Proxy.Get(Guid.NewGuid(), "SomeLabel", 45.65, out quantity);
+                Assert.Equal(44, quantity);
+                Assert.NotEqual(default(TestResponse), result);
+                Assert.Equal("MyLabel", result.Label);
+            }
+        }
+
         public void Dispose()
         {
             _tcphost.Close();

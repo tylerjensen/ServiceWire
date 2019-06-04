@@ -1,6 +1,11 @@
 ServiceWire
 ===========
 
+### Bug Fixes in version 5.3.1
+
+1. Fixed bug related to complex type serialization that occurred when using output parameters.
+
+
 ### BREAKING CHANGES in version 5.3.0
 
 1. Injectable serialization (see project library tests for examples). 

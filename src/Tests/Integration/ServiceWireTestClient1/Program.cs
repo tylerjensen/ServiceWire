@@ -18,6 +18,8 @@ namespace ServiceWireTestClient1
     {
         private static void Main(string[] args)
         {
+            Thread.Sleep(1000);
+
             var ip = ConfigurationManager.AppSettings["ip"];
             var port = Convert.ToInt32(ConfigurationManager.AppSettings["port"]);
             var ipEndpoint = new IPEndPoint(IPAddress.Parse(ip), port);

@@ -24,6 +24,7 @@ namespace DemoCommon
         List<string> GetItems(Guid id);
     }
 
+    [Serializable]
     public struct ComplexResponse
     {
         public Guid Id { get; set; }

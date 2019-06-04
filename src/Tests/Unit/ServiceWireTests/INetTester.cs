@@ -9,7 +9,16 @@ namespace ServiceWireTests
     {
         int Min(int a, int b);
         Dictionary<int, int> Range(int start, int count);
+        TestResponse Get(Guid id, string label, double weight, out int quantity);
         Task<int> CalculateAsync(int a, int b);
+    }
+
+    [Serializable]
+    public struct TestResponse
+    {
+        public Guid Id { get; set; }
+        public string Label { get; set; }
+        public long Quantity { get; set; }
     }
 
     public class NetTester : INetTester
@@ -27,6 +36,12 @@ namespace ServiceWireTests
         public Task<int> CalculateAsync(int a, int b)
         {
 	        return Task.FromResult(a + b);
+        }
+
+        public TestResponse Get(Guid id, string label, double weight, out int quantity)
+        {
+            quantity = 44;
+            return new TestResponse { Id = id, Label = "MyLabel", Quantity = quantity };
         }
     }
 }

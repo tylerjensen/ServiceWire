@@ -116,14 +116,14 @@ namespace ServiceWire
                 if (null != _zkCrypto)
                 {
                     //sync interface with encryption
-                    var assemName = serviceType.FullName;
+                    var assemName = serviceType.ToConfigName();
                     var assemblyNameEncrypted = _zkCrypto.Encrypt(assemName.ConvertToBytes());
                     _binWriter.Write(assemblyNameEncrypted.Length);
                     _binWriter.Write(assemblyNameEncrypted);
                 }
                 else
                 {
-                    _binWriter.Write(serviceType.FullName);
+                    _binWriter.Write(serviceType.ToConfigName());
                 }
                 //read sync data
                 var len = _binReader.ReadInt32();

@@ -82,11 +82,12 @@ namespace ServiceWire.Aspects
                 var parameters = kvp.Value.GetParameters();
                 var parameterTypes = new string[parameters.Length];
                 for (var i = 0; i < parameters.Length; i++)
-                    parameterTypes[i] = parameters[i].ParameterType.FullName;
+                    parameterTypes[i] = parameters[i].ParameterType.ToConfigName();
                 syncSyncInfos.Add(new MethodSyncInfo
                 {
                     MethodIdent = kvp.Key,
                     MethodName = kvp.Value.Name,
+                    MethodReturnType = kvp.Value.ReturnType.ToConfigName(),
                     ParameterTypes = parameterTypes
                 });
             }

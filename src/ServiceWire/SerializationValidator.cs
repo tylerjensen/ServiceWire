@@ -41,7 +41,7 @@ namespace ServiceWire
             {
                 var errorMessage =
                     string.Format("One or more types in {0} are not marked with the Serializable attribute: {1}",
-                        type.FullName, string.Join(",", nonSerializableTypes));
+                        type.ToConfigName(), string.Join(",", nonSerializableTypes));
                 throw new SerializationException(errorMessage);
             }
         }

@@ -130,7 +130,7 @@ namespace ServiceWire
                 var serviceType = typeof(TService);
                 if (!serviceType.IsInterface) throw new ArgumentException("TService must be an interface.", "TService");
                 //serviceType.ValidateServiceInterface(); //throws if one class in the interface or its members is not serializable
-                var serviceKey = serviceType.FullName; // serviceType.AssemblyQualifiedName ?? serviceType.FullName;
+                var serviceKey = serviceType.ToConfigName(); // serviceType.AssemblyQualifiedName ?? serviceType.FullName;
                 if (_serviceKeys.ContainsKey(serviceKey)) throw new Exception("Service already added. Only one instance allowed.");
                 int keyIndex = _serviceKeys.Count;
                 _serviceKeys.TryAdd(serviceKey, keyIndex);
@@ -200,12 +200,12 @@ namespace ServiceWire
                 var parameters = kvp.Value.GetParameters();
                 var parameterTypes = new string[parameters.Length];
                 for (var i = 0; i < parameters.Length; i++)
-                    parameterTypes[i] = parameters[i].ParameterType.FullName;
+                    parameterTypes[i] = parameters[i].ParameterType.ToConfigName();
                 syncSyncInfos.Add(new MethodSyncInfo
                 {
                     MethodIdent = kvp.Key, 
                     MethodName = kvp.Value.Name, 
-                    MethodReturnType = kvp.Value.ReturnType.FullName, 
+                    MethodReturnType = kvp.Value.ReturnType.ToConfigName(), 
                     ParameterTypes = parameterTypes
                 });
             }

@@ -22,7 +22,7 @@ namespace ServiceWire
             Type interfaceType = typeof(TInterface);
 
             //derive unique key for this dynamic assembly by interface, channel and ctor type names
-            var proxyName = interfaceType.FullName + channelType.FullName + ctorArgType.FullName;
+            var proxyName = interfaceType.ToConfigName() + channelType.ToConfigName() + ctorArgType.ToConfigName();
 
             //get pooled proxy builder
             var localChannelType = channelType;
@@ -182,7 +182,7 @@ namespace ServiceWire
             if (inputArgTypes.Length > 0)
             {
                 var args = new string[inputArgTypes.Length];
-                for (int i = 0; i < inputArgTypes.Length; i++) args[i] = inputArgTypes[i].FullName;
+                for (int i = 0; i < inputArgTypes.Length; i++) args[i] = inputArgTypes[i].ToConfigName();
                 metadata += "|" + string.Join("|", args);
             }
             //declare and assign string literal
