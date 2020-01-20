@@ -46,7 +46,7 @@ namespace ServiceWire
         {
             //create the type and construct an instance
             Type[] ctorArgTypes = new Type[] { typeof(Type), proxyBuilder.CtorType, typeof(ISerializer) };
-            Type t = proxyBuilder.TypeBuilder.CreateType();
+            Type t = proxyBuilder.TypeBuilder.CreateTypeInfo();
             var constructorInfo = t.GetConstructor(ctorArgTypes);
             if (constructorInfo != null)
             {
@@ -205,7 +205,7 @@ namespace ServiceWire
 
                 mIL.Emit(OpCodes.Dup);
                 mIL.Emit(OpCodes.Ldc_I4, i); //push the index onto the stack
-                mIL.Emit(OpCodes.Ldarg, i + 1); //load the i'th argument. This might be an address			
+                mIL.Emit(OpCodes.Ldarg, i + 1); //load the i'th argument. This might be an address
                 if (inputArgTypes[i].IsByRef)
                 {
                     if (inputType.IsValueType)
