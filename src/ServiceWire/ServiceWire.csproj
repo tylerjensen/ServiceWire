@@ -9,10 +9,10 @@
     <PackageProjectUrl>https://github.com/tylerjensen/ServiceWire</PackageProjectUrl>
     <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
     <Copyright>Tyler Jensen 2013-2019</Copyright>
-    <Version>5.3.1</Version>
+    <Version>5.3.2</Version>
     <Description>ServiceWire is a very fast and light weight service host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP. And with the release of 2.0.0, ServiceWire now supports optional use of Zero Knowledge authentication with a fast variation of Secure Remote Password Protocol and strong Rijndael encryption of data across the wire via TCP without the need for public keys going across the wire.</Description>
     <PackageTags>WCF Services Host Client NamedPipes TCP Messaging RPC Interception Zero Knowledge Secure Remote Password Protocol Serialization</PackageTags>
-    <PackageReleaseNotes>Bug fixes to complex type serialization and output parameter handling.</PackageReleaseNotes>
+    <PackageReleaseNotes>Update support for .Net Standard 2.0 and 2.1 to allow use in .NET Framework 4.61 and up and .NET Core 2.0 and up.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

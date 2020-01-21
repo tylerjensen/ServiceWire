@@ -88,7 +88,7 @@ namespace ServiceWireTests
         {
             var rnd = new Random();
 
-            Parallel.For(0, 50, (index, state) =>
+            Parallel.For(0, 4, (index, state) =>
             {
                 var a = rnd.Next(0, 100);
                 var b = rnd.Next(0, 100);
@@ -134,7 +134,8 @@ namespace ServiceWireTests
         [Fact]
         public void ResponseParallelTest()
         {
-            Parallel.For(0, 50, (index, state) =>
+            Random rnd = new Random(DateTime.Now.Millisecond);
+            Parallel.For(0, 4, (index, state) =>
             {
                 using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
                 {
