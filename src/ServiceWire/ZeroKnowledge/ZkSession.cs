@@ -38,13 +38,14 @@ namespace ServiceWire.ZeroKnowledge
             _logger.Debug("ZkProof client session hash received: {0}", Convert.ToBase64String(_clientSessionHash));
             var serverClientSessionHash = _zkProtocol.ClientCreateSessionHash(_username, _zkPasswordHash.Salt, 
                 _aEphemeral, _bEphemeral, _serverSessionKey);
+
+            _serverSessionHash = _zkProtocol.ServerCreateSessionHash(_aEphemeral, _clientSessionHash, _serverSessionKey);
             if (!_clientSessionHash.IsEqualTo(serverClientSessionHash))
             {
                 _logger.Debug("ZkProof session hash does not match. Authentication failed. Server session hash: {0}", Convert.ToBase64String(_serverSessionHash));
                 binWriter.Write(false);
                 return false;
             }
-            _serverSessionHash = _zkProtocol.ServerCreateSessionHash(_aEphemeral, _clientSessionHash, _serverSessionKey);
             _zkCrypto = new ZkCrypto(_serverSessionKey, _scramble);
             binWriter.Write(true);
             binWriter.Write(_serverSessionHash);
