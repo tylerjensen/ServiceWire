@@ -1,7 +1,7 @@
-[![tylerjensen](https://circleci.com/gh/tylerjensen/ServiceWire.svg?style=svg)](https://circleci.com/gh/tylerjensen/ServiceWire)
-
 ServiceWire
 ===========
+
+[![tylerjensen](https://circleci.com/gh/tylerjensen/servicewire.svg?style=shield)](https://circleci.com/gh/tylerjensen/servicewire)
 
 ### Bug Fixes in version 5.3.1
 
