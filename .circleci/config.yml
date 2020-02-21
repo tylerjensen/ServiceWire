@@ -10,4 +10,4 @@
     
      steps:
        - checkout
-       - run: dotnet build
+       - run: dotnet build ./src/ServiceWire.sln
