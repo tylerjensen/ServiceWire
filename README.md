@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/tylerjensen/ServiceWire.svg?style=svg)](https://circleci.com/gh/tylerjensen/ServiceWire)
+
 ServiceWire
 ===========
 
