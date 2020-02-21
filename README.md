@@ -1,4 +1,4 @@
-[![tylerjensen](https://circleci.com/gh/tylerjensen/servicewire.svg?style=flat)](https://circleci.com/gh/tylerjensen/servicewire)
+[![tylerjensen](https://circleci.com/gh/tylerjensen/ServiceWire.svg?style=svg)](https://circleci.com/gh/tylerjensen/ServiceWire)
 
 ServiceWire
 ===========
