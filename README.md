@@ -3,6 +3,11 @@
 ServiceWire
 ===========
 
+### .NET Standard 2.0 and 2.1 in version 5.3.2
+
+1. Changed library build to only .NET Standard 2.0 and 2.1.
+2. This breaks users of named pipes in .NET 4.6.2 -- DO NOT UPGRADE until we resolve that issue.
+
 ### Bug Fixes in version 5.3.1
 
 1. Fixed bug related to complex type serialization that occurred when using output parameters.
