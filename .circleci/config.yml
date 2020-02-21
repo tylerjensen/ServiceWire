@@ -5,7 +5,6 @@
 
  jobs:
    build:
-     working_directory: ~/src
      executor: win/default     
     
      steps:
