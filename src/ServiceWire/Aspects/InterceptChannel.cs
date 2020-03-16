@@ -14,10 +14,10 @@ namespace ServiceWire.Aspects
         public InterceptPoint InterceptPoint { get { return _interceptPoint; } }
 
         public InterceptChannel(Type interceptedType, InterceptPoint interceptPoint, ISerializer serializer)
+            : base(serializer)
         {
             _serviceType = interceptedType;
             _interceptPoint = interceptPoint;
-            _serializer = serializer;
             CreateMethodMap();
         }
 
