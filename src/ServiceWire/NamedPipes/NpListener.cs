@@ -17,10 +17,10 @@ namespace ServiceWire.NamedPipes
         private ILog _log = new NullLogger();
         private IStats _stats = new NullStats();
 
-        string PipeName { get; set; }
+        public string PipeName { get; set; }
         public event EventHandler<PipeClientConnectionEventArgs> RequestReieved;
 
-        public PipeSecurity PipeSecurity { get { return _pipeSecurity; } }
+        PipeSecurity PipeSecurity { get { return _pipeSecurity; } }
 
         public NpListener(string pipeName, int maxConnections = 254, ILog log = null, IStats stats = null)
         {
