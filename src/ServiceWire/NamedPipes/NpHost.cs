@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.IO.Pipes;
 
 namespace ServiceWire.NamedPipes
 {
@@ -22,6 +23,8 @@ namespace ServiceWire.NamedPipes
                 _useThreadPool = value;
             }
         }
+
+        public PipeSecurity PipeSecurity { get { return _listener.PipeSecurity; } }
 
         /// <summary>
         /// Constructs an instance of the host and starts listening for incoming connections.
