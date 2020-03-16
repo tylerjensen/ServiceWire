@@ -20,7 +20,7 @@ namespace ServiceWire.NamedPipes
         public string PipeName { get; set; }
         public event EventHandler<PipeClientConnectionEventArgs> RequestReieved;
 
-        PipeSecurity PipeSecurity { get { return _pipeSecurity; } }
+        internal PipeSecurity PipeSecurity { get { return _pipeSecurity; } }
 
         public NpListener(string pipeName, int maxConnections = 254, ILog log = null, IStats stats = null)
         {
