@@ -15,6 +15,7 @@ namespace ServiceWire.NamedPipes
         /// <param name="npEndPoint"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         public NpChannel(Type serviceType, NpEndPoint npEndPoint, ISerializer serializer)
+            : base(serializer)
         {
             _serviceType = serviceType;
             _clientStream = new NamedPipeClientStream(npEndPoint.ServerName, npEndPoint.PipeName, PipeDirection.InOut);
@@ -22,7 +23,6 @@ namespace ServiceWire.NamedPipes
             _stream = new BufferedStream(_clientStream);
             _binReader = new BinaryReader(_clientStream);
             _binWriter = new BinaryWriter(_clientStream);
-            _serializer = serializer ?? new DefaultSerializer();
             try
             {
                 SyncInterface(_serviceType);
