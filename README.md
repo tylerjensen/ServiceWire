@@ -3,6 +3,13 @@
 ServiceWire
 ===========
 
+### .NET 4.62 added back in version 5.3.3
+
+1. Added .NET Framework 4.62 build in package to prevent permissions issue in named pipes. 
+2. Fixed custom serializer issue. 
+3. .NET Standard 2.0 and 2.1 builds remain. 
+4. Resolved parallel Zk test issues.
+
 ### .NET Standard 2.0 and 2.1 in version 5.3.2
 
 1. Changed library build to only .NET Standard 2.0 and 2.1.
