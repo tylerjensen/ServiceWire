@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using ServiceWire.TcpIp;
 using ServiceWire.ZeroKnowledge;
@@ -87,23 +88,22 @@ namespace ServiceWireTests
         public void SimpleParallelZkTest()
         {
             var rnd = new Random();
-
-            Parallel.For(0, 4, (index, state) =>
+            using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
             {
-                var a = rnd.Next(0, 100);
-                var b = rnd.Next(0, 100);
-
-                using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
+                Parallel.For(0, 12, (index, state) =>
                 {
-                    var result = clientProxy.Proxy.Min(a, b);
+                    var a = rnd.Next(0, 100);
+                    var b = rnd.Next(0, 100);
 
-                    if (Math.Min(a, b) != result)
-                    {
-                        state.Break();
-                        Assert.Equal(Math.Min(a, b), result);
-                    }
-                }
-            });
+                        var result = clientProxy.Proxy.Min(a, b);
+
+                        if (Math.Min(a, b) != result)
+                        {
+                            state.Break();
+                            Assert.Equal(Math.Min(a, b), result);
+                        }
+                });
+            }
         }
 
         [Fact]
@@ -135,31 +135,31 @@ namespace ServiceWireTests
         public void ResponseParallelTest()
         {
             Random rnd = new Random(DateTime.Now.Millisecond);
-            Parallel.For(0, 4, (index, state) =>
+            using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
             {
-                using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
+                Parallel.For(0, 12, (index, state) =>
                 {
-                    const int count = 50;
-                    const int start = 0;
+                        const int count = 50;
+                        const int start = 0;
 
-                    var result = clientProxy.Proxy.Range(start, count);
+                        var result = clientProxy.Proxy.Range(start, count);
 
-                    for (var i = start; i < count; i++)
-                    {
-                        int temp;
-                        if (result.TryGetValue(i, out temp))
+                        for (var i = start; i < count; i++)
                         {
-                            if(i != temp) state.Break();
-                            Assert.Equal(i, temp);
+                            int temp;
+                            if (result.TryGetValue(i, out temp))
+                            {
+                                if(i != temp) state.Break();
+                                Assert.Equal(i, temp);
+                            }
+                            else
+                            {
+                                state.Break();
+                                Assert.True(false);
+                            }
                         }
-                        else
-                        {
-                            state.Break();
-                            Assert.True(false);
-                        }
-                    }
-                }
-            });
+                });
+            }
         }
 
         public void Dispose()
