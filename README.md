@@ -10,6 +10,8 @@ ServiceWire
 3. .NET Standard 2.0 and 2.1 builds remain. 
 4. Resolved parallel Zk test issues.
 
+Note: Use of async/await and Task<T> not recommended. Use of Task return type not supported. While the syntax of Task return type is supported, apparently it is not marked as Serializable. In fact async/await is not really supported. Under the covers the task type is stripped away over the wire and the method is executed on a worker thread on the server synchronously. If you think about it, you will understand that it's two separate processes, so the Task Parallel Library is not going to be able to manage the thread context across the processes. RPC is inherently synchronous but the handling of each request on the host is done on thread pools.
+
 ### .NET Standard 2.0 and 2.1 in version 5.3.2
 
 1. Changed library build to only .NET Standard 2.0 and 2.1.
