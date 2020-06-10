@@ -27,7 +27,7 @@ namespace ServiceWire
 
         public Host(ISerializer serializer = null)
         {
-            _serializer = serializer;
+            _serializer = serializer ?? new DefaultSerializer();
             _parameterTransferHelper = new ParameterTransferHelper(_serializer);
         }
 

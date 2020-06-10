@@ -25,6 +25,7 @@ namespace ServiceWire.TcpIp
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         public TcpHost(int port, ILog log = null, IStats stats = null, 
             IZkRepository zkRepository = null, ISerializer serializer = null)
+            : base(serializer)
         {
             Initialize(new IPEndPoint(IPAddress.Any, port), log, stats, zkRepository, serializer);
         }
