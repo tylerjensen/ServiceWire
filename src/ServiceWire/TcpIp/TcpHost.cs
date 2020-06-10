@@ -25,8 +25,9 @@ namespace ServiceWire.TcpIp
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         public TcpHost(int port, ILog log = null, IStats stats = null, 
             IZkRepository zkRepository = null, ISerializer serializer = null)
+            : base(serializer)
         {
-            Initialize(new IPEndPoint(IPAddress.Any, port), log, stats, zkRepository, serializer);
+            Initialize(new IPEndPoint(IPAddress.Any, port), log, stats, zkRepository);
         }
 
         /// <summary>
@@ -42,16 +43,16 @@ namespace ServiceWire.TcpIp
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         public TcpHost(IPEndPoint endpoint, ILog log = null, IStats stats = null, 
             IZkRepository zkRepository = null, ISerializer serializer = null)
+            : base(serializer)
         {
-            Initialize(endpoint, log, stats, zkRepository, serializer);
+            Initialize(endpoint, log, stats, zkRepository);
         }
 
-        private void Initialize(IPEndPoint endpoint, ILog log, IStats stats, IZkRepository zkRepository, ISerializer serializer)
+        private void Initialize(IPEndPoint endpoint, ILog log, IStats stats, IZkRepository zkRepository)
         {
             base.Log = log;
             base.Stats = stats;
             base.ZkRepository = zkRepository ?? new ZkNullRepository();
-            _serializer = serializer ?? new DefaultSerializer();
             _endPoint = endpoint;
             _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
