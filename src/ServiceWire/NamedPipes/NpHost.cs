@@ -34,6 +34,7 @@ namespace ServiceWire.NamedPipes
         /// <param name="stats"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         public NpHost(string pipeName, ILog log = null, IStats stats = null, ISerializer serializer = null)
+            : base(serializer)
         {
             base.Log = log;
             base.Stats = stats;

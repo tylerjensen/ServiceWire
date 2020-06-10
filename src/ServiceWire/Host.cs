@@ -25,8 +25,9 @@ namespace ServiceWire
         protected ConcurrentDictionary<int, ServiceInstance> _services = new ConcurrentDictionary<int, ServiceInstance>();
         protected readonly ParameterTransferHelper _parameterTransferHelper;
 
-        public Host()
+        public Host(ISerializer serializer = null)
         {
+            _serializer = serializer;
             _parameterTransferHelper = new ParameterTransferHelper(_serializer);
         }
 
