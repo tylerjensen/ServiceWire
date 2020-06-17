@@ -180,6 +180,25 @@ namespace ServiceWireTests
             }
         }
 
+        [Fact]
+        public void ResponseWithOutParameterNewtonsoftSerializerTest()
+        {
+            using (var nphost = new NpHost(PipeName + "JsonResponseOut", serializer: new NewtonsoftSerializer()))
+            {
+                nphost.AddService<INetTester>(_tester);
+                nphost.Open();
+
+                using (var clientProxy = new NpClient<INetTester>(new NpEndPoint(PipeName + "JsonResponseOut"), new NewtonsoftSerializer()))
+                {
+                    int quantity = 0;
+                    var result = clientProxy.Proxy.Get(Guid.NewGuid(), "SomeLabel", 45.65, out quantity);
+                    Assert.Equal(44, quantity);
+                    Assert.NotEqual(default(TestResponse), result);
+                    Assert.Equal("MyLabel", result.Label);
+                }
+            }
+        }
+
         public void Dispose()
         {
             _nphost.Close();

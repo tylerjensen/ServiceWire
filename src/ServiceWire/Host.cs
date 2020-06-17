@@ -17,7 +17,7 @@ namespace ServiceWire
         protected int _compressionThreshold = 131072; //128KB
         protected ILog _log = new NullLogger();
         protected IStats _stats = new NullStats();
-        protected ISerializer _serializer;
+        protected readonly ISerializer _serializer;
         protected IZkRepository _zkRepository = new ZkNullRepository();
         private volatile bool _requireZk = false;
 
@@ -25,7 +25,7 @@ namespace ServiceWire
         protected ConcurrentDictionary<int, ServiceInstance> _services = new ConcurrentDictionary<int, ServiceInstance>();
         protected readonly ParameterTransferHelper _parameterTransferHelper;
 
-        public Host(ISerializer serializer = null)
+        public Host(ISerializer serializer)
         {
             _serializer = serializer ?? new DefaultSerializer();
             _parameterTransferHelper = new ParameterTransferHelper(_serializer);

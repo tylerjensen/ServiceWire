@@ -38,7 +38,6 @@ namespace ServiceWire.NamedPipes
         {
             base.Log = log;
             base.Stats = stats;
-            _serializer = serializer ?? new DefaultSerializer();
             _pipeName = pipeName;
             _listener = new NpListener(_pipeName, log: base.Log, stats: base.Stats);
             _listener.RequestReieved += ClientConnectionMade;
