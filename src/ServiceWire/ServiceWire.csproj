@@ -16,6 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="NamedPipeServerStream.NetFrameworkVersion" Version="1.0.2" />
     <PackageReference Include="System.IO.Pipes" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
