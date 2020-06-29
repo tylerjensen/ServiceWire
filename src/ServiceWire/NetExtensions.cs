@@ -32,10 +32,6 @@ namespace ServiceWire
             {
                 var result = Type.GetType(configName);
                 return result;
-                //var parts = (from n in configName.Split(',') select n.Trim()).ToArray();
-                //var assembly = Assembly.Load(new AssemblyName(parts[1]));
-                //var type = assembly.GetType(parts[0]);
-                //return type;
             }
             catch (Exception e)
             {

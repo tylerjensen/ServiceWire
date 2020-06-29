@@ -3,6 +3,11 @@
 ServiceWire
 ===========
 
+### .NET Framework to .NET Core and Serializer Bug Fixes 5.3.4
+
+1. Support for .NET Framework to .NET Core core parameter types to eliminate exceptions when a Framework client is talking to a Core host or vice versa. 
+2. Serializer injection bug fixed.
+
 ### .NET 4.62 added back in version 5.3.3
 
 1. Added .NET Framework 4.62 build in package to prevent permissions issue in named pipes. 
