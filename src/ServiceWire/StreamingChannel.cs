@@ -156,9 +156,6 @@ namespace ServiceWire
                 var useCrypto = null != _zkCrypto;
                 var mdata = metaData.Split('|');
 
-                //write the message type
-                _binWriter.Write((int)MessageType.MethodInvocation);
-
                 //find the matching server side method ident
                 var ident = -1;
                 for (int index = 0; index < _syncInfo.MethodInfos.Length; index++)
@@ -188,6 +185,9 @@ namespace ServiceWire
 
                 if (ident < 0)
                     throw new Exception(string.Format("Cannot match method '{0}' to its server side equivalent", mdata[0]));
+
+                //write the message type
+                _binWriter.Write((int)MessageType.MethodInvocation);
 
                 //write service key index
                 _binWriter.Write(_syncInfo.ServiceKeyIndex);
