@@ -13,6 +13,12 @@ namespace ServiceWire
     {
         public static string ToConfigName(this Type t)
         {
+            // Do not qualify types from mscorlib/System.Private.CoreLib otherwise calling between process running with different frameworks won't work
+            // i.e. "System.String, mscorlib" (.NET FW) != "System.String, System.Private.CoreLib" (.NET CORE)
+            if (t.Assembly.GetName().Name == "mscorlib" ||
+                t.Assembly.GetName().Name == "System.Private.CoreLib")
+                return t.FullName;
+
             var name = t.AssemblyQualifiedName;
             name = Regex.Replace(name, @", Version=\d+.\d+.\d+.\d+", string.Empty);
             name = Regex.Replace(name, @", Culture=\w+", string.Empty);
