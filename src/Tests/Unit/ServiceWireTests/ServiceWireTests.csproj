@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- ** Tests by OS targets only on LTS releases. -->
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <TargetFrameworks>netcoreapp3.1;netcoreapp2.1</TargetFrameworks>
   </PropertyGroup>
