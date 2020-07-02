@@ -10,7 +10,6 @@ namespace ServiceWire.NamedPipes
     public class NpListener
     {
         private bool running;
-        private Thread runningThread;
         private EventWaitHandle terminateHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
         private int _maxConnections = 254;
 #if NET462

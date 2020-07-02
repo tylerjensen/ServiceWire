@@ -61,7 +61,7 @@ namespace ServiceWire
 
         #region IDisposable Members
 
-        protected bool _disposed = false;
+        private bool _disposed = false;
 
         public void Dispose()
         {

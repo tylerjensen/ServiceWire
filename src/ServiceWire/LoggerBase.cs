@@ -84,7 +84,7 @@ namespace ServiceWire
                     var fileName = GetFileName();
                     File.AppendAllLines(fileName, lines);
                 }
-                catch (Exception e)
+                catch
                 {
                     //todo ?
                 }
