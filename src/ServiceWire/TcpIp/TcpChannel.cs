@@ -1,7 +1,6 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Threading;
 
@@ -101,7 +100,7 @@ namespace ServiceWire.TcpIp
             {
                 SyncInterface(_serviceType, _username, _password);
             }
-            catch (Exception e)
+            catch
             {
                 this.Dispose(true);
                 throw;

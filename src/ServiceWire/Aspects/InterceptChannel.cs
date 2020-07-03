@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace ServiceWire.Aspects
@@ -149,7 +148,6 @@ namespace ServiceWire.Aspects
                     returnType = (null == method) ? null : method.ReturnType;
 
                     //invoke the method
-                    var returnMessageType = MessageType.ReturnValues;
                     try
                     {
                         if (null != _interceptPoint.Cut && null != _interceptPoint.Cut.PreInvoke)
@@ -198,7 +196,7 @@ namespace ServiceWire.Aspects
                 }
                 throw new Exception(string.Format("Cannot match method '{0}' to its implementation.", mdata[0]));
             }
-            catch (Exception outerException)
+            catch
             {
                 //log?
                 throw;
