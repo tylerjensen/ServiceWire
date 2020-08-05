@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <PackageProjectUrl>https://github.com/tylerjensen/ServiceWire</PackageProjectUrl>
+	<PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <Authors>Tyler Jensen</Authors>
+    <PackageTags>WCF;Services;Host;Client;NamedPipes;TCP;Messaging;Serialization;</PackageTags>
+    <RepositoryUrl>https://github.com/tylerjensen/ServiceWire</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)\packages\$(Configuration)</PackageOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.2.31" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

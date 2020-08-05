@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.168
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30320.27
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B4BD92DB-D725-4D20-8134-B610CA83F842}"
 EndProject
@@ -11,28 +11,30 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".solutionItems", ".solutionItems", "{C6A9C54E-EB6C-403A-AC34-A2E0F4674B61}"
 	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
 		..\README.md = ..\README.md
+		version.json = version.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demo", "Demo", "{917620BA-F957-4891-82CC-B7AEDC2121CD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceWire", "ServiceWire\ServiceWire.csproj", "{4F36B450-A225-4D13-9786-8B84AC25A304}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestHost", "Tests\Integration\ServiceWireTestHost\ServiceWireTestHost.csproj", "{3265DA8B-AD7E-4F2A-BB5B-2D81C5BA500A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceWireTestHost", "Tests\Integration\ServiceWireTestHost\ServiceWireTestHost.csproj", "{3265DA8B-AD7E-4F2A-BB5B-2D81C5BA500A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestClient2", "Tests\Integration\ServiceWireTestClient2\ServiceWireTestClient2.csproj", "{2AF18F87-5258-4AF4-8441-A67344DD5C13}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceWireTestClient2", "Tests\Integration\ServiceWireTestClient2\ServiceWireTestClient2.csproj", "{2AF18F87-5258-4AF4-8441-A67344DD5C13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestClient1", "Tests\Integration\ServiceWireTestClient1\ServiceWireTestClient1.csproj", "{B9FAD2F3-17D4-435D-906B-45175457B294}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceWireTestClient1", "Tests\Integration\ServiceWireTestClient1\ServiceWireTestClient1.csproj", "{B9FAD2F3-17D4-435D-906B-45175457B294}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceWireTests", "Tests\Unit\ServiceWireTests\ServiceWireTests.csproj", "{0DF0ECE8-6ACA-442B-BBA6-6367F9B8D296}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestCommon", "Tests\ServiceWireTestCommon\ServiceWireTestCommon.csproj", "{4E07F3FB-F17C-4FF8-AA06-59ECE4956F6F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceWireTestCommon", "Tests\ServiceWireTestCommon\ServiceWireTestCommon.csproj", "{4E07F3FB-F17C-4FF8-AA06-59ECE4956F6F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoHost", "Demo\DemoHost\DemoHost.csproj", "{67A4599D-104F-40DF-AD8E-0F1F9EA56F7B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoHost", "Demo\DemoHost\DemoHost.csproj", "{67A4599D-104F-40DF-AD8E-0F1F9EA56F7B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoCommon", "Demo\DemoCommon\DemoCommon.csproj", "{D871AB84-61BC-474B-80DD-2B75E149CC90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoCommon", "Demo\DemoCommon\DemoCommon.csproj", "{D871AB84-61BC-474B-80DD-2B75E149CC90}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoClient", "Demo\DemoClient\DemoClient.csproj", "{B8D38CA4-25C1-455F-865C-93BB1F73C4D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoClient", "Demo\DemoClient\DemoClient.csproj", "{B8D38CA4-25C1-455F-865C-93BB1F73C4D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
