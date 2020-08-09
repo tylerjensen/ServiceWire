@@ -17,7 +17,9 @@ namespace ServiceWire
             // i.e. "System.String, mscorlib" (.NET FW) != "System.String, System.Private.CoreLib" (.NET CORE)
             if (t.Assembly.GetName().Name == "mscorlib" ||
                 t.Assembly.GetName().Name == "System.Private.CoreLib")
+            {
                 return t.FullName;
+            }
 
             var name = t.AssemblyQualifiedName;
             name = Regex.Replace(name, @", Version=\d+.\d+.\d+.\d+", string.Empty);
