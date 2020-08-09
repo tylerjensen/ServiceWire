@@ -16,7 +16,8 @@ namespace ServiceWire
             // Do not qualify types from mscorlib/System.Private.CoreLib otherwise calling between process running with different frameworks won't work
             // i.e. "System.String, mscorlib" (.NET FW) != "System.String, System.Private.CoreLib" (.NET CORE)
             if (t.Assembly.GetName().Name == "mscorlib" ||
-                t.Assembly.GetName().Name == "System.Private.CoreLib")
+                t.Assembly.GetName().Name == "System.Private.CoreLib" ||
+                t.Assembly.GetName().Name.StartsWith("System.Private."))
             {
                 return t.FullName;
             }
@@ -33,7 +34,8 @@ namespace ServiceWire
             try
             {
                 var result = Type.GetType(configName);
-                return result;
+
+                return result ?? TypeMapper.GetType(configName);
             }
             catch (Exception e)
             {
