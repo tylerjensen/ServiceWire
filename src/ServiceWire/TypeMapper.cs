@@ -27,9 +27,13 @@ namespace ServiceWire
 
         public static Type GetType(string fullTypeName)
         {
+            bool isArrayType = fullTypeName.EndsWith("[]");
+
+            fullTypeName = fullTypeName.TrimEnd("[]".ToCharArray());
+
             if (mappedTypes.TryGetValue(fullTypeName, out Type type))
             {
-                return type;
+                return isArrayType ? type.MakeArrayType() : type;
             }
             throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ServiceWireResources.TypeIsNotMapped, fullTypeName));
         }

@@ -36,5 +36,33 @@ namespace ServiceWireTests
 
             Assert.Equal(uriType.FullName, mapType.FullName);
         }
+
+        [Fact]
+        public void CanMapUriArrayTypes()
+        {
+            Type uriType = typeof(Uri[]);
+
+            string framworkDiff = $"{uriType.FullName}, System.Unknown";
+
+            Type mapType = framworkDiff.ToType();
+
+            Assert.NotNull(mapType);
+
+            Assert.Equal(uriType.FullName, mapType.FullName);
+        }
+
+        [Fact]
+        public async Task CanMapUriArrayTypesAsync()
+        {
+            Type uriType = typeof(Uri[]);
+
+            string framworkDiff = $"{uriType.FullName}, System.Unknown";
+
+            Type mapType = await framworkDiff.ToTypeAsync();
+
+            Assert.NotNull(mapType);
+
+            Assert.Equal(uriType.FullName, mapType.FullName);
+        }
     }
 }
