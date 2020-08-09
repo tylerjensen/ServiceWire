@@ -14,7 +14,9 @@ namespace ServiceWireTests
         {
             Type uriType = typeof(Uri);
 
-            Type mapType = TypeMapper.GetType(uriType.FullName);
+            string framworkDiff = $"{uriType.FullName}, System.Unknown";
+
+            Type mapType = framworkDiff.ToType();
 
             Assert.NotNull(mapType);
 
@@ -26,7 +28,9 @@ namespace ServiceWireTests
         {
             Type uriType = typeof(Uri);
 
-            Type mapType = await TypeMapper.GetTypeAsync(uriType.FullName);
+            string framworkDiff = $"{uriType.FullName}, System.Unknown";
+
+            Type mapType = await framworkDiff.ToTypeAsync();
 
             Assert.NotNull(mapType);
 

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ServiceWire
 {
@@ -16,8 +17,7 @@ namespace ServiceWire
             // Do not qualify types from mscorlib/System.Private.CoreLib otherwise calling between process running with different frameworks won't work
             // i.e. "System.String, mscorlib" (.NET FW) != "System.String, System.Private.CoreLib" (.NET CORE)
             if (t.Assembly.GetName().Name == "mscorlib" ||
-                t.Assembly.GetName().Name == "System.Private.CoreLib" ||
-                t.Assembly.GetName().Name.StartsWith("System.Private."))
+                t.Assembly.GetName().Name == "System.Private.CoreLib")
             {
                 return t.FullName;
             }
@@ -35,7 +35,22 @@ namespace ServiceWire
             {
                 var result = Type.GetType(configName);
 
-                return result ?? TypeMapper.GetType(configName);
+                return result ?? TypeMapper.GetType(configName.Substring(0, configName.IndexOf(',')));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            return null;
+        }
+
+        public static async Task<Type> ToTypeAsync(this string configName)
+        {
+            try
+            {
+                var result = Type.GetType(configName);
+
+                return result ?? await TypeMapper.GetTypeAsync(configName.Substring(0, configName.IndexOf(',')));
             }
             catch (Exception e)
             {
