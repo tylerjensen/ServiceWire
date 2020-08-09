@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ServiceWire
 {
@@ -31,6 +32,11 @@ namespace ServiceWire
                 return type;
             }
             throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ServiceWireResources.TypeIsNotMapped, fullTypeName));
+        }
+
+        public static async Task<Type> GetTypeAsync(string fullTypeName)
+        {
+            return await Task.Run(() => GetType(fullTypeName));
         }
     }
 }
