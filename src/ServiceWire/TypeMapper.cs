@@ -1,5 +1,5 @@
 ﻿// 
-// TemplatingHost.cs
+// TypeMapper.cs
 //  
 // Author:
 //       Kenneth Carter <kccarter32@gmail.com>
