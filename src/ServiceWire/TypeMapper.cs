@@ -62,9 +62,11 @@ namespace ServiceWire
             throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ServiceWireResources.TypeIsNotMapped, fullTypeName));
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public static async Task<Type> GetTypeAsync(string fullTypeName)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
-            return await Task.Run(() => GetType(fullTypeName));
+            return GetType(fullTypeName);
         }
     }
 }
