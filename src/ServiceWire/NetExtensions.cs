@@ -11,19 +11,34 @@ namespace ServiceWire
 {
     public static class NetExtensions
     {
+        static TypeCacheImpl _typeCache = new TypeCacheImpl();
+
         public static string ToConfigName(this Type t)
         {
+            var aname = t.Assembly.GetName();
             // Do not qualify types from mscorlib/System.Private.CoreLib otherwise calling between process running with different frameworks won't work
             // i.e. "System.String, mscorlib" (.NET FW) != "System.String, System.Private.CoreLib" (.NET CORE)
-            if (t.Assembly.GetName().Name == "mscorlib" ||
-                t.Assembly.GetName().Name == "System.Private.CoreLib")
+            if (aname.Name == "mscorlib" ||
+                aname.Name == "System.Private.CoreLib")
                 return t.FullName;
 
-            var name = t.AssemblyQualifiedName;
-            name = Regex.Replace(name, @", Version=\d+.\d+.\d+.\d+", string.Empty);
-            name = Regex.Replace(name, @", Culture=\w+", string.Empty);
-            name = Regex.Replace(name, @", PublicKeyToken=\w+", string.Empty);
-            return name;
+            // confgiName is cached for non system types (Regex.Replace is not executed on each serialization)
+            var cached = _typeCache[t];
+            if (cached == null)
+            {
+                var name = t.AssemblyQualifiedName;
+                var shortName = Regex.Replace(name, @", Version=\d+.\d+.\d+.\d+", string.Empty);
+                shortName = Regex.Replace(shortName, @", Culture=\w+", string.Empty);
+                shortName = Regex.Replace(shortName, @", PublicKeyToken=\w+", string.Empty);
+
+                var test = ToType(shortName); // short name is checked to be loaded
+                if (test != null)
+                    name = shortName;
+                
+                cached = new TypeCacheEntry { ConfigName = name };
+                _typeCache.Add(t, cached);
+            }
+            return cached.ConfigName;
         }
 
         public static Type ToType(this string configName)
