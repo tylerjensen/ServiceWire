@@ -166,3 +166,7 @@ pip-log.txt
 src/pack/lib/net35
 src/pack/lib/net461
 /src/.vs/ServiceWire
+
+#.VS & VSCode
+.vs/
+.vscode/
