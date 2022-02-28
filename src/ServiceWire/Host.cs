@@ -1,11 +1,11 @@
+using ServiceWire.ZeroKnowledge;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
-using ServiceWire.ZeroKnowledge;
 
 namespace ServiceWire
 {
@@ -21,7 +21,7 @@ namespace ServiceWire
         protected IZkRepository _zkRepository = new ZkNullRepository();
         private volatile bool _requireZk = false;
 
-        protected ConcurrentDictionary<string, int> _serviceKeys = new ConcurrentDictionary<string, int>(); 
+        protected ConcurrentDictionary<string, int> _serviceKeys = new ConcurrentDictionary<string, int>();
         protected ConcurrentDictionary<int, ServiceInstance> _services = new ConcurrentDictionary<int, ServiceInstance>();
         protected readonly ParameterTransferHelper _parameterTransferHelper;
 
@@ -40,9 +40,9 @@ namespace ServiceWire
             set
             {
                 _zkRepository = value;
-                if (_zkRepository is ZkNullRepository) 
+                if (_zkRepository is ZkNullRepository)
                     _requireZk = false;
-                else 
+                else
                     _requireZk = true;
             }
         }
@@ -204,9 +204,9 @@ namespace ServiceWire
                     parameterTypes[i] = parameters[i].ParameterType.ToConfigName();
                 syncSyncInfos.Add(new MethodSyncInfo
                 {
-                    MethodIdent = kvp.Key, 
-                    MethodName = kvp.Value.Name, 
-                    MethodReturnType = kvp.Value.ReturnType.ToConfigName(), 
+                    MethodIdent = kvp.Key,
+                    MethodName = kvp.Value.Name,
+                    MethodReturnType = kvp.Value.ReturnType.ToConfigName(),
                     ParameterTypes = parameterTypes
                 });
             }
@@ -420,10 +420,10 @@ namespace ServiceWire
                         object returnValue = method.Invoke(invokedInstance.SingletonInstance, parameters);
                         if (returnValue is Task task)
                         {
-	                        task.GetAwaiter().GetResult();
-	                        var prop = task.GetType().GetProperty("Result");
-	                        returnValue = prop?.GetValue(task);
-						}
+                            task.GetAwaiter().GetResult();
+                            var prop = task.GetType().GetProperty("Result");
+                            returnValue = prop?.GetValue(task);
+                        }
                         //the result to the client is the return value (null if void) and the input parameters
                         returnParameters = new object[1 + parameters.Length];
                         returnParameters[0] = returnValue;
@@ -433,13 +433,13 @@ namespace ServiceWire
                     catch (Exception ex)
                     {
                         //an exception was caught. Rethrow it client side
-                        returnParameters = new object[] {ex};
+                        returnParameters = new object[] { (ex is TargetInvocationException && ex.InnerException != null) ? ex.InnerException : ex };
                         returnMessageType = MessageType.ThrowException;
                     }
 
                     //send the result back to the client
                     // (1) write the message type
-                    binWriter.Write((int) returnMessageType);
+                    binWriter.Write((int)returnMessageType);
 
                     // (2) write the return parameters
                     if (_requireZk)
@@ -471,10 +471,10 @@ namespace ServiceWire
                     }
                 }
                 else
-                    binWriter.Write((int) MessageType.UnknownMethod);
+                    binWriter.Write((int)MessageType.UnknownMethod);
             }
             else
-                binWriter.Write((int) MessageType.UnknownMethod);
+                binWriter.Write((int)MessageType.UnknownMethod);
 
             //flush
             binWriter.Flush();
@@ -494,18 +494,18 @@ namespace ServiceWire
 
         protected virtual void Dispose(bool disposing)
         {
-	        if (_disposed) return;
-	        _disposed = true; //prevent second call to Dispose
+            if (_disposed) return;
+            _disposed = true; //prevent second call to Dispose
             if (disposing)
             {
-	            if (_log is Logger log) log.FlushLog();
-	            if (_stats is Stats stat) stat.FlushLog();
-	            _isOpen = false;
-	            Continue = false;
-	            foreach (var instance in _services)
-	            {
-		            if (instance.Value.SingletonInstance is IDisposable disposable) disposable.Dispose();
-	            }
+                if (_log is Logger log) log.FlushLog();
+                if (_stats is Stats stat) stat.FlushLog();
+                _isOpen = false;
+                Continue = false;
+                foreach (var instance in _services)
+                {
+                    if (instance.Value.SingletonInstance is IDisposable disposable) disposable.Dispose();
+                }
             }
         }
 

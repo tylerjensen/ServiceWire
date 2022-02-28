@@ -6,6 +6,9 @@
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' "> 
     <TargetFrameworks>netcoreapp3.1;netcoreapp2.1;net462</TargetFrameworks>
   </PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;netcoreapp2.1;net48</TargetFrameworks>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\ServiceWire\ServiceWire.csproj" />

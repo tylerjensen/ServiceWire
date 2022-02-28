@@ -10,6 +10,7 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <TargetFrameworks>netcoreapp3.1;netcoreapp2.1;net48</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
