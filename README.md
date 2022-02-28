@@ -3,6 +3,11 @@
 ServiceWire
 ===========
 
+### BugFix + Test cases + 48
+
+1. Throwing the original error through an Intercept would fail for interface methods that have a void return type
+2. Updated framework references from .net462 to .net48
+
 ### .NET Framework to .NET Core and Serializer Bug Fixes 5.3.4
 
 1. Support for .NET Framework to .NET Core core parameter types to eliminate exceptions when a Framework client is talking to a Core host or vice versa. 

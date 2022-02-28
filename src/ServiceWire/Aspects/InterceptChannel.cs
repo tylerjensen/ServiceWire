@@ -182,7 +182,10 @@ namespace ServiceWire.Aspects
                         }
                         else
                         {
-                            returnParameters = new object[] { returnType.GetDefault() };
+                            returnParameters = new object[]
+                            {
+                              returnType == typeof(void)? null: returnType.GetDefault()
+                            };
                         }
                     }
                     finally

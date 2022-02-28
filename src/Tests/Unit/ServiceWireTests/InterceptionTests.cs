@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
-using ServiceWire.Aspects;
+﻿using ServiceWire.Aspects;
+using System;
 using System.Diagnostics;
 using Xunit;
 
@@ -17,7 +14,7 @@ namespace ServiceWireTests
             var postInvokeInfo = string.Empty;
             var exceptionHandlerInfo = string.Empty;
             var cc = new CrossCuttingConcerns();
-            cc.PreInvoke = (instanceId, methodName, parameters) => 
+            cc.PreInvoke = (instanceId, methodName, parameters) =>
             {
                 preInvokeInfo = methodName + "_preInvokeInfo";
             };
@@ -40,7 +37,7 @@ namespace ServiceWireTests
             Assert.False(string.IsNullOrEmpty(postInvokeInfo));
             Assert.False(string.IsNullOrEmpty(exceptionHandlerInfo));
         }
-    
+
         [Fact]
         public void SimpleTimingTest()
         {
@@ -112,6 +109,68 @@ namespace ServiceWireTests
             Assert.True(plainCtorTs <= interceptCtorTs2);
             Assert.True(plainAddTs <= interceptAddTs2);
         }
+
+        [Fact]
+        public void SimpleErrorTestNoThrow()
+        {
+            var preInvokeInfo = string.Empty;
+            var postInvokeInfo = string.Empty;
+            var exceptionHandlerInfo = string.Empty;
+            var cc = new CrossCuttingConcerns();
+            cc.PreInvoke = (instanceId, methodName, parameters) =>
+            {
+                preInvokeInfo = methodName + "_preInvokeInfo";
+            };
+            cc.PostInvoke = (instanceId, methodName, parameters) =>
+            {
+                postInvokeInfo = methodName + "_postInvokeInfo";
+            };
+            cc.ExceptionHandler = (instanceId, methodName, parameters, exception) =>
+            {
+                exceptionHandlerInfo = methodName + "_exceptionHandlerInfo";
+                return false; //do not throw
+            };
+            var t = Interceptor.Intercept<ISimpleError>(new SimpleError(), cc);
+            t.RaiseAnError();
+            Assert.False(string.IsNullOrEmpty(preInvokeInfo));
+            Assert.False(string.IsNullOrEmpty(postInvokeInfo));
+            Assert.False(string.IsNullOrEmpty(exceptionHandlerInfo));
+        }
+
+        [Fact]
+        public void SimpleErrorTestThrowOriginalError()
+        {
+            var preInvokeInfo = string.Empty;
+            var postInvokeInfo = string.Empty;
+            var exceptionHandlerInfo = string.Empty;
+            var cc = new CrossCuttingConcerns();
+            cc.PreInvoke = (instanceId, methodName, parameters) =>
+            {
+                preInvokeInfo = methodName + "_preInvokeInfo";
+            };
+            cc.PostInvoke = (instanceId, methodName, parameters) =>
+            {
+                postInvokeInfo = methodName + "_postInvokeInfo";
+            };
+            cc.ExceptionHandler = (instanceId, methodName, parameters, exception) =>
+            {
+                exceptionHandlerInfo = methodName + "_exceptionHandlerInfo";
+                return true; //do throw
+            };
+            var t = Interceptor.Intercept<ISimpleError>(new SimpleError(), cc);
+            try
+            {
+                t.RaiseAnError();
+            }
+            catch (Exception ex)
+            {
+                var isCorrectError = ex.Message.Contains("eliberate");
+                Assert.True(isCorrectError);
+            }
+            Assert.False(string.IsNullOrEmpty(preInvokeInfo));
+            Assert.False(string.IsNullOrEmpty(postInvokeInfo));
+            Assert.False(string.IsNullOrEmpty(exceptionHandlerInfo));
+        }
     }
 
     public interface ISimpleMath
@@ -149,6 +208,19 @@ namespace ServiceWireTests
         public int Divide(int a, int b)
         {
             return a / b;
+        }
+    }
+
+    public interface ISimpleError
+    {
+        void RaiseAnError();
+    }
+
+    public class SimpleError : ISimpleError
+    {
+        public void RaiseAnError()
+        {
+            throw new Exception("Deliberate Exception for Test");
         }
     }
 
