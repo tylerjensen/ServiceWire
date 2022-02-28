@@ -3,6 +3,12 @@
 ServiceWire
 ===========
 
+### Multiple Framework Targets and void Return Types 5.3.5
+
+1. Updated all projects to target .net462, .net48, netcoreapp3.1, and net6.0 only.
+2. Corrected multiple targets for multiple OS in projects for those using Linux.
+3. Updated NuGet package version. 
+
 ### BugFix + Test cases + 48
 
 1. Throwing the original error through an Intercept would fail for interface methods that have a void return type

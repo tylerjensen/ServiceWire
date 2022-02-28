@@ -1,14 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
+		<TargetFrameworks>net6.0;netcoreapp3.1</TargetFrameworks>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+		<TargetFrameworks>net6.0;netcoreapp3.1;net48;net462</TargetFrameworks>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ServiceWire\ServiceWire.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<ApplicationIcon />
+		<OutputType>Exe</OutputType>
+		<StartupObject />
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ServiceWire\ServiceWire.csproj" />
+	</ItemGroup>
 
 </Project>

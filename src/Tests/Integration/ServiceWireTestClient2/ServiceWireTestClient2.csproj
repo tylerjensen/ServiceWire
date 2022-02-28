@@ -1,26 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-    <TargetFrameworks>netcoreapp3.1;netcoreapp2.1</TargetFrameworks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' "> 
-    <TargetFrameworks>netcoreapp3.1;netcoreapp2.1;net462</TargetFrameworks>
-  </PropertyGroup>
+	<PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
+		<TargetFrameworks>net6.0;netcoreapp3.1</TargetFrameworks>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+		<TargetFrameworks>net6.0;netcoreapp3.1;net48;net462</TargetFrameworks>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <ApplicationIcon />
-    <OutputType>Exe</OutputType>
-    <StartupObject />
-    <TargetFrameworks>netcoreapp3.1;netcoreapp2.1;net48</TargetFrameworks>
-  </PropertyGroup>
+	<PropertyGroup>
+		<ApplicationIcon />
+		<OutputType>Exe</OutputType>
+		<StartupObject />
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\ServiceWire\ServiceWire.csproj" />
-    <ProjectReference Include="..\..\ServiceWireTestCommon\ServiceWireTestCommon.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\ServiceWire\ServiceWire.csproj" />
+		<ProjectReference Include="..\..\ServiceWireTestCommon\ServiceWireTestCommon.csproj" />
+	</ItemGroup>
 
 </Project>
