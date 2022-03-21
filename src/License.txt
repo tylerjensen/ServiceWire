@@ -7,11 +7,11 @@
                 performance remote procedure call (RPC) communication between 
                 .NET processes over Named Pipes or TCP/IP.
   
-  Copyright (C) 2013-2014 DuoVia Inc.
+  Copyright (C) Tyler Jensen
   
   Author: Tyler Jensen 
   
-  Source: https://github.com/duovia/ServiceWire
+  Source: https://github.com/tylerjensen/ServiceWire
   
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.

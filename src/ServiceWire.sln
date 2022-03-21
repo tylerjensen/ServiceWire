@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".solutionItems", ".solutionItems", "{C6A9C54E-EB6C-403A-AC34-A2E0F4674B61}"
 	ProjectSection(SolutionItems) = preProject
+		icon.png = icon.png
+		License.txt = License.txt
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
@@ -34,7 +36,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoCommon", "Demo\DemoComm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoClient", "Demo\DemoClient\DemoClient.csproj", "{B8D38CA4-25C1-455F-865C-93BB1F73C4D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWireTestHostPlusClient", "ServiceWireTestHostPlusClient\ServiceWireTestHostPlusClient.csproj", "{339E1750-55D3-4FA3-B428-C5BAA6639741}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceWireTestHostPlusClient", "ServiceWireTestHostPlusClient\ServiceWireTestHostPlusClient.csproj", "{339E1750-55D3-4FA3-B428-C5BAA6639741}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -11,15 +11,20 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Tyler Jensen</Authors>
 		<Company />
-		<PackageIconUrl>http://www.tsjensen.com/blog/image.axd?picture=2014/11/swlogo_sm.png</PackageIconUrl>
+		<PackageIcon>icon.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/tylerjensen/ServiceWire</PackageProjectUrl>
-		<PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
-		<Copyright>Tyler Jensen 2013-2020</Copyright>
-		<Version>5.3.5</Version>
+		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<Copyright>Tyler Jensen 2013-2021</Copyright>
+		<Version>5.3.6</Version>
 		<Description>ServiceWire is a very fast and light weight service host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP. And with the release of 2.0.0, ServiceWire now supports optional use of Zero Knowledge authentication with a fast variation of Secure Remote Password Protocol and strong Rijndael encryption of data across the wire via TCP without the need for public keys going across the wire.</Description>
 		<PackageTags>WCF Services Host Client NamedPipes TCP Messaging RPC Interception Zero Knowledge Secure Remote Password Protocol Serialization</PackageTags>
-		<PackageReleaseNotes>Fixes error on void return type thanks to IvoTops contribution. Updates target packages to LTS releases .NET 4.8, .NET Core 3.1 and .NET 6.0 with legacy .NET 4.62.</PackageReleaseNotes>
+		<PackageReleaseNotes>Fix for AssemblyQualified names from user defined types.</PackageReleaseNotes>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\License.txt" Pack="true" PackagePath="" />
+		<None Include="..\icon.png" Pack="true" PackagePath="" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="System.IO.Pipes" Version="4.3.0" />
