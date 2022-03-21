@@ -3,6 +3,10 @@
 ServiceWire
 ===========
 
+### AssemblyQualified names from user defined types in 5.3.6
+
+1. Fix for AssemblyQualified names from user defined types.
+
 ### Multiple Framework Targets and void Return Types 5.3.5
 
 1. Updated all projects to target .net462, .net48, netcoreapp3.1, and net6.0 only.
