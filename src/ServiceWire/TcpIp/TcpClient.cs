@@ -5,30 +5,33 @@ namespace ServiceWire.TcpIp
 {
     public class TcpClient<TInterface> : IDisposable where TInterface : class
     {
-		public TInterface Proxy { get; }
+        public TInterface Proxy { get; }
 
-		public TcpClient(TcpEndPoint endpoint, ISerializer serializer = null)
+        public TcpClient(TcpEndPoint endpoint, ISerializer serializer = null, ICompressor compressor = null)
         {
             if (null == serializer) serializer = new DefaultSerializer();
-            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer);
+            if (null == compressor) compressor = new DefaultCompressor();
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor);
         }
 
-        public TcpClient(TcpZkEndPoint endpoint, ISerializer serializer = null)
+        public TcpClient(TcpZkEndPoint endpoint, ISerializer serializer = null, ICompressor compressor = null)
         {
             if (null == serializer) serializer = new DefaultSerializer();
-            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer);
+            if (null == compressor) compressor = new DefaultCompressor();
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor);
         }
 
-        public TcpClient(IPEndPoint endpoint, ISerializer serializer = null)
+        public TcpClient(IPEndPoint endpoint, ISerializer serializer = null, ICompressor compressor = null)
         {
             if (null == serializer) serializer = new DefaultSerializer();
-            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer);
+            if (null == compressor) compressor = new DefaultCompressor();
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor);
         }
 
         public void InjectLoggerStats(ILog logger, IStats stats)
         {
-	        var channel = Proxy as Channel;
-	        channel?.InjectLoggerStats(logger, stats);
+            var channel = Proxy as Channel;
+            channel?.InjectLoggerStats(logger, stats);
         }
 
         public bool IsConnected => (Proxy as TcpChannel)?.IsConnected == true;

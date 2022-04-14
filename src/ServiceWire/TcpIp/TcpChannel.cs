@@ -1,7 +1,7 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.IO;
 using System.Threading;
 
 namespace ServiceWire.TcpIp
@@ -18,8 +18,9 @@ namespace ServiceWire.TcpIp
         /// <param name="serviceType"></param>
         /// <param name="endpoint"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
-        public TcpChannel(Type serviceType, IPEndPoint endpoint, ISerializer serializer)
-            : base(serializer)
+        /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
+        public TcpChannel(Type serviceType, IPEndPoint endpoint, ISerializer serializer, ICompressor compressor)
+            : base(serializer, compressor)
         {
             Initialize(null, null, serviceType, endpoint, 2500);
         }
@@ -30,8 +31,9 @@ namespace ServiceWire.TcpIp
         /// <param name="serviceType"></param>
         /// <param name="endpoint"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
-        public TcpChannel(Type serviceType, TcpEndPoint endpoint, ISerializer serializer)
-            : base(serializer)
+        /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
+        public TcpChannel(Type serviceType, TcpEndPoint endpoint, ISerializer serializer, ICompressor compressor)
+            : base(serializer, compressor)
         {
             Initialize(null, null, serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs);
         }
@@ -42,17 +44,18 @@ namespace ServiceWire.TcpIp
         /// <param name="serviceType"></param>
         /// <param name="endpoint"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
-        public TcpChannel(Type serviceType, TcpZkEndPoint endpoint, ISerializer serializer)
-            : base(serializer)
+        /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
+        public TcpChannel(Type serviceType, TcpZkEndPoint endpoint, ISerializer serializer, ICompressor compressor)
+            : base(serializer, compressor)
         {
             if (endpoint == null) throw new ArgumentNullException("endpoint");
             if (endpoint.Username == null) throw new ArgumentNullException("endpoint.Username");
             if (endpoint.Password == null) throw new ArgumentNullException("endpoint.Password");
-            Initialize(endpoint.Username, endpoint.Password, 
+            Initialize(endpoint.Username, endpoint.Password,
                 serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs);
         }
 
-        private void Initialize(string username, string password, 
+        private void Initialize(string username, string password,
             Type serviceType, IPEndPoint endpoint, int connectTimeoutMs)
         {
             _username = username;
@@ -92,7 +95,7 @@ namespace ServiceWire.TcpIp
             {
                 _client.Dispose();
                 throw new SocketException((int)SocketError.NotConnected);
-            } 
+            }
             _stream = new BufferedStream(new NetworkStream(_client), 8192);
             _binReader = new BinaryReader(_stream);
             _binWriter = new BinaryWriter(_stream);

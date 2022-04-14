@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection.Emit;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Threading;
 
 namespace ServiceWire
@@ -16,7 +16,7 @@ namespace ServiceWire
         //pooled dictionary achieves same or better performance as ThreadStatic without creating as many builders under average load
         private static PooledDictionary<string, ProxyBuilder> _proxies = new PooledDictionary<string, ProxyBuilder>();
 
-        public static TInterface CreateProxy<TInterface>(Type channelType, Type ctorArgType, object channelCtorValue, ISerializer serializer) where TInterface : class
+        public static TInterface CreateProxy<TInterface>(Type channelType, Type ctorArgType, object channelCtorValue, ISerializer serializer, ICompressor compressor) where TInterface : class
         {
             if (!channelType.InheritsFrom(typeof(Channel))) throw new ArgumentException("channelType does not inherit from Channel");
             Type interfaceType = typeof(TInterface);
@@ -32,7 +32,7 @@ namespace ServiceWire
             try
             {
                 proxyBuilder = _proxies.Request(proxyName, () => CreateProxyBuilder(proxyName, interfaceType, localChannelType, localCtorArgType));
-                proxy = CreateProxy<TInterface>(proxyBuilder, channelCtorValue, serializer);
+                proxy = CreateProxy<TInterface>(proxyBuilder, channelCtorValue, serializer, compressor);
             }
             finally
             {
@@ -42,15 +42,15 @@ namespace ServiceWire
             return proxy;
         }
 
-        private static TInterface CreateProxy<TInterface>(ProxyBuilder proxyBuilder, object channelCtorValue, ISerializer serializer) where TInterface : class
+        private static TInterface CreateProxy<TInterface>(ProxyBuilder proxyBuilder, object channelCtorValue, ISerializer serializer, ICompressor compressor) where TInterface : class
         {
             //create the type and construct an instance
-            Type[] ctorArgTypes = new Type[] { typeof(Type), proxyBuilder.CtorType, typeof(ISerializer) };
+            Type[] ctorArgTypes = new Type[] { typeof(Type), proxyBuilder.CtorType, typeof(ISerializer), typeof(ICompressor) };
             Type t = proxyBuilder.TypeBuilder.CreateTypeInfo();
             var constructorInfo = t.GetConstructor(ctorArgTypes);
             if (constructorInfo != null)
             {
-                TInterface instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface), channelCtorValue, serializer });
+                TInterface instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface), channelCtorValue, serializer, compressor });
                 return instance;
             }
             return null;
@@ -77,7 +77,7 @@ namespace ServiceWire
             typeBuilder.AddInterfaceImplementation(interfaceType);
 
             //construct the constructor
-            Type[] ctorArgTypes = new Type[] { typeof(Type), ctorArgType, typeof(ISerializer) };
+            Type[] ctorArgTypes = new Type[] { typeof(Type), ctorArgType, typeof(ISerializer), typeof(ICompressor) };
             CreateConstructor(channelType, typeBuilder, ctorArgTypes);
 
             //construct the type maps
@@ -147,6 +147,7 @@ namespace ServiceWire
             ctorIL.Emit(OpCodes.Ldarg_1); //load serviceType
             ctorIL.Emit(OpCodes.Ldarg_2); //load "endpoint"
             ctorIL.Emit(OpCodes.Ldarg_3); //load "serializer"
+            ctorIL.Emit(OpCodes.Ldarg_S, 4); //load "compressor"
             ctorIL.Emit(OpCodes.Call, baseCtor); //call "base(...)"
             ctorIL.Emit(OpCodes.Ret);
         }
@@ -214,14 +215,15 @@ namespace ServiceWire
                         {
                             mIL.Emit(ldindOpCodeTypeMap[inputType]);
                             mIL.Emit(OpCodes.Box, inputType);
-                        }
-                        else
+                        } else
+                        {
                             throw new NotSupportedException("Non-primitive native types (e.g. Decimal and Guid) ByRef are not supported.");
-                    }
-                    else
+                        }
+                    } else
+                    {
                         mIL.Emit(OpCodes.Ldind_Ref);
-                }
-                else
+                    }
+                } else
                 {
                     if (inputArgTypes[i].IsValueType)
                         mIL.Emit(OpCodes.Box, inputArgTypes[i]);
@@ -245,8 +247,7 @@ namespace ServiceWire
                         mIL.Emit(OpCodes.Unbox, inputArgTypes[i].GetElementType());
                         mIL.Emit(ldindOpCodeTypeMap[inputArgTypes[i].GetElementType()]);
                         mIL.Emit(stindOpCodeTypeMap[inputArgTypes[i].GetElementType()]);
-                    }
-                    else
+                    } else
                     {
                         mIL.Emit(OpCodes.Castclass, inputArgTypes[i].GetElementType());
                         mIL.Emit(OpCodes.Stind_Ref); //store the unboxed value at the argument address
@@ -266,9 +267,10 @@ namespace ServiceWire
                         mIL.Emit(ldindOpCodeTypeMap[returnType]);
                     else
                         mIL.Emit(OpCodes.Ldobj, returnType);
-                }
-                else
+                } else
+                {
                     mIL.Emit(OpCodes.Castclass, returnType);
+                }
             }
             mIL.Emit(OpCodes.Ret);
         }

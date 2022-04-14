@@ -18,6 +18,7 @@ namespace ServiceWire
         protected ILog _log = new NullLogger();
         protected IStats _stats = new NullStats();
         protected readonly ISerializer _serializer;
+        protected readonly ICompressor _compressor;
         protected IZkRepository _zkRepository = new ZkNullRepository();
         private volatile bool _requireZk = false;
 
@@ -25,10 +26,11 @@ namespace ServiceWire
         protected ConcurrentDictionary<int, ServiceInstance> _services = new ConcurrentDictionary<int, ServiceInstance>();
         protected readonly ParameterTransferHelper _parameterTransferHelper;
 
-        public Host(ISerializer serializer)
+        public Host(ISerializer serializer, ICompressor compressor)
         {
             _serializer = serializer ?? new DefaultSerializer();
-            _parameterTransferHelper = new ParameterTransferHelper(_serializer);
+            _compressor = compressor ?? new DefaultCompressor();
+            _parameterTransferHelper = new ParameterTransferHelper(_serializer, _compressor);
         }
 
         public IZkRepository ZkRepository
@@ -145,7 +147,6 @@ namespace ServiceWire
             }
         }
 
-
         /// <summary>
         /// Loads all methods from interfaces and assigns an identifier
         /// to each. These are later synchronized with the client.
@@ -192,7 +193,6 @@ namespace ServiceWire
                     currentMethodIdent++;
                 }
             }
-
 
             //Create a list of sync infos from the dictionary
             var syncSyncInfos = new List<MethodSyncInfo>();
@@ -319,7 +319,6 @@ namespace ServiceWire
             }
         }
 
-
         private void ProcessSync(ZkSession session, BinaryReader binReader, BinaryWriter binWriter, Stopwatch sw)
         {
             var syncCat = "Sync";
@@ -332,17 +331,14 @@ namespace ServiceWire
                 var bytes = binReader.ReadBytes(len);
                 var data = session.Crypto.Decrypt(bytes);
                 serviceTypeName = data.ConverToString();
-            }
-            else
+            } else
             {
                 serviceTypeName = binReader.ReadString();
             }
 
-            int serviceKey;
-            if (_serviceKeys.TryGetValue(serviceTypeName, out serviceKey))
+            if (_serviceKeys.TryGetValue(serviceTypeName, out var serviceKey))
             {
-                ServiceInstance instance;
-                if (_services.TryGetValue(serviceKey, out instance))
+                if (_services.TryGetValue(serviceKey, out var instance))
                 {
                     syncCat = instance.InterfaceType.Name;
                     //Create a list of sync infos from the dictionary
@@ -354,15 +350,13 @@ namespace ServiceWire
                         binWriter.Write(encData.Length);
                         binWriter.Write(encData);
                         _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
-                    }
-                    else
+                    } else
                     {
                         binWriter.Write(syncBytes.Length);
                         binWriter.Write(syncBytes);
                     }
                 }
-            }
-            else
+            } else
             {
                 //return zero to indicate type or version of type not found
                 binWriter.Write(0);
@@ -377,20 +371,17 @@ namespace ServiceWire
             var cat = "unknown";
             var stat = "MethodInvocation";
             int invokedServiceKey = binReader.ReadInt32();
-            ServiceInstance invokedInstance;
-            if (_services.TryGetValue(invokedServiceKey, out invokedInstance))
+            if (_services.TryGetValue(invokedServiceKey, out var invokedInstance))
             {
                 cat = invokedInstance.InterfaceType.Name;
                 //read the method identifier
                 int methodHashCode = binReader.ReadInt32();
                 if (invokedInstance.InterfaceMethods.ContainsKey(methodHashCode))
                 {
-                    MethodInfo method;
-                    invokedInstance.InterfaceMethods.TryGetValue(methodHashCode, out method);
+                    invokedInstance.InterfaceMethods.TryGetValue(methodHashCode, out var method);
                     stat = method.Name;
 
-                    bool[] isByRef;
-                    invokedInstance.MethodParametersByRef.TryGetValue(methodHashCode, out isByRef);
+                    invokedInstance.MethodParametersByRef.TryGetValue(methodHashCode, out var isByRef);
 
                     //read parameter data
                     object[] parameters;
@@ -406,8 +397,7 @@ namespace ServiceWire
                         {
                             parameters = _parameterTransferHelper.ReceiveParameters(br);
                         }
-                    }
-                    else
+                    } else
                     {
                         parameters = _parameterTransferHelper.ReceiveParameters(binReader);
                     }
@@ -460,8 +450,7 @@ namespace ServiceWire
                         _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
                         binWriter.Write(encData.Length);
                         binWriter.Write(encData);
-                    }
-                    else
+                    } else
                     {
                         _parameterTransferHelper.SendParameters(
                             invokedInstance.ServiceSyncInfo.UseCompression,
@@ -469,12 +458,14 @@ namespace ServiceWire
                             binWriter,
                             returnParameters);
                     }
-                }
-                else
+                } else
+                {
                     binWriter.Write((int)MessageType.UnknownMethod);
-            }
-            else
+                }
+            } else
+            {
                 binWriter.Write((int)MessageType.UnknownMethod);
+            }
 
             //flush
             binWriter.Flush();

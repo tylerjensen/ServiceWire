@@ -13,12 +13,12 @@ namespace ServiceWire
         private static Dictionary<Type, byte> _parameterTypes;
 
         private readonly ISerializer _serializer;
-
-        public ParameterTransferHelper(ISerializer serializer)
+        private readonly ICompressor _compressor;
+        public ParameterTransferHelper(ISerializer serializer, ICompressor compressor)
         {
             _serializer = serializer ?? new DefaultSerializer();
+            _compressor = compressor ?? new DefaultCompressor();
         }
-
 
         public void SendParameters(bool useCompression, int compressionThreshold, BinaryWriter writer, params object[] parameters)
         {
@@ -28,8 +28,9 @@ namespace ServiceWire
             foreach (object parameter in parameters)
             {
                 if (parameter == null)
+                {
                     writer.Write(ParameterTypes.Null);
-                else
+                } else
                 {
                     Type type = parameter.GetType();
                     byte typeByte = GetParameterType(type);
@@ -43,7 +44,7 @@ namespace ServiceWire
                             if (useCompression && dataBytes.LongLength > compressionThreshold)
                             {
                                 typeByte = ParameterTypes.CompressedByteArray;
-                                dataBytes = dataBytes.ToGZipBytes();
+                                dataBytes = _compressor.Compress(dataBytes);
                             }
                             break;
                         case ParameterTypes.CharArray:
@@ -51,14 +52,14 @@ namespace ServiceWire
                             if (useCompression && charArray.LongLength > compressionThreshold)
                             {
                                 typeByte = ParameterTypes.CompressedCharArray;
-                                dataBytes = Encoding.UTF8.GetBytes(charArray).ToGZipBytes();
+                                dataBytes = _compressor.Compress(Encoding.UTF8.GetBytes(charArray));
                             }
                             break;
                         case ParameterTypes.String:
                             if (useCompression && ((string)parameter).Length > compressionThreshold)
                             {
                                 typeByte = ParameterTypes.CompressedString;
-                                dataBytes = Encoding.UTF8.GetBytes(((string)parameter)).ToGZipBytes();
+                                dataBytes = _compressor.Compress(Encoding.UTF8.GetBytes(((string)parameter)));
                             }
                             break;
                         case ParameterTypes.ArrayString:
@@ -69,7 +70,7 @@ namespace ServiceWire
                                 if (total > compressionThreshold)
                                 {
                                     typeByte = ParameterTypes.Unknown;
-                                    dataBytes = _serializer.Serialize(array, type.ToConfigName()).ToGZipBytes();
+                                    dataBytes = _compressor.Compress(_serializer.Serialize(array, type.ToConfigName()));
                                 }
                             }
                             break;
@@ -78,11 +79,11 @@ namespace ServiceWire
                             if (useCompression && dataBytes.Length > compressionThreshold)
                             {
                                 typeByte = ParameterTypes.CompressedUnknown;
-                                dataBytes = dataBytes.ToGZipBytes();
+                                dataBytes = _compressor.Compress(dataBytes);
                             }
                             break;
                     }
-                    
+
                     //write the type byte
                     writer.Write(typeByte);
                     //write the parameter
@@ -142,75 +143,75 @@ namespace ServiceWire
                             writer.Write(((Guid)parameter).ToByteArray());
                             break;
                         case ParameterTypes.DateTime:
-                            writer.Write((string)((DateTime)parameter).ToString("o"));
+                            writer.Write(((DateTime)parameter).ToString("o"));
                             break;
 
                         case ParameterTypes.ArrayBool:
                             var bools = (bool[])parameter;
                             writer.Write(bools.Length);
-                            foreach(var b in bools) writer.Write(b);
+                            foreach (var b in bools) writer.Write(b);
                             break;
                         case ParameterTypes.ArraySByte:
                             var sbytes = (sbyte[])parameter;
                             writer.Write(sbytes.Length);
                             foreach (var sb in sbytes) writer.Write(sb);
-                            break;   
+                            break;
                         case ParameterTypes.ArrayDecimal:
                             var decs = (decimal[])parameter;
                             writer.Write(decs.Length);
                             foreach (var d in decs) writer.Write(d);
-                            break; 
+                            break;
                         case ParameterTypes.ArrayDouble:
                             var dbls = (double[])parameter;
                             writer.Write(dbls.Length);
                             foreach (var db in dbls) writer.Write(db);
-                            break;  
+                            break;
                         case ParameterTypes.ArrayFloat:
                             var fls = (float[])parameter;
                             writer.Write(fls.Length);
-                            foreach(var f in fls) writer.Write(f);
-                            break;   
+                            foreach (var f in fls) writer.Write(f);
+                            break;
                         case ParameterTypes.ArrayInt:
                             var ints = (int[])parameter;
                             writer.Write(ints.Length);
                             foreach (var i in ints) writer.Write(i);
-                            break;     
+                            break;
                         case ParameterTypes.ArrayUInt:
                             var uints = (uint[])parameter;
                             writer.Write(uints.Length);
                             foreach (var u in uints) writer.Write(u);
-                            break;    
+                            break;
                         case ParameterTypes.ArrayLong:
                             var longs = (long[])parameter;
                             writer.Write(longs.Length);
                             foreach (var lg in longs) writer.Write(lg);
-                            break;    
+                            break;
                         case ParameterTypes.ArrayULong:
                             var ulongs = (ulong[])parameter;
                             writer.Write(ulongs.Length);
                             foreach (var ul in ulongs) writer.Write(ul);
-                            break;   
+                            break;
                         case ParameterTypes.ArrayShort:
                             var shorts = (short[])parameter;
                             writer.Write(shorts.Length);
                             foreach (var s in shorts) writer.Write(s);
-                            break;   
+                            break;
                         case ParameterTypes.ArrayUShort:
                             var ushorts = (ushort[])parameter;
                             writer.Write(ushorts.Length);
                             foreach (var us in ushorts) writer.Write(us);
-                            break;  
+                            break;
                         case ParameterTypes.ArrayString:
                             var strings = (string[])parameter;
                             writer.Write(strings.Length);
                             foreach (var st in strings) writer.Write(st);
-                            break;  
+                            break;
                         case ParameterTypes.ArrayType:
                             var types = (Type[])parameter;
                             writer.Write(types.Length);
                             foreach (var t in types)
                                 writer.Write(t.ToConfigName());
-                            break;    
+                            break;
                         case ParameterTypes.ArrayGuid:
                             var guids = (Guid[])parameter;
                             writer.Write(guids.Length);
@@ -256,8 +257,9 @@ namespace ServiceWire
                 //read type byte
                 byte typeByte = reader.ReadByte();
                 if (typeByte == ParameterTypes.Null)
+                {
                     parameters[i] = null;
-                else
+                } else
                 {
                     switch (typeByte)
                     {
@@ -271,7 +273,7 @@ namespace ServiceWire
                             parameters[i] = reader.ReadBytes(reader.ReadInt32());
                             break;
                         case ParameterTypes.CompressedByteArray:
-                            parameters[i] = reader.ReadBytes(reader.ReadInt32()).FromGZipBytes();
+                            parameters[i] = _compressor.DeCompress(reader.ReadBytes(reader.ReadInt32()));
                             break;
                         case ParameterTypes.Char:
                             parameters[i] = reader.ReadChar();
@@ -280,7 +282,7 @@ namespace ServiceWire
                             parameters[i] = reader.ReadChars(reader.ReadInt32());
                             break;
                         case ParameterTypes.CompressedCharArray:
-                            var ccBytes = reader.ReadBytes(reader.ReadInt32()).FromGZipBytes();
+                            var ccBytes = _compressor.DeCompress(reader.ReadBytes(reader.ReadInt32()));
                             parameters[i] = Encoding.UTF8.GetChars(ccBytes);
                             break;
                         case ParameterTypes.Decimal:
@@ -308,7 +310,7 @@ namespace ServiceWire
                             parameters[i] = reader.ReadString();
                             break;
                         case ParameterTypes.CompressedString:
-                            var csBytes = reader.ReadBytes(reader.ReadInt32()).FromGZipBytes();
+                            var csBytes = _compressor.DeCompress(reader.ReadBytes(reader.ReadInt32()));
                             parameters[i] = Encoding.UTF8.GetString(csBytes);
                             break;
                         case ParameterTypes.UInt:
@@ -434,7 +436,7 @@ namespace ServiceWire
                             break;
                         case ParameterTypes.CompressedUnknown:
                             var cuTypeConfigName = reader.ReadString();
-                            var cuBytes = reader.ReadBytes(reader.ReadInt32()).FromGZipBytes();
+                            var cuBytes = _compressor.DeCompress(reader.ReadBytes(reader.ReadInt32()));
                             parameters[i] = _serializer.Deserialize(cuBytes, cuTypeConfigName);
                             break;
                         default:
