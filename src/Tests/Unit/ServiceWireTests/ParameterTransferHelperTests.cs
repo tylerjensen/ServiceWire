@@ -1,6 +1,6 @@
-﻿using System;
+﻿using ServiceWire;
+using System;
 using System.IO;
-using ServiceWire;
 using Xunit;
 
 namespace ServiceWireTests
@@ -112,7 +112,7 @@ namespace ServiceWireTests
             var uis = new uint[] { 34578444, 45676456, 452456456, 452456456, 424556456 };
             TestArraySimpleType(uis);
 
-            var ls = new long[] { 34997766, 99887766, 34998866, 34987766, 34998877};
+            var ls = new long[] { 34997766, 99887766, 34998866, 34987766, 34998877 };
             TestArraySimpleType(ls);
 
             var uls = new ulong[] { 987675765654, 987758765654, 987758765654, 987675876654, 987675875654 };
@@ -170,7 +170,7 @@ namespace ServiceWireTests
 
         private object[] RunInAndOut(params object[] obj)
         {
-            var pth = new ParameterTransferHelper(new DefaultSerializer());
+            var pth = new ParameterTransferHelper(new DefaultSerializer(), new DefaultCompressor());
             object[] result = null;
             using (var ms = new MemoryStream())
             using (var writer = new BinaryWriter(ms))
@@ -184,7 +184,6 @@ namespace ServiceWireTests
         }
     }
 }
-
 
 /*
                 _parameterTypes.Add(typeof(bool), ParameterTypes.Bool);

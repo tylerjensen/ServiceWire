@@ -33,8 +33,9 @@ namespace ServiceWire.NamedPipes
         /// <param name="log"></param>
         /// <param name="stats"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
-        public NpHost(string pipeName, ILog log = null, IStats stats = null, ISerializer serializer = null)
-            : base(serializer)
+        /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
+        public NpHost(string pipeName, ILog log = null, IStats stats = null, ISerializer serializer = null, ICompressor compressor = null)
+            : base(serializer, compressor)
         {
             base.Log = log;
             base.Stats = stats;

@@ -12,8 +12,8 @@ namespace ServiceWire.Aspects
 
         public InterceptPoint InterceptPoint { get { return _interceptPoint; } }
 
-        public InterceptChannel(Type interceptedType, InterceptPoint interceptPoint, ISerializer serializer)
-            : base(serializer)
+        public InterceptChannel(Type interceptedType, InterceptPoint interceptPoint, ISerializer serializer, ICompressor compressor)
+            : base(serializer, compressor)
         {
             _serviceType = interceptedType;
             _interceptPoint = interceptPoint;
@@ -73,7 +73,6 @@ namespace ServiceWire.Aspects
                 }
             }
 
-
             //Create a list of sync infos from the dictionary
             var syncSyncInfos = new List<MethodSyncInfo>();
             foreach (var kvp in _serviceInstance.InterfaceMethods)
@@ -120,11 +119,14 @@ namespace ServiceWire.Aspects
                         {
                             var matchingParameterTypes = true;
                             for (int i = 0; i < si.ParameterTypes.Length; i++)
+                            {
                                 if (!mdata[i + 1].Equals(si.ParameterTypes[i]))
                                 {
                                     matchingParameterTypes = false;
                                     break;
                                 }
+                            }
+
                             if (matchingParameterTypes)
                             {
                                 ident = si.MethodIdent;
@@ -139,11 +141,9 @@ namespace ServiceWire.Aspects
 
                 if (_serviceInstance.InterfaceMethods.ContainsKey(ident))
                 {
-                    MethodInfo method;
-                    _serviceInstance.InterfaceMethods.TryGetValue(ident, out method);
+                    _serviceInstance.InterfaceMethods.TryGetValue(ident, out var method);
 
-                    bool[] isByRef;
-                    _serviceInstance.MethodParametersByRef.TryGetValue(ident, out isByRef);
+                    _serviceInstance.MethodParametersByRef.TryGetValue(ident, out var isByRef);
 
                     returnType = (null == method) ? null : method.ReturnType;
 
@@ -179,8 +179,7 @@ namespace ServiceWire.Aspects
                         {
                             returnParameters = new object[] { exceptionOfConcern };
                             throw exceptionOfConcern;
-                        }
-                        else
+                        } else
                         {
                             returnParameters = new object[]
                             {

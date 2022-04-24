@@ -1,10 +1,10 @@
+using ServiceWire.ZeroKnowledge;
 using System;
 using System.Collections.Concurrent;
-using System.IO;
-using System.Security.Authentication;
-using ServiceWire.ZeroKnowledge;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
+using System.Security.Authentication;
 using System.Threading.Tasks;
 
 namespace ServiceWire
@@ -20,12 +20,12 @@ namespace ServiceWire
         private ZkCrypto _zkCrypto;
 
         // keep cached sync info to avoid redundant wire trips
-        private static readonly ConcurrentDictionary<Type, ServiceSyncInfo> SyncInfoCache = new ConcurrentDictionary<Type, ServiceSyncInfo>(); 
+        private static readonly ConcurrentDictionary<Type, ServiceSyncInfo> SyncInfoCache = new ConcurrentDictionary<Type, ServiceSyncInfo>();
 
-        public StreamingChannel(ISerializer serializer)
-            : base(serializer)
+        public StreamingChannel(ISerializer serializer, ICompressor compressor)
+            : base(serializer, compressor)
         {
-            _parameterTransferHelper = new ParameterTransferHelper(_serializer);
+            _parameterTransferHelper = new ParameterTransferHelper(_serializer, _compressor);
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace ServiceWire
         /// This method asks the server for a list of identifiers paired with method
         /// names and -parameter types. This is used when invoking methods server side.
         /// </summary>
-        protected override void SyncInterface(Type serviceType, 
+        protected override void SyncInterface(Type serviceType,
             string username = null, string password = null)
         {
             if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
@@ -50,7 +50,7 @@ namespace ServiceWire
                 // Step 1. Client sends username and ephemeral hash of random number.
                 var aRand = sr.CryptRand();
                 var aClientEphemeral = sr.GetClientEphemeralA(aRand);
-                
+
                 // send username and aClientEphemeral to server
                 _binWriter.Write((int)MessageType.ZkInitiate);
                 _binWriter.Write(username);
@@ -75,7 +75,7 @@ namespace ServiceWire
                 var clientScramble = sr.CalculateRandomScramble(aClientEphemeral, bServerEphemeral);
 
                 // Step 4. Client computes session key
-                var clientSessionKey = sr.ClientComputeSessionKey(salt, username, password, 
+                var clientSessionKey = sr.ClientComputeSessionKey(salt, username, password,
                     aClientEphemeral, bServerEphemeral, clientScramble);
 
                 // Step 6. Client creates hash of session key and sends to server. Server creates same key and verifies.
@@ -95,7 +95,7 @@ namespace ServiceWire
                     throw new InvalidCredentialException("authentication failed");
                 }
                 var serverSessionHash = _binReader.ReadBytes(32);
-                var clientServerSessionHash = sr.ServerCreateSessionHash(aClientEphemeral, 
+                var clientServerSessionHash = sr.ServerCreateSessionHash(aClientEphemeral,
                     clientSessionHash, clientSessionKey);
                 if (!serverSessionHash.IsEqualTo(clientServerSessionHash))
                 {
@@ -108,7 +108,7 @@ namespace ServiceWire
                 sw.Stop();
                 _stats.Log("ZkAuthentication", sw.ElapsedMilliseconds);
             }
-            
+
             if (!SyncInfoCache.TryGetValue(serviceType, out _syncInfo))
             {
                 //write the message type
@@ -120,8 +120,7 @@ namespace ServiceWire
                     var assemblyNameEncrypted = _zkCrypto.Encrypt(assemName.ConvertToBytes());
                     _binWriter.Write(assemblyNameEncrypted.Length);
                     _binWriter.Write(assemblyNameEncrypted);
-                }
-                else
+                } else
                 {
                     _binWriter.Write(serviceType.ToConfigName());
                 }
@@ -214,8 +213,7 @@ namespace ServiceWire
                     _binWriter.Write(encData.Length);
                     _binWriter.Write(encData);
                     _logger.Debug("Encrypted data sent to server: {0}", Convert.ToBase64String(encData));
-                }
-                else
+                } else
                 {
                     //send the parameters
                     _parameterTransferHelper.SendParameters(_syncInfo.UseCompression,
@@ -247,8 +245,7 @@ namespace ServiceWire
                     {
                         outParams = _parameterTransferHelper.ReceiveParameters(br);
                     }
-                }
-                else
+                } else
                 {
                     outParams = _parameterTransferHelper.ReceiveParameters(_binReader);
                 }
@@ -257,19 +254,18 @@ namespace ServiceWire
                 var returnType = methodSyncInfo.MethodReturnType.ToType();
                 if (IsTaskType(returnType) && outParams.Length > 0)
                 {
-	                if (returnType.IsGenericType)
-	                {
-		                MethodInfo methodInfo = typeof(Task).GetMethod(nameof(Task.FromResult))
-			                .MakeGenericMethod(new[] { returnType.GenericTypeArguments[0] });
-		                outParams[0] = methodInfo.Invoke(null, new[] { outParams[0] });
-					}
-	                else
-	                {
-		                outParams[0] = Task.CompletedTask;
-	                }
-				}
-				
-				if (messageType == MessageType.ThrowException)
+                    if (returnType.IsGenericType)
+                    {
+                        MethodInfo methodInfo = typeof(Task).GetMethod(nameof(Task.FromResult))
+                            .MakeGenericMethod(new[] { returnType.GenericTypeArguments[0] });
+                        outParams[0] = methodInfo.Invoke(null, new[] { outParams[0] });
+                    } else
+                    {
+                        outParams[0] = Task.CompletedTask;
+                    }
+                }
+
+                if (messageType == MessageType.ThrowException)
                     throw (Exception)outParams[0];
 
                 return outParams;
@@ -277,15 +273,15 @@ namespace ServiceWire
         }
 
         private static bool IsTaskType(Type type)
-		{
-			if (type == typeof(Task))
-				return true;
+        {
+            if (type == typeof(Task))
+                return true;
 
-			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>))
-				return true;
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>))
+                return true;
 
-			return false;
-		}
+            return false;
+        }
 
         #region IDisposable Members
 

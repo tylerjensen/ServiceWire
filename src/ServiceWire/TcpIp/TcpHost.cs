@@ -1,10 +1,10 @@
+using ServiceWire.ZeroKnowledge;
 using System;
-using System.Net.Sockets;
-using System.Net;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using ServiceWire.ZeroKnowledge;
 
 namespace ServiceWire.TcpIp
 {
@@ -23,9 +23,9 @@ namespace ServiceWire.TcpIp
         /// <param name="stats"></param>
         /// <param name="zkRepository">Only required to support zero knowledge authentication and encryption.</param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
-        public TcpHost(int port, ILog log = null, IStats stats = null, 
-            IZkRepository zkRepository = null, ISerializer serializer = null)
-            : base(serializer)
+        public TcpHost(int port, ILog log = null, IStats stats = null,
+            IZkRepository zkRepository = null, ISerializer serializer = null, ICompressor compressor = null)
+            : base(serializer, compressor)
         {
             Initialize(new IPEndPoint(IPAddress.Any, port), log, stats, zkRepository);
         }
@@ -41,9 +41,10 @@ namespace ServiceWire.TcpIp
         /// <param name="stats"></param>
         /// <param name="zkRepository">Only required to support zero knowledge authentication and encryption.</param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
-        public TcpHost(IPEndPoint endpoint, ILog log = null, IStats stats = null, 
-            IZkRepository zkRepository = null, ISerializer serializer = null)
-            : base(serializer)
+        /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
+        public TcpHost(IPEndPoint endpoint, ILog log = null, IStats stats = null,
+            IZkRepository zkRepository = null, ISerializer serializer = null, ICompressor compressor = null)
+            : base(serializer, compressor)
         {
             Initialize(endpoint, log, stats, zkRepository);
         }
@@ -182,7 +183,7 @@ namespace ServiceWire.TcpIp
             }
         }
 
-#region IDisposable Members
+        #region IDisposable Members
 
         private bool _disposed = false;
 
@@ -202,6 +203,6 @@ namespace ServiceWire.TcpIp
             base.Dispose(disposing);
         }
 
-#endregion
+        #endregion
     }
 }
