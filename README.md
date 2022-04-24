@@ -3,6 +3,11 @@
 ServiceWire
 ===========
 
+### ICompression added for injecting compression strategy in 5.4.0
+
+1. Added ICompression for injecting custom compression into usage.
+2. Added .NET 5.0 as target back in.
+
 ### AssemblyQualified names from user defined types in 5.3.6
 
 1. Fix for AssemblyQualified names from user defined types.
