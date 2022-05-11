@@ -342,18 +342,33 @@ namespace ServiceWire
                 {
                     syncCat = instance.InterfaceType.Name;
                     //Create a list of sync infos from the dictionary
-                    var syncBytes = _serializer.Serialize(instance.ServiceSyncInfo);
-                    if (_requireZk)
+                    byte[] syncBytes = null;
+                    try
                     {
-                        _log.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(syncBytes));
-                        var encData = session.Crypto.Encrypt(syncBytes);
-                        binWriter.Write(encData.Length);
-                        binWriter.Write(encData);
-                        _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
-                    } else
+                        //if the serializer fails, we need to send 0 to client to indicate sync error
+                        syncBytes = _serializer.Serialize(instance.ServiceSyncInfo);
+                    }
+                    catch (Exception e)
                     {
-                        binWriter.Write(syncBytes.Length);
-                        binWriter.Write(syncBytes);
+                        //return zero to indicate failure to client to avoid EOS error on client
+                        binWriter.Write(0);
+                        _log.Debug("SyncInterface error {0}.", e);
+                    }
+                    if (null != syncBytes)
+                    {
+                        if (_requireZk)
+                        {
+                            _log.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(syncBytes));
+                            var encData = session.Crypto.Encrypt(syncBytes);
+                            binWriter.Write(encData.Length);
+                            binWriter.Write(encData);
+                            _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
+                        }
+                        else
+                        {
+                            binWriter.Write(syncBytes.Length);
+                            binWriter.Write(syncBytes);
+                        }
                     }
                 }
             } else
