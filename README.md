@@ -3,6 +3,12 @@
 ServiceWire
 ===========
 
+### Capture serialization error bug fix in 5.4.1
+
+1. In .NET 5+, the BinaryFormatter is marked obsolete and prohibited in ASP.NET apps.
+2. This bug caused and end of stream error rather than capturing it properly. This version fixes that bug and exposes the limitation introduced in .NET 5+ on ASP.NET apps.
+3. Using ServiceWire in an ASP.NET app is still possible but requires the use of the [EnableUnsafeBinaryFormatterSerialization](https://docs.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/5.0/binaryformatter-serialization-obsolete) flag in your project file. Use this carefully and be sure you understand the risks. 
+
 ### ICompression added for injecting compression strategy in 5.4.0
 
 1. Added ICompression for injecting custom compression into usage.
@@ -133,3 +139,4 @@ Portions of this library are a derivative of [RemotingLite][].
   [NuGet package here]: http://www.nuget.org/packages/ServiceWire/
   [RemotingLite]: http://remotinglite.codeplex.com/
   [ServiceWire documentation]: https://github.com/tylerjensen/ServiceWire/wiki
+
