@@ -1,3 +1,4 @@
+using ServiceWire.ZeroKnowledge;
 using System;
 using System.IO;
 
@@ -5,23 +6,7 @@ namespace ServiceWire.NamedPipes
 {
     public class NpHost : Host
     {
-        private NpListener _listener;
         private string _pipeName;
-        private bool _useThreadPool = false;
-
-        /// <summary>
-        /// Get or set whether the host should use regular or thread pool threads.
-        /// </summary>
-        public bool UseThreadPool
-        {
-            get { return _useThreadPool; }
-            set
-            {
-                if (_isOpen)
-                    throw new Exception("The host is already open");
-                _useThreadPool = value;
-            }
-        }
 
         /// <summary>
         /// Constructs an instance of the host and starts listening for incoming connections.
@@ -34,14 +19,13 @@ namespace ServiceWire.NamedPipes
         /// <param name="stats"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
-        public NpHost(string pipeName, ILog log = null, IStats stats = null, ISerializer serializer = null, ICompressor compressor = null)
-            : base(serializer, compressor)
+        /// <param name="zkRepository">Inject your zero knowledge password hash lookup repository. Null ignores ZK algorithm.</param>
+        /// <param name="sessionTimeoutMins">How long in minutes before the host will close an unused client connection. Default is 20 minutes.</param>
+        public NpHost(string pipeName, ILog log = null, IStats stats = null, ISerializer serializer = null, ICompressor compressor = null, 
+            IZkRepository zkRepository = null, int sessionTimeoutMins = 20)
+            : base("inproc://" + pipeName, sessionTimeoutMins, serializer, compressor, log, stats, zkRepository)
         {
-            base.Log = log;
-            base.Stats = stats;
             _pipeName = pipeName;
-            _listener = new NpListener(_pipeName, log: base.Log, stats: base.Stats);
-            _listener.RequestReieved += ClientConnectionMade;
         }
 
         /// <summary>
@@ -51,40 +35,5 @@ namespace ServiceWire.NamedPipes
         {
             get { return _pipeName; }
         }
-
-        protected override void StartListener()
-        {
-            _listener.Start(); //start listening in the background
-        }
-
-        /// <summary>
-        /// This method handles all requests on separate thread per client connection.
-        /// There is one thread running this method for each connected client.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        private void ClientConnectionMade(object sender, PipeClientConnectionEventArgs args)
-        {
-            var stream = new BufferedStream(args.PipeStream);
-            base.ProcessRequest(stream);
-        }
-
-        #region IDisposable Members
-
-        private bool _disposed = false;
-
-        protected override void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                _disposed = true; //prevent second call to Dispose
-                if (disposing)
-                {
-                    _listener.Stop();
-                }
-            }
-        }
-
-        #endregion
     }
 }

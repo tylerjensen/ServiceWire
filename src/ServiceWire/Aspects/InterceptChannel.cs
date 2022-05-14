@@ -12,16 +12,16 @@ namespace ServiceWire.Aspects
 
         public InterceptPoint InterceptPoint { get { return _interceptPoint; } }
 
-        public InterceptChannel(Type interceptedType, InterceptPoint interceptPoint, ISerializer serializer, ICompressor compressor)
-            : base(serializer, compressor)
+        public InterceptChannel(Type interceptedType, InterceptPoint interceptPoint, ISerializer serializer, ICompressor compressor, 
+            string identity, string identityKey, ILog log, IStats stats, int invokeTimeoutMs)
+            : base(serializer, compressor, log, stats, invokeTimeoutMs)
         {
             _serviceType = interceptedType;
             _interceptPoint = interceptPoint;
             CreateMethodMap();
         }
 
-        protected override void SyncInterface(Type interceptedType,
-            string username = null, string password = null)
+        protected override void SyncInterface()
         {
             //do nothing in this channel
         }

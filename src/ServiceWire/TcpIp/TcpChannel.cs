@@ -8,10 +8,6 @@ namespace ServiceWire.TcpIp
 {
     public class TcpChannel : StreamingChannel
     {
-        private Socket _client;
-        private string _username;
-        private string _password;
-
         /// <summary>
         /// Creates a connection to the concrete object handling method calls on the server side
         /// </summary>
@@ -19,10 +15,11 @@ namespace ServiceWire.TcpIp
         /// <param name="endpoint"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
-        public TcpChannel(Type serviceType, IPEndPoint endpoint, ISerializer serializer, ICompressor compressor)
-            : base(serializer, compressor)
+        public TcpChannel(Type serviceType, IPEndPoint endpoint, ISerializer serializer, ICompressor compressor,
+            string identity, string identityKey, ILog log, IStats stats, int invokeTimeoutMs)
+            : base(serializer, compressor, "tcp://" + endpoint.Address.ToString() + ":" + endpoint.Port, identity, identityKey, log, stats, invokeTimeoutMs)
         {
-            Initialize(null, null, serviceType, endpoint, 2500);
+            Initialize(serviceType);
         }
 
         /// <summary>
@@ -32,10 +29,11 @@ namespace ServiceWire.TcpIp
         /// <param name="endpoint"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
-        public TcpChannel(Type serviceType, TcpEndPoint endpoint, ISerializer serializer, ICompressor compressor)
-            : base(serializer, compressor)
+        public TcpChannel(Type serviceType, TcpEndPoint endpoint, ISerializer serializer, ICompressor compressor,
+            string identity, string identityKey, ILog log, IStats stats, int invokeTimeoutMs)
+            : base(serializer, compressor, "tcp://" + endpoint.EndPoint.Address.ToString() + ":" + endpoint.EndPoint.Port, identity, identityKey, log, stats, invokeTimeoutMs)
         {
-            Initialize(null, null, serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs);
+            Initialize(serviceType);
         }
 
         /// <summary>
@@ -45,63 +43,23 @@ namespace ServiceWire.TcpIp
         /// <param name="endpoint"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
-        public TcpChannel(Type serviceType, TcpZkEndPoint endpoint, ISerializer serializer, ICompressor compressor)
-            : base(serializer, compressor)
+        public TcpChannel(Type serviceType, TcpZkEndPoint endpoint, ISerializer serializer, ICompressor compressor,
+            string identity, string identityKey, ILog log, IStats stats, int invokeTimeoutMs)
+            : base(serializer, compressor, "tcp://" + endpoint.EndPoint.Address.ToString() + ":" + endpoint.EndPoint.Port,
+                  identity, identityKey, log, stats, invokeTimeoutMs)
         {
             if (endpoint == null) throw new ArgumentNullException("endpoint");
             if (endpoint.Username == null) throw new ArgumentNullException("endpoint.Username");
             if (endpoint.Password == null) throw new ArgumentNullException("endpoint.Password");
-            Initialize(endpoint.Username, endpoint.Password,
-                serviceType, endpoint.EndPoint, endpoint.ConnectTimeOutMs);
+            Initialize(serviceType);
         }
 
-        private void Initialize(string username, string password,
-            Type serviceType, IPEndPoint endpoint, int connectTimeoutMs)
+        private void Initialize(Type serviceType)
         {
-            _username = username;
-            _password = password;
             _serviceType = serviceType;
-            _client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp); // TcpClient(AddressFamily.InterNetwork);
-            _client.LingerState.Enabled = false;
-
-            var connected = false;
-            var connectEventArgs = new SocketAsyncEventArgs
-            {
-                RemoteEndPoint = endpoint
-            };
-            connectEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>((sender, e) =>
-            {
-                connected = true;
-            });
-
-            if (_client.ConnectAsync(connectEventArgs))
-            {
-                //operation pending - (false means completed synchronously)
-                while (!connected)
-                {
-                    if (!SpinWait.SpinUntil(() => connected, connectTimeoutMs))
-                    {
-                        _client.Dispose();
-                        throw new TimeoutException("Unable to connect within " + connectTimeoutMs + "ms");
-                    }
-                }
-            }
-            if (connectEventArgs.SocketError != SocketError.Success)
-            {
-                _client.Dispose();
-                throw new SocketException((int)connectEventArgs.SocketError);
-            }
-            if (!_client.Connected)
-            {
-                _client.Dispose();
-                throw new SocketException((int)SocketError.NotConnected);
-            }
-            _stream = new BufferedStream(new NetworkStream(_client), 8192);
-            _binReader = new BinaryReader(_stream);
-            _binWriter = new BinaryWriter(_stream);
             try
             {
-                SyncInterface(_serviceType, _username, _password);
+                SyncInterface();
             }
             catch
             {
@@ -110,17 +68,11 @@ namespace ServiceWire.TcpIp
             }
         }
 
-        public override bool IsConnected { get { return (null != _client) && _client.Connected; } }
-
         #region IDisposable override
 
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            if (disposing)
-            {
-                _client.Dispose();
-            }
         }
 
         #endregion

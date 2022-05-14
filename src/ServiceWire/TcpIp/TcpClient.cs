@@ -7,31 +7,34 @@ namespace ServiceWire.TcpIp
     {
         public TInterface Proxy { get; }
 
-        public TcpClient(TcpEndPoint endpoint, ISerializer serializer = null, ICompressor compressor = null)
+        public TcpClient(TcpEndPoint endpoint, ISerializer serializer = null, ICompressor compressor = null,
+            string identity = null, string identityKey = null, ILog log = null, IStats stats = null, int invokeTimeoutMs = 90000)
         {
             if (null == serializer) serializer = new DefaultSerializer();
             if (null == compressor) compressor = new DefaultCompressor();
-            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor);
+            if (null == log) log = new NullLogger();
+            if (null == stats) stats = new NullStats();
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor, identity, identityKey, log, stats, invokeTimeoutMs);
         }
 
-        public TcpClient(TcpZkEndPoint endpoint, ISerializer serializer = null, ICompressor compressor = null)
+        public TcpClient(TcpZkEndPoint endpoint, ISerializer serializer = null, ICompressor compressor = null,
+            string identity = null, string identityKey = null, ILog log = null, IStats stats = null, int invokeTimeoutMs = 90000)
         {
             if (null == serializer) serializer = new DefaultSerializer();
             if (null == compressor) compressor = new DefaultCompressor();
-            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor);
+            if (null == log) log = new NullLogger();
+            if (null == stats) stats = new NullStats();
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor, identity, identityKey, log, stats, invokeTimeoutMs);
         }
 
-        public TcpClient(IPEndPoint endpoint, ISerializer serializer = null, ICompressor compressor = null)
+        public TcpClient(IPEndPoint endpoint, ISerializer serializer = null, ICompressor compressor = null,
+            string identity = null, string identityKey = null, ILog log = null, IStats stats = null, int invokeTimeoutMs = 90000)
         {
             if (null == serializer) serializer = new DefaultSerializer();
             if (null == compressor) compressor = new DefaultCompressor();
-            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor);
-        }
-
-        public void InjectLoggerStats(ILog logger, IStats stats)
-        {
-            var channel = Proxy as Channel;
-            channel?.InjectLoggerStats(logger, stats);
+            if (null == log) log = new NullLogger();
+            if (null == stats) stats = new NullStats();
+            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor, identity, identityKey, log, stats, invokeTimeoutMs);
         }
 
         public bool IsConnected => (Proxy as TcpChannel)?.IsConnected == true;

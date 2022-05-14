@@ -11,7 +11,6 @@ namespace ServiceWireTestHostPlustClient
             // Create Host
             var nphost = new NpHost("TEST", null, null);
             nphost.AddService<ISimpleError>(new SimpleError());
-            nphost.Open();
 
             // Create Client
             var npClient = new NpClient<ISimpleError>(new NpEndPoint("TEST"));
@@ -29,6 +28,7 @@ namespace ServiceWireTestHostPlustClient
                 Console.WriteLine(ex.Message);
             }
             Console.ReadLine();
+            nphost.Dispose();
         }
     }
 

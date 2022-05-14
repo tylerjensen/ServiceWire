@@ -49,7 +49,6 @@ namespace ServiceWireTests
 
             _tcphost = new TcpHost(CreateEndPoint(), zkRepository: _repo);
             _tcphost.AddService<INetTester>(_tester);
-            _tcphost.Open();
         }
 
         [Fact]
@@ -163,7 +162,7 @@ namespace ServiceWireTests
 
         public void Dispose()
         {
-            _tcphost.Close();
+            _tcphost.Dispose();
         }
     }
 }

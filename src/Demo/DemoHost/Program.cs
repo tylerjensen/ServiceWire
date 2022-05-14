@@ -47,12 +47,10 @@ namespace DemoHost
 			var test = new Test();
 			tcphost.AddService<ITest>(test);
 
-            tcphost.Open();
-
             Console.WriteLine("Press Enter to stop the dual host test.");
             Console.ReadLine();
 
-            tcphost.Close();
+            tcphost.Dispose();
 
             Console.WriteLine("Press Enter to quit.");
             Console.ReadLine();

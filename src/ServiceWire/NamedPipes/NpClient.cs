@@ -22,11 +22,14 @@ namespace ServiceWire.NamedPipes
         /// <param name="npAddress"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
-        public NpClient(NpEndPoint npAddress, ISerializer serializer = null, ICompressor compressor = null)
+        public NpClient(NpEndPoint npAddress, ISerializer serializer = null, ICompressor compressor = null,
+            string identity = null, string identityKey = null, ILog log = null, IStats stats = null, int invokeTimeoutMs = 90000)
         {
             if (null == serializer) serializer = new DefaultSerializer();
             if (null == compressor) compressor = new DefaultCompressor();
-            _proxy = NpProxy.CreateProxy<TInterface>(npAddress, serializer, compressor);
+            if (null == log) log = new NullLogger();
+            if (null == stats) stats = new NullStats();
+            _proxy = NpProxy.CreateProxy<TInterface>(npAddress, serializer, compressor, identity, identityKey, log, stats, invokeTimeoutMs);
         }
 
         #region IDisposable Members

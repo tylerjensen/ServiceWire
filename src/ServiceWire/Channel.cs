@@ -6,21 +6,19 @@ namespace ServiceWire
     {
         protected Type _serviceType;
 
-        protected ILog _logger = new NullLogger();
-        protected IStats _stats = new NullStats();
+        protected readonly ILog _log = new NullLogger();
+        protected readonly IStats _stats = new NullStats();
+        protected readonly int _invokeTimeoutMs;
         internal readonly ISerializer _serializer;
         internal readonly ICompressor _compressor;
 
-        public Channel(ISerializer serializer, ICompressor compressor)
+        public Channel(ISerializer serializer, ICompressor compressor, ILog log, IStats stats, int invokeTimeoutMs)
         {
             _serializer = serializer ?? new DefaultSerializer();
             _compressor = compressor ?? new DefaultCompressor();
-        }
-
-        public void InjectLoggerStats(ILog logger, IStats stats)
-        {
-            _logger = logger;
-            _stats = stats;
+            _log = log ?? new NullLogger();
+            _stats = stats ?? new NullStats();
+            _invokeTimeoutMs = invokeTimeoutMs;
         }
 
         /// <summary>
@@ -37,8 +35,7 @@ namespace ServiceWire
         /// names and -parameter types. This is used when invoking methods server side.
         /// When username and password supplied, zero knowledge encryption is used.
         /// </summary>
-        protected abstract void SyncInterface(Type serviceType,
-            string username = null, string password = null);
+        protected abstract void SyncInterface();
 
         #region IDisposable Members
 

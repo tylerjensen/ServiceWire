@@ -42,25 +42,20 @@ namespace DemoClient
         private static async Task RunTest(TcpZkEndPoint zkEndpoint, string ip, Logger logger, Stats stats)
         {
             var sw = Stopwatch.StartNew();
-			using (var client = new TcpClient<ITest>(zkEndpoint))
+			using (var client = new TcpClient<ITest>(zkEndpoint, null, null, null, null, logger, stats))
 			{
-				client.InjectLoggerStats(logger, stats);
 				await client.Proxy.SetAsync(1);
 				int value = await client.Proxy.GetAsync();
 			}
 
-			using (var client = new TcpClient<IDataContract>(zkEndpoint))
+			using (var client = new TcpClient<IDataContract>(zkEndpoint, null, null, null, null, logger, stats))
 			{
-				client.InjectLoggerStats(logger, stats);
-
 				decimal abc = client.Proxy.GetDecimal(4.5m);
 				bool result = client.Proxy.OutDecimal(abc);
 			}
 
-			using (var client = new TcpClient<IComplexDataContract>(zkEndpoint))
+			using (var client = new TcpClient<IComplexDataContract>(zkEndpoint, null, null, null, null, logger, stats))
 			{
-				client.InjectLoggerStats(logger, stats);
-
 				var id = client.Proxy.GetId("test1", 3.314, 42, DateTime.Now);
 				long q = 3;
 				var response = client.Proxy.Get(id, "mirror", 4.123, out q);

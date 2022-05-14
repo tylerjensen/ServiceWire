@@ -1,51 +1,84 @@
+using NetMQ;
+using NetMQ.Sockets;
+using ServiceWire.Messaging;
 using ServiceWire.ZeroKnowledge;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ServiceWire
 {
-    public abstract class Host : IDisposable
+    public class Host : IDisposable
     {
         protected volatile bool _isOpen;
         protected volatile bool _continueListening = true;
         protected bool _useCompression = false; //default is false
         protected int _compressionThreshold = 131072; //128KB
-        protected ILog _log = new NullLogger();
-        protected IStats _stats = new NullStats();
+        protected readonly ILog _log;
+        protected readonly IStats _stats;
         protected readonly ISerializer _serializer;
         protected readonly ICompressor _compressor;
-        protected IZkRepository _zkRepository = new ZkNullRepository();
+        protected readonly IZkRepository _zkRepository;
         private volatile bool _requireZk = false;
 
         protected ConcurrentDictionary<string, int> _serviceKeys = new ConcurrentDictionary<string, int>();
         protected ConcurrentDictionary<int, ServiceInstance> _services = new ConcurrentDictionary<int, ServiceInstance>();
         protected readonly ParameterTransferHelper _parameterTransferHelper;
 
-        public Host(ISerializer serializer, ICompressor compressor)
+        protected readonly IMsgHost _host;
+        protected readonly string _connectionString;
+
+        public Host(string connectionString, int sessionTimeoutMins, ISerializer serializer, ICompressor compressor, ILog log, IStats stats, IZkRepository zkRepository)
         {
+            _connectionString = connectionString ?? "inproc://servicewire";
             _serializer = serializer ?? new DefaultSerializer();
             _compressor = compressor ?? new DefaultCompressor();
+            _log = log ?? new NullLogger();
+            _stats = stats ?? new NullStats();
             _parameterTransferHelper = new ParameterTransferHelper(_serializer, _compressor);
+
+            _zkRepository = zkRepository ?? new ZkNullRepository();
+
+            _host = new MsgHost(_connectionString, _zkRepository, _log, _stats, sessionTimeoutMins);
+            _host.ZkClientSessionEstablishedEvent += ZkClientSessionEstablishedEvent;
+            _host.ReceivedHeartbeatEvent += ReceivedHeartbeatEvent;
+            _host.MessageSentFailure += MessageSentFailure;
+            _host.MessageReceived += MessageReceived;
         }
+
+        private void MessageReceived(object sender, MessageEventArgs e)
+        {
+            ProcessRequest(e.Message);
+        }
+
+        private void MessageSentFailure(object sender, MessageEventFailureArgs e)
+        {
+            //TODO - decide how to surface or log this
+        }
+
+        private void ReceivedHeartbeatEvent(object sender, MessageEventArgs e)
+        {
+            //TODO - decide how to surface or log this
+        }
+
+        private void ZkClientSessionEstablishedEvent(object sender, MessageEventArgs e)
+        {
+            _requireZk = true;
+            //TODO - decide how to surface or log this
+        }
+
 
         public IZkRepository ZkRepository
         {
             get
             {
                 return _zkRepository;
-            }
-            set
-            {
-                _zkRepository = value;
-                if (_zkRepository is ZkNullRepository)
-                    _requireZk = false;
-                else
-                    _requireZk = true;
             }
         }
 
@@ -55,10 +88,6 @@ namespace ServiceWire
             {
                 return _stats;
             }
-            set
-            {
-                _stats = value ?? _stats;
-            }
         }
 
         public ILog Log
@@ -66,10 +95,6 @@ namespace ServiceWire
             get
             {
                 return _log;
-            }
-            set
-            {
-                _log = value ?? _log;
             }
         }
 
@@ -222,118 +247,60 @@ namespace ServiceWire
             return instance;
         }
 
-        /// <summary>
-        /// Opens the host and starts a listener. This listener spawns a new thread (or uses a
-        /// thread pool thread) for each incoming connection.
-        /// </summary>
-        public void Open()
-        {
-            _isOpen = true;
-            StartListener();
-        }
-
-        protected abstract void StartListener();
 
         /// <summary>
-        /// Closes the host and calls Dispose().
+        /// This method handles all requests.
         /// </summary>
-        public void Close()
+        /// <param name="message">The request message.</param>
+        private void ProcessRequest(Message message)
         {
-            Dispose();
-        }
-
-        protected void ProcessRequest(Stream stream)
-        {
-            if (null == stream || (!stream.CanWrite && !stream.CanRead))
-            {
-                _log.Error("Cannot process a request on a stream that is not read/write.");
-                return;
-            }
-            ProcessRequest(stream, stream);
-        }
-
-        /// <summary>
-        /// This method handles all requests from a single client.
-        /// There is one thread running this method for each connected client.
-        /// </summary>
-        /// <param name="readStream">The read/write stream.</param>
-        /// <param name="writeStream">The read/write stream.</param>
-        protected virtual void ProcessRequest(Stream readStream, Stream writeStream)
-        {
-            if (null == readStream || null == writeStream) return;
-
-            var binReader = new BinaryReader(readStream);
-            var binWriter = new BinaryWriter(writeStream);
-            bool doContinue = true;
+            var sw = Stopwatch.StartNew();
             try
             {
-                ZkSession zkSession = null;
-                do
+                //read message type
+                var messageType = (MessageType)BitConverter.ToInt32(message.Frames[0], 0);
+                switch (messageType)
                 {
-                    var sw = Stopwatch.StartNew();
-                    try
-                    {
-                        //read message type
-                        var messageType = (MessageType)binReader.ReadInt32();
-                        switch (messageType)
-                        {
-                            case MessageType.ZkInitiate:
-                                zkSession = new ZkSession(_zkRepository, _log, _stats);
-                                doContinue = zkSession.ProcessZkInitiation(binReader, binWriter, sw);
-                                break;
-                            case MessageType.ZkProof:
-                                if (null == zkSession) throw new NullReferenceException("session null");
-                                doContinue = zkSession.ProcessZkProof(binReader, binWriter, sw);
-                                break;
-                            case MessageType.SyncInterface:
-                                ProcessSync(zkSession, binReader, binWriter, sw);
-                                break;
-                            case MessageType.MethodInvocation:
-                                ProcessInvocation(zkSession, binReader, binWriter, sw);
-                                break;
-                            case MessageType.TerminateConnection:
-                                doContinue = false;
-                                break;
-                            default:
-                                doContinue = false;
-                                break;
-                        }
-                    }
-                    catch (Exception e) //do not resume operation on this thread if any errors are unhandled.
-                    {
-                        _log.Error("Error in ProcessRequest: {0}", e.ToString().Flatten());
-                        doContinue = false;
-                    }
-                    sw.Stop();
+                    case MessageType.SyncInterface:
+                        ProcessSync(message, sw);
+                        break;
+                    case MessageType.MethodInvocation:
+                        ProcessInvocation(message, sw);
+                        break;
+                    case MessageType.TerminateConnection:
+                        _host.RemoveSession(message.ClientId);
+                        break;
+                    default:
+                        //TODO - log unknown messageType?
+                        break;
                 }
-                while (doContinue);
             }
-            catch (Exception fatalException)
+            catch (Exception e) //do not resume operation on this thread if any errors are unhandled.
             {
-                _log.Fatal("Fatal error in ProcessRequest: {0}", fatalException.ToString().Flatten());
+                _log.Error("Error in ProcessRequest: {0}", e.ToString().Flatten());
             }
-            finally
-            {
-                binReader.Close();
-                binWriter.Close();
-            }
+            sw.Stop();
         }
 
-        private void ProcessSync(ZkSession session, BinaryReader binReader, BinaryWriter binWriter, Stopwatch sw)
+        private void ProcessSync(Message message, Stopwatch sw)
         {
+            var msgSession = _host.GetSession(message.ClientId);
+            var session = msgSession?.Session;
+            var retMsg = new Message { ClientId = message.ClientId, Frames = new List<byte[]>() };
+            retMsg.Frames.Add(BitConverter.GetBytes((int)MessageType.SyncInterface));
+
             var syncCat = "Sync";
 
             string serviceTypeName;
             if (_requireZk)
             {
                 //use session and encryption - if throws should not have gotten this far
-                var len = binReader.ReadInt32();
-                var bytes = binReader.ReadBytes(len);
+                var bytes = message.Frames[1];
                 var data = session.Crypto.Decrypt(bytes);
-                serviceTypeName = data.ConverToString();
+                serviceTypeName = data.ConvertToString();
             } else
             {
-                serviceTypeName = binReader.ReadString();
+                serviceTypeName = message.Frames[1].ConvertToString();
             }
 
             if (_serviceKeys.TryGetValue(serviceTypeName, out var serviceKey))
@@ -351,46 +318,50 @@ namespace ServiceWire
                     catch (Exception e)
                     {
                         //return zero to indicate failure to client to avoid EOS error on client
-                        binWriter.Write(0);
+                        retMsg.Frames.Add(BitConverter.GetBytes(0));
                         _log.Debug("SyncInterface error {0}.", e);
                     }
                     if (null != syncBytes)
                     {
+                        retMsg.Frames.Add(BitConverter.GetBytes(1)); //indicate success
                         if (_requireZk)
                         {
                             _log.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(syncBytes));
                             var encData = session.Crypto.Encrypt(syncBytes);
-                            binWriter.Write(encData.Length);
-                            binWriter.Write(encData);
+                            retMsg.Frames.Add(encData);
                             _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
                         }
                         else
                         {
-                            binWriter.Write(syncBytes.Length);
-                            binWriter.Write(syncBytes);
+                            retMsg.Frames.Add(syncBytes);
                         }
                     }
                 }
             } else
             {
                 //return zero to indicate type or version of type not found
-                binWriter.Write(0);
+                retMsg.Frames.Add(BitConverter.GetBytes(0));
             }
-            binWriter.Flush();
+            _host.Send(retMsg);
             _log.Debug("SyncInterface for {0} in {1}ms.", syncCat, sw.ElapsedMilliseconds);
         }
 
-        private void ProcessInvocation(ZkSession session, BinaryReader binReader, BinaryWriter binWriter, Stopwatch sw)
+        private void ProcessInvocation(Message message, Stopwatch sw)
         {
+            var msgSession = _host.GetSession(message.ClientId);
+            var session = msgSession?.Session;
+            var retMsg = new Message { ClientId = message.ClientId, Frames = new List<byte[]>() };
+
             //read service instance key
             var cat = "unknown";
             var stat = "MethodInvocation";
-            int invokedServiceKey = binReader.ReadInt32();
+            //start with 2 because 1 is the invokeId
+            int invokedServiceKey = BitConverter.ToInt32(message.Frames[2], 0);
             if (_services.TryGetValue(invokedServiceKey, out var invokedInstance))
             {
                 cat = invokedInstance.InterfaceType.Name;
                 //read the method identifier
-                int methodHashCode = binReader.ReadInt32();
+                int methodHashCode = BitConverter.ToInt32(message.Frames[3], 0);
                 if (invokedInstance.InterfaceMethods.ContainsKey(methodHashCode))
                 {
                     invokedInstance.InterfaceMethods.TryGetValue(methodHashCode, out var method);
@@ -400,21 +371,22 @@ namespace ServiceWire
 
                     //read parameter data
                     object[] parameters;
+                    byte[] data;
                     if (_requireZk)
                     {
-                        var len = binReader.ReadInt32();
-                        var encData = binReader.ReadBytes(len);
+                        var encData = message.Frames[4];
                         _log.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
-                        var data = session.Crypto.Decrypt(encData);
+                        data = session.Crypto.Decrypt(encData);
                         _log.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
-                        using (var ms = new MemoryStream(data))
-                        using (var br = new BinaryReader(ms))
-                        {
-                            parameters = _parameterTransferHelper.ReceiveParameters(br);
-                        }
                     } else
                     {
-                        parameters = _parameterTransferHelper.ReceiveParameters(binReader);
+                        // TODO - modify ReceiveParameters to read from frames rather than stream of bytes maybe
+                        data = message.Frames[4];
+                    }
+                    using (var ms = new MemoryStream(data))
+                    using (var br = new BinaryReader(ms))
+                    {
+                        parameters = _parameterTransferHelper.ReceiveParameters(br);
                     }
 
                     //invoke the method
@@ -444,46 +416,47 @@ namespace ServiceWire
 
                     //send the result back to the client
                     // (1) write the message type
-                    binWriter.Write((int)returnMessageType);
+                    retMsg.Frames.Add(BitConverter.GetBytes((int)returnMessageType));
+                    retMsg.Frames.Add(message.Frames[1]); //invokeId
 
                     // (2) write the return parameters
-                    if (_requireZk)
-                    {
-                        byte[] data;
-                        using (var ms = new MemoryStream())
-                        using (var bw = new BinaryWriter(ms))
-                        {
-                            _parameterTransferHelper.SendParameters(
-                                invokedInstance.ServiceSyncInfo.UseCompression,
-                                invokedInstance.ServiceSyncInfo.CompressionThreshold,
-                                bw,
-                                returnParameters);
-                            data = ms.ToArray();
-                        }
-                        _log.Debug("Unencrypted data sent server: {0}", Convert.ToBase64String(data));
-                        var encData = session.Crypto.Encrypt(data);
-                        _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
-                        binWriter.Write(encData.Length);
-                        binWriter.Write(encData);
-                    } else
+                    byte[] rawResponseData;
+                    byte[] responseData;
+                    using (var ms = new MemoryStream())
+                    using (var bw = new BinaryWriter(ms))
                     {
                         _parameterTransferHelper.SendParameters(
                             invokedInstance.ServiceSyncInfo.UseCompression,
                             invokedInstance.ServiceSyncInfo.CompressionThreshold,
-                            binWriter,
+                            bw,
                             returnParameters);
+                        rawResponseData = ms.ToArray();
                     }
-                } else
+                    if (_requireZk)
+                    {
+                        _log.Debug("Unencrypted data sent server: {0}", Convert.ToBase64String(rawResponseData));
+                        responseData = session.Crypto.Encrypt(rawResponseData);
+                        _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(responseData));
+                    } 
+                    else
+                    {
+                        responseData = rawResponseData;
+                    }
+                    retMsg.Frames.Add(responseData);
+                }
+                else
                 {
-                    binWriter.Write((int)MessageType.UnknownMethod);
+                    retMsg.Frames.Add(BitConverter.GetBytes((int)MessageType.UnknownMethod));
+                    retMsg.Frames.Add(message.Frames[1]); //invokeId
                 }
             } else
             {
-                binWriter.Write((int)MessageType.UnknownMethod);
+                retMsg.Frames.Add(BitConverter.GetBytes((int)MessageType.UnknownMethod));
+                retMsg.Frames.Add(message.Frames[1]); //invokeId
             }
 
             //flush
-            binWriter.Flush();
+            _host.Send(retMsg);
             _stats.Log(cat, stat, sw.ElapsedMilliseconds);
         }
 
@@ -512,6 +485,7 @@ namespace ServiceWire
                 {
                     if (instance.Value.SingletonInstance is IDisposable disposable) disposable.Dispose();
                 }
+                if (null != _host) _host.Dispose();
             }
         }
 

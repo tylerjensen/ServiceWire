@@ -24,7 +24,6 @@ namespace ServiceWireTests
             _tester = new NetTester();
             _nphost = new NpHost(PipeName);
             _nphost.AddService<INetTester>(_tester);
-            _nphost.Open();
         }
 
         [Fact]
@@ -48,7 +47,6 @@ namespace ServiceWireTests
             using (var nphost = new NpHost(PipeName + "Json", serializer: new NewtonsoftSerializer()))
             {
                 nphost.AddService<INetTester>(_tester);
-                nphost.Open();
 
                 var rnd = new Random();
 
@@ -69,7 +67,6 @@ namespace ServiceWireTests
             using (var nphost = new NpHost(PipeName + "Proto", serializer: new ProtobufSerializer()))
             {
                 nphost.AddService<INetTester>(_tester);
-                nphost.Open();
 
                 var rnd = new Random();
 
@@ -186,7 +183,6 @@ namespace ServiceWireTests
             using (var nphost = new NpHost(PipeName + "JsonResponseOut", serializer: new NewtonsoftSerializer()))
             {
                 nphost.AddService<INetTester>(_tester);
-                nphost.Open();
 
                 using (var clientProxy = new NpClient<INetTester>(new NpEndPoint(PipeName + "JsonResponseOut"), new NewtonsoftSerializer()))
                 {
@@ -201,7 +197,7 @@ namespace ServiceWireTests
 
         public void Dispose()
         {
-            _nphost.Close();
+            _nphost.Dispose();
         }
     }
 }

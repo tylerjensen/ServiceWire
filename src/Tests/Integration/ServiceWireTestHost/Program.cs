@@ -33,7 +33,6 @@ namespace ServiceWireTestHost
             nphost.UseCompression = useCompression;
             nphost.CompressionThreshold = compressionThreshold;
 			nphost.AddService<IMyTester>(mytester);
-			nphost.Open();
 
 			var tcphost = new TcpHost(ipEndpoint, logger, stats);
             tcphost.UseCompression = useCompression;
@@ -44,13 +43,12 @@ namespace ServiceWireTestHost
 		    var valTypes = new ValTypes();
             tcphost.AddService<IValTypes>(valTypes);
 
-			tcphost.Open();
 
 			Console.WriteLine("Press Enter to stop the dual host test.");
 			Console.ReadLine();
 
-			nphost.Close();
-			tcphost.Close();
+			nphost.Dispose();
+			tcphost.Dispose();
 
 			Console.WriteLine("Press Enter to quit.");
 			Console.ReadLine();

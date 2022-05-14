@@ -1,4 +1,6 @@
-﻿using ServiceWire.ZeroKnowledge;
+﻿using ServiceWire;
+using ServiceWire.Messaging;
+using ServiceWire.ZeroKnowledge;
 using Xunit;
 
 namespace ServiceWireTests
@@ -8,14 +10,14 @@ namespace ServiceWireTests
         [Fact]
         public void BigIntegerArrayTest()
         {
-            var bigint = new BigInteger(ZkSafePrimes.N4);
-            var bytes = BigInteger.ToByteArray(bigint);
+            var bigint = new ZkBigInteger(ZkSafePrimes.N4);
+            var bytes = ZkBigInteger.ToByteArray(bigint);
             Assert.Equal(ZkSafePrimes.N4.Length, bytes.Length);
             for (int i = 0; i < bytes.Length; i++)
             {
                 Assert.Equal(ZkSafePrimes.N4[i], bytes[i]);
             }
-            var big2 = new BigInteger(bytes);
+            var big2 = new ZkBigInteger(bytes);
             Assert.Equal(bigint, big2);
         }
 
@@ -80,7 +82,7 @@ namespace ServiceWireTests
             Assert.True(serverEqualToClient);
 
             var data = sr.Combine(sr.CryptRand(), sr.CryptRand(), sr.CryptRand());
-            var crypto = new ZkCrypto(clientSessionKey, clientScramble);
+            var crypto = new ZkCrypto(clientSessionKey, clientScramble, new NullLogger());
             var encrypted = crypto.Encrypt(data);
             var decrypted = crypto.Decrypt(encrypted);
             var cryptSame = data.IsEqualTo(decrypted);

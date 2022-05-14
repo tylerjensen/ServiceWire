@@ -8,8 +8,5 @@ namespace ServiceWire
         UnknownMethod = 3,
         ThrowException = 4,
         SyncInterface = 5,
-
-        ZkInitiate = 20,
-        ZkProof = 21
     };
 }

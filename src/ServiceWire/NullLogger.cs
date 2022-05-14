@@ -1,6 +1,6 @@
 ﻿namespace ServiceWire
 {
-    internal class NullLogger : ILog
+    public class NullLogger : ILog
     {
         public void Debug(string formattedMessage, params object[] args)
         {

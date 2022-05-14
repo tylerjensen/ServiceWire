@@ -10,45 +10,62 @@ namespace ServiceWire.ZeroKnowledge
     {
         private readonly byte[] _key;
         private readonly byte[] _iv;
-        private readonly MD5CryptoServiceProvider _md5;
+        private readonly ILog _logger;
 
-        public ZkCrypto(byte[] key, byte[] iv)
+        public ZkCrypto(byte[] key, byte[] iv, ILog logger)
         {
             if (key.Length != 32) throw new ArgumentException("key must be 256 bits", "key");
-            if (iv.Length != 32) throw new ArgumentException("iv must be 256 bits", "iv");
-            _md5 = new MD5CryptoServiceProvider();
+            if (iv.Length != 16) throw new ArgumentException("iv must be 128 bits", "iv");
             _key = key;
-            _iv = _md5.ComputeHash(iv);
+            _iv = iv;
+            _logger = logger ?? new NullLogger();
         }
 
         public byte[] Encrypt(byte[] data)
         {
-            using (var crypto = RijndaelManaged.Create())
+            try
             {
-                crypto.Mode = CipherMode.CBC;
-                crypto.BlockSize = 128;
-                crypto.KeySize = 256;
-                crypto.Padding = PaddingMode.ISO10126;
-                using (var encryptor = crypto.CreateEncryptor(_key, _iv))
+                using (var crypto = Aes.Create())
                 {
-                    return encryptor.TransformFinalBlock(data, 0, data.Length);
+                    crypto.Mode = CipherMode.CBC;
+                    crypto.BlockSize = 128; // 256;
+                    crypto.KeySize = 256;
+                    crypto.Padding = PaddingMode.PKCS7;
+                    using (var encryptor = crypto.CreateEncryptor(_key, _iv))
+                    {
+                        return encryptor.TransformFinalBlock(data, 0, data.Length);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                _logger.Error("Encryption error {0}", e);
+                return data;
             }
         }
 
         public byte[] Decrypt(byte[] encrypted)
         {
-            using (var crypto = RijndaelManaged.Create())
+            try
             {
-                crypto.Mode = CipherMode.CBC;
-                crypto.BlockSize = 128;
-                crypto.KeySize = 256;
-                crypto.Padding = PaddingMode.ISO10126;
-                using (var dencryptor = crypto.CreateDecryptor(_key, _iv))
+                using (var crypto = Aes.Create())
                 {
-                    return dencryptor.TransformFinalBlock(encrypted, 0, encrypted.Length);
+                    crypto.Mode = CipherMode.CBC;
+                    crypto.BlockSize = 128; // 256;
+                    crypto.KeySize = 256;
+                    crypto.Padding = PaddingMode.PKCS7;
+                    using (var dencryptor = crypto.CreateDecryptor(_key, _iv))
+                    {
+                        return dencryptor.TransformFinalBlock(encrypted, 0, encrypted.Length);
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                _logger.Error("Decryption error {0}", e);
+                return encrypted;
+            }
         }
+
     }
 }
