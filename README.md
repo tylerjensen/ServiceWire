@@ -1,4 +1,13 @@
-[![tylerjensen](https://circleci.com/gh/tylerjensen/ServiceWire.svg?style=shield)](https://circleci.com/gh/tylerjensen/ServiceWire)  --.NET 6.0 not yet supported.
+Experimental Branch DO NOT USE
+===========
+
+### This branch will NOT be merged. It is an experiment using the NetMQ library.
+
+1. This branch is strictly experimental and for learning purposes only.
+2. NetMQ (like ZeroMQ) does not support NamedPipes as a protocol/transport layer.
+3. The way that the socket layer is isolated in this branch may be used in future versions. 
+4. The underlying AsyncIO library may be used in TCP socket layer in future versions.
+
 
 ServiceWire
 ===========
