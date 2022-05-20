@@ -3,6 +3,12 @@
 ServiceWire
 ===========
 
+### Capture serialization error bug fix in 5.4.2
+
+1. Single target of NetStandard 2.0 for a smaller NuGet package.
+2. Fix to a NamedPipes performance issue.
+3. Elimination of NET462 code differences.
+
 ### Capture serialization error bug fix in 5.4.1
 
 1. In .NET 5+, the BinaryFormatter is marked obsolete and prohibited in ASP.NET apps.

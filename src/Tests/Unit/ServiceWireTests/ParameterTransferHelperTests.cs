@@ -38,10 +38,6 @@ namespace ServiceWireTests
             TestSingle(ut); // ushort),
             string str = "hello";
             TestSingle(str); // string),
-#if NET462
-            Type ty = str.GetType();
-            TestSingle(ty); // Type), P
-#endif
             Guid g = Guid.NewGuid();
             TestSingle(g); // Guid), P
             DateTime dt = DateTime.Now;
@@ -69,17 +65,9 @@ namespace ServiceWireTests
             TestMultiple(db, f, i, ui, l, ul, st, ut);
 
             string str = "hello";
-            //.NET Core does not support binary serialization of Type
-#if NET462
-            Type ty = str.GetType();
-            Guid g = Guid.NewGuid();
-            DateTime dt = DateTime.Now;
-            TestMultiple(str, ty, g, dt);
-#else
             Guid g = Guid.NewGuid();
             DateTime dt = DateTime.Now;
             TestMultiple(str, g, dt);
-#endif
         }
 
         [Fact]
@@ -126,12 +114,6 @@ namespace ServiceWireTests
 
             var strs = new string[] { "hello", "heallo", "heldlo", "hellao" };
             TestArraySimpleType(strs);
-
-            //.NET Core does not support binary serialization of Type
-#if NET462
-            var tys = new Type[] { strs.GetType(), uts.GetType(), sts.GetType() };
-            TestArraySimpleType(tys);
-#endif
 
             var gs = new Guid[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
             TestArraySimpleType(gs);

@@ -336,9 +336,11 @@ namespace ServiceWire
                 serviceTypeName = binReader.ReadString();
             }
 
-            if (_serviceKeys.TryGetValue(serviceTypeName, out var serviceKey))
+            int serviceKey;
+            if (_serviceKeys.TryGetValue(serviceTypeName, out serviceKey))
             {
-                if (_services.TryGetValue(serviceKey, out var instance))
+                ServiceInstance instance;
+                if (_services.TryGetValue(serviceKey, out instance))
                 {
                     syncCat = instance.InterfaceType.Name;
                     //Create a list of sync infos from the dictionary
@@ -386,17 +388,20 @@ namespace ServiceWire
             var cat = "unknown";
             var stat = "MethodInvocation";
             int invokedServiceKey = binReader.ReadInt32();
-            if (_services.TryGetValue(invokedServiceKey, out var invokedInstance))
+            ServiceInstance invokedInstance;
+            if (_services.TryGetValue(invokedServiceKey, out invokedInstance))
             {
                 cat = invokedInstance.InterfaceType.Name;
                 //read the method identifier
                 int methodHashCode = binReader.ReadInt32();
                 if (invokedInstance.InterfaceMethods.ContainsKey(methodHashCode))
                 {
-                    invokedInstance.InterfaceMethods.TryGetValue(methodHashCode, out var method);
+                    MethodInfo method;
+                    invokedInstance.InterfaceMethods.TryGetValue(methodHashCode, out method);
                     stat = method.Name;
 
-                    invokedInstance.MethodParametersByRef.TryGetValue(methodHashCode, out var isByRef);
+                    bool[] isByRef;
+                    invokedInstance.MethodParametersByRef.TryGetValue(methodHashCode, out isByRef);
 
                     //read parameter data
                     object[] parameters;

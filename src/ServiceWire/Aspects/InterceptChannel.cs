@@ -141,9 +141,11 @@ namespace ServiceWire.Aspects
 
                 if (_serviceInstance.InterfaceMethods.ContainsKey(ident))
                 {
-                    _serviceInstance.InterfaceMethods.TryGetValue(ident, out var method);
+                    MethodInfo method;
+                    _serviceInstance.InterfaceMethods.TryGetValue(ident, out method);
 
-                    _serviceInstance.MethodParametersByRef.TryGetValue(ident, out var isByRef);
+                    bool[] isByRef;
+                    _serviceInstance.MethodParametersByRef.TryGetValue(ident, out isByRef);
 
                     returnType = (null == method) ? null : method.ReturnType;
 
