@@ -146,7 +146,85 @@ Portions of this library are a derivative of [RemotingLite][].
   [RemotingLite]: http://remotinglite.codeplex.com/
   [ServiceWire documentation]: https://github.com/tylerjensen/ServiceWire/wiki
 
-### Benchmark Latest (5/22/2022)
+### ConnBenchmarks (5/21/2022)
+
+The Conn benchmarks measure the establishment on a host and client connection and one simple operation. These benchmarks summarize the cost of making the connection.
+
+```
+BenchmarkDotNet=v0.13.1, OS=Windows 10.0.22000
+Intel Core i7-10750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
+.NET SDK=6.0.300
+  [Host]     : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
+  Job-ICGMVM : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
+  Job-UECWEW : .NET Framework 4.8 (4.8.4510.0), X64 RyuJIT
+
+InvocationCount=64  MaxIterationCount=16  MinIterationCount=4
+UnrollFactor=1
+
+|  Method |        Job |            Runtime |        Mean |     Error |    StdDev | Ratio | RatioSD |   Gen 0 | Allocated |
+|-------- |----------- |------------------- |------------:|----------:|----------:|------:|--------:|--------:|----------:|
+| TcpConn | Job-ICGMVM |           .NET 6.0 | 15,515.9 us | 419.21 us | 350.06 us |  1.00 |    0.00 |       - |     52 KB |
+| TcpConn | Job-UECWEW | .NET Framework 4.8 |  1,960.8 us | 841.09 us | 786.76 us |  0.13 |    0.05 | 15.6250 |     97 KB |
+|         |            |                    |             |           |           |       |         |         |           |
+|  NpConn | Job-ICGMVM |           .NET 6.0 |    270.9 us |   5.48 us |   5.12 us |  1.00 |    0.00 |       - |     64 KB |
+|  NpConn | Job-UECWEW | .NET Framework 4.8 |    297.9 us |   6.50 us |   6.39 us |  1.10 |    0.03 | 15.6250 |    107 KB |
+```
+
+### AllBenchmarks (5/21/2022)
+
+The All benchmarks measure operations on named pipes and tcp (localhost) connections after the connection has been established.
+
+```
+BenchmarkDotNet=v0.13.1, OS=Windows 10.0.22000
+Intel Core i7-10750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
+.NET SDK=6.0.300
+  [Host]     : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
+  Job-AUNACT : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
+  Job-NEMODS : .NET Framework 4.8 (4.8.4510.0), X64 RyuJIT
+
+InvocationCount=1024  MaxIterationCount=64  MinIterationCount=8
+UnrollFactor=1
+
+|       Method |        Job |            Runtime |      Mean |    Error |   StdDev | Ratio | RatioSD |   Gen 0 | Allocated |
+|------------- |----------- |------------------- |----------:|---------:|---------:|------:|--------:|--------:|----------:|
+|       TcpSim | Job-AUNACT |           .NET 6.0 |  32.10 us | 0.641 us | 0.686 us |  1.00 |    0.00 |       - |     641 B |
+|       TcpSim | Job-NEMODS | .NET Framework 4.8 |  33.90 us | 0.609 us | 1.099 us |  1.06 |    0.04 |       - |     856 B |
+|              |            |                    |           |          |          |       |         |         |           |
+|   TcpSimJson | Job-AUNACT |           .NET 6.0 |  32.10 us | 0.381 us | 0.169 us |  1.00 |    0.00 |       - |     641 B |
+|   TcpSimJson | Job-NEMODS | .NET Framework 4.8 |  32.03 us | 0.598 us | 0.560 us |  1.00 |    0.02 |       - |     856 B |
+|              |            |                    |           |          |          |       |         |         |           |
+|        TcpRg | Job-AUNACT |           .NET 6.0 | 171.08 us | 1.829 us | 0.812 us |  1.00 |    0.00 | 10.7422 |  69,717 B |
+|        TcpRg | Job-NEMODS | .NET Framework 4.8 | 228.85 us | 3.442 us | 1.528 us |  1.34 |    0.01 | 12.6953 |  80,716 B |
+|              |            |                    |           |          |          |       |         |         |           |
+|    TcpRgJson | Job-AUNACT |           .NET 6.0 | 170.89 us | 2.648 us | 1.752 us |  1.00 |    0.00 | 10.7422 |  69,717 B |
+|    TcpRgJson | Job-NEMODS | .NET Framework 4.8 | 228.15 us | 4.329 us | 2.863 us |  1.34 |    0.02 | 12.6953 |  80,661 B |
+|              |            |                    |           |          |          |       |         |         |           |
+|     TcpCxOut | Job-AUNACT |           .NET 6.0 |  81.39 us | 1.405 us | 0.929 us |  1.00 |    0.00 |  2.9297 |  19,797 B |
+|     TcpCxOut | Job-NEMODS | .NET Framework 4.8 | 100.65 us | 1.675 us | 1.398 us |  1.24 |    0.03 |  3.9063 |  28,586 B |
+|              |            |                    |           |          |          |       |         |         |           |
+| TcpCxOutJson | Job-AUNACT |           .NET 6.0 |  82.29 us | 1.642 us | 1.282 us |  1.00 |    0.00 |  2.9297 |  19,797 B |
+| TcpCxOutJson | Job-NEMODS | .NET Framework 4.8 | 100.20 us | 1.790 us | 0.936 us |  1.22 |    0.03 |  3.9063 |  28,581 B |
+|              |            |                    |           |          |          |       |         |         |           |
+|        NpSim | Job-AUNACT |           .NET 6.0 |  23.78 us | 0.471 us | 0.861 us |  1.00 |    0.00 |       - |     641 B |
+|        NpSim | Job-NEMODS | .NET Framework 4.8 |  24.04 us | 0.479 us | 0.606 us |  1.01 |    0.04 |       - |   1,008 B |
+|              |            |                    |           |          |          |       |         |         |           |
+|    NpSimJson | Job-AUNACT |           .NET 6.0 |  23.92 us | 0.462 us | 0.692 us |  1.00 |    0.00 |       - |     641 B |
+|    NpSimJson | Job-NEMODS | .NET Framework 4.8 |  24.05 us | 0.477 us | 0.848 us |  1.01 |    0.06 |       - |   1,016 B |
+|              |            |                    |           |          |          |       |         |         |           |
+|         NpRg | Job-AUNACT |           .NET 6.0 | 162.42 us | 2.800 us | 1.243 us |  1.00 |    0.00 | 10.7422 |  69,717 B |
+|         NpRg | Job-NEMODS | .NET Framework 4.8 | 222.95 us | 4.147 us | 3.676 us |  1.37 |    0.02 | 12.6953 |  80,721 B |
+|              |            |                    |           |          |          |       |         |         |           |
+|     NpRgJson | Job-AUNACT |           .NET 6.0 |  85.35 us | 1.570 us | 0.934 us |  1.00 |    0.00 |  3.9063 |  27,211 B |
+|     NpRgJson | Job-NEMODS | .NET Framework 4.8 | 109.36 us | 1.925 us | 2.503 us |  1.30 |    0.04 |  4.8828 |  36,339 B |
+|              |            |                    |           |          |          |       |         |         |           |
+|      NpCxOut | Job-AUNACT |           .NET 6.0 |  74.25 us | 1.448 us | 1.047 us |  1.00 |    0.00 |  2.9297 |  19,797 B |
+|      NpCxOut | Job-NEMODS | .NET Framework 4.8 |  95.20 us | 1.547 us | 1.119 us |  1.28 |    0.02 |  3.9063 |  28,991 B |
+|              |            |                    |           |          |          |       |         |         |           |
+|  NpCxOutJson | Job-AUNACT |           .NET 6.0 |  63.50 us | 1.084 us | 1.249 us |  1.00 |    0.00 |  0.9766 |  10,026 B |
+|  NpCxOutJson | Job-NEMODS | .NET Framework 4.8 |  75.30 us | 1.045 us | 0.464 us |  1.17 |    0.02 |  1.9531 |  17,807 B |
+```
+
+### Initial Benchmark (5/22/2022)
 
 ```
 BenchmarkDotNet=v0.13.1, OS=Windows 10.0.22000

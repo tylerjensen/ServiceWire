@@ -9,7 +9,10 @@ namespace ServiceWire.Benchmarks
     {
         public static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<NamedPipesBenchmarks>();
+            //var summary = BenchmarkRunner.Run<NamedPipesBenchmarks>();
+            //summary = BenchmarkRunner.Run<TcpBenchmarks>();
+
+            var summary = BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }
 }
