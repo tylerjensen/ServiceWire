@@ -146,3 +146,34 @@ Portions of this library are a derivative of [RemotingLite][].
   [RemotingLite]: http://remotinglite.codeplex.com/
   [ServiceWire documentation]: https://github.com/tylerjensen/ServiceWire/wiki
 
+### Benchmark Latest (5/22/2022)
+
+```
+BenchmarkDotNet=v0.13.1, OS=Windows 10.0.22000
+Intel Core i7-10750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
+.NET SDK=6.0.300
+  [Host]             : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
+  .NET 6.0           : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
+  .NET Framework 4.8 : .NET Framework 4.8 (4.8.4510.0), X64 RyuJIT
+
+
+|      Method |                Job |            Runtime |      Mean |    Error |   StdDev | Ratio | RatioSD |   Gen 0 |  Gen 1 | Allocated |
+|------------ |------------------- |------------------- |----------:|---------:|---------:|------:|--------:|--------:|-------:|----------:|
+|       NpSim |           .NET 6.0 |           .NET 6.0 |  23.11 us | 0.168 us | 0.157 us |  1.00 |    0.00 |  0.0916 |      - |     712 B |
+|       NpSim | .NET Framework 4.8 | .NET Framework 4.8 |  24.07 us | 0.328 us | 0.307 us |  1.04 |    0.01 |  0.1831 |      - |   1,290 B |
+|             |                    |                    |           |          |          |       |         |         |        |           |
+|   NpSimJson |           .NET 6.0 |           .NET 6.0 |  23.68 us | 0.220 us | 0.195 us |  1.00 |    0.00 |  0.0916 |      - |     712 B |
+|   NpSimJson | .NET Framework 4.8 | .NET Framework 4.8 |  24.13 us | 0.133 us | 0.124 us |  1.02 |    0.01 |  0.1831 |      - |   1,290 B |
+|             |                    |                    |           |          |          |       |         |         |        |           |
+|        NpRg |           .NET 6.0 |           .NET 6.0 | 159.31 us | 1.656 us | 1.468 us |  1.00 |    0.00 | 11.2305 | 0.4883 |  69,715 B |
+|        NpRg | .NET Framework 4.8 | .NET Framework 4.8 | 218.43 us | 3.239 us | 3.030 us |  1.37 |    0.02 | 12.6953 | 0.4883 |  80,672 B |
+|             |                    |                    |           |          |          |       |         |         |        |           |
+|    NpRgJson |           .NET 6.0 |           .NET 6.0 |  85.15 us | 1.347 us | 1.194 us |  1.00 |    0.00 |  4.5166 |      - |  27,209 B |
+|    NpRgJson | .NET Framework 4.8 | .NET Framework 4.8 | 111.02 us | 1.189 us | 1.112 us |  1.30 |    0.03 |  5.6152 |      - |  36,343 B |
+|             |                    |                    |           |          |          |       |         |         |        |           |
+|     NpCxOut |           .NET 6.0 |           .NET 6.0 |  74.16 us | 0.723 us | 0.604 us |  1.00 |    0.00 |  3.1738 |      - |  19,795 B |
+|     NpCxOut | .NET Framework 4.8 | .NET Framework 4.8 |  95.84 us | 1.042 us | 0.974 us |  1.29 |    0.02 |  4.5166 |      - |  28,984 B |
+|             |                    |                    |           |          |          |       |         |         |        |           |
+| NpCxOutJson |           .NET 6.0 |           .NET 6.0 |  63.58 us | 0.459 us | 0.430 us |  1.00 |    0.00 |  1.5869 |      - |  10,025 B |
+| NpCxOutJson | .NET Framework 4.8 | .NET Framework 4.8 |  76.82 us | 0.769 us | 0.682 us |  1.21 |    0.01 |  2.8076 |      - |  17,796 B |
+```
