@@ -27,6 +27,7 @@
 	<ItemGroup>
 		<PackageReference Include="System.IO.Pipes" Version="4.3.0" />
 		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+		<PackageReference Include="System.Text.Json" Version="6.0.4" />
 		<PackageReference Include="System.Threading" Version="4.3.0" />
 	</ItemGroup>
 

@@ -19,6 +19,7 @@ namespace ServiceWire.Benchmarks
         public Guid Id { get; set; }
         public string Label { get; set; }
         public long Quantity { get; set; }
+        public IList<string> Values { get; set; }
     }
 
     public class NetTester : INetTester
@@ -41,7 +42,7 @@ namespace ServiceWire.Benchmarks
         public TestResponse Get(Guid id, string label, double weight, out int quantity)
         {
             quantity = 44;
-            return new TestResponse { Id = id, Label = "MyLabel", Quantity = quantity };
+            return new TestResponse { Id = id, Label = "MyLabel", Quantity = quantity, Values = new List<string> { "one", "two", "three", "four" } };
         }
     }
 }

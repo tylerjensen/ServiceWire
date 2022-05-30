@@ -37,6 +37,7 @@ namespace ServiceWireTestCommon
         public Guid Id { get; set; }
         public string Label { get; set; }
         public long Quantity { get; set; }
+        public IList<string> Values { get; set; }
     }
 
     public class NetTcpTesterProxy : TcpClient<INetTester>, INetTester
