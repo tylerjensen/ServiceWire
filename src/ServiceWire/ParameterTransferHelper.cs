@@ -36,37 +36,47 @@ namespace ServiceWire
                 {
                     Type type = parameter.GetType();
                     byte typeByte = GetParameterType(type);
-                    //determine whether to compress parameter
-                    byte[] dataBytes = new byte[0];
-                    //check for compressable values and compress if required
+                    
+                    byte[] dataBytes = null;
+
                     switch (typeByte)
                     {
                         case ParameterTypes.ByteArray:
                             dataBytes = (byte[])parameter;
-                            if (useCompression && dataBytes.LongLength > compressionThreshold)
-                            {
-                                typeByte = ParameterTypes.CompressedByteArray;
-                                dataBytes = _compressor.Compress(dataBytes);
-                            }
                             break;
-                        case ParameterTypes.CharArray:
-                            char[] charArray = (char[])parameter;
-                            if (useCompression && charArray.LongLength > compressionThreshold)
-                            {
-                                typeByte = ParameterTypes.CompressedCharArray;
-                                dataBytes = _compressor.Compress(Encoding.UTF8.GetBytes(charArray));
-                            }
+                        case ParameterTypes.Unknown:
+                            dataBytes = _serializer.Serialize(parameter, type.ToConfigName());
                             break;
-                        case ParameterTypes.String:
-                            if (useCompression && ((string)parameter).Length > compressionThreshold)
-                            {
-                                typeByte = ParameterTypes.CompressedString;
-                                dataBytes = _compressor.Compress(Encoding.UTF8.GetBytes(((string)parameter)));
-                            }
-                            break;
-                        case ParameterTypes.ArrayString:
-                            if (useCompression)
-                            {
+                    }
+
+                    if (useCompression)
+                    {
+                        //check for compressable values and compress if required
+                        switch (typeByte)
+                        {
+                            case ParameterTypes.ByteArray:
+                                if (dataBytes.LongLength > compressionThreshold)
+                                {
+                                    typeByte = ParameterTypes.CompressedByteArray;
+                                    dataBytes = _compressor.Compress(dataBytes);
+                                }
+                                break;
+                            case ParameterTypes.CharArray:
+                                char[] charArray = (char[])parameter;
+                                if (charArray.LongLength > compressionThreshold)
+                                {
+                                    typeByte = ParameterTypes.CompressedCharArray;
+                                    dataBytes = _compressor.Compress(Encoding.UTF8.GetBytes(charArray));
+                                }
+                                break;
+                            case ParameterTypes.String:
+                                if (((string)parameter).Length > compressionThreshold)
+                                {
+                                    typeByte = ParameterTypes.CompressedString;
+                                    dataBytes = _compressor.Compress(Encoding.UTF8.GetBytes(((string)parameter)));
+                                }
+                                break;
+                            case ParameterTypes.ArrayString:
                                 var array = (string[])parameter;
                                 var total = (from n in array select n.Length).Sum();
                                 if (total > compressionThreshold)
@@ -74,16 +84,15 @@ namespace ServiceWire
                                     typeByte = ParameterTypes.Unknown;
                                     dataBytes = _compressor.Compress(_serializer.Serialize(array, type.ToConfigName()));
                                 }
-                            }
-                            break;
-                        case ParameterTypes.Unknown:
-                            dataBytes = _serializer.Serialize(parameter, type.ToConfigName());
-                            if (useCompression && dataBytes.Length > compressionThreshold)
-                            {
-                                typeByte = ParameterTypes.CompressedUnknown;
-                                dataBytes = _compressor.Compress(dataBytes);
-                            }
-                            break;
+                                break;
+                            case ParameterTypes.Unknown:
+                                if (dataBytes.Length > compressionThreshold)
+                                {
+                                    typeByte = ParameterTypes.CompressedUnknown;
+                                    dataBytes = _compressor.Compress(dataBytes);
+                                }
+                                break;
+                        }
                     }
 
                     //write the type byte
