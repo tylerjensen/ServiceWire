@@ -199,6 +199,17 @@ namespace ServiceWireTests
             }
         }
 
+        [Fact]
+        public void GetStringsTest()
+        {
+            using (var clientProxy = new NpClient<INetTester>(CreateEndPoint()))
+            {
+                var result = clientProxy.Proxy.GetStrings();
+                Assert.Equal(4, result.Length);
+                Assert.Null(result[2]);
+            }
+        }
+
         public void Dispose()
         {
             _nphost.Close();

@@ -11,6 +11,7 @@ namespace ServiceWireTests
         Dictionary<int, int> Range(int start, int count);
         TestResponse Get(Guid id, string label, double weight, out int quantity);
         Task<int> CalculateAsync(int a, int b);
+        string[] GetStrings();
     }
 
     [Serializable]
@@ -43,6 +44,11 @@ namespace ServiceWireTests
         {
             quantity = 44;
             return new TestResponse { Id = id, Label = "MyLabel", Quantity = quantity, Values = new List<string> { "one", "two", "three", "four" } };
+        }
+
+        public string[] GetStrings()
+        {
+            return new string[] { "one", "two", null, "four" };
         }
     }
 }

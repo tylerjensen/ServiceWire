@@ -12,6 +12,8 @@ namespace ServiceWire
         [ThreadStatic]
         private static Dictionary<Type, byte> _parameterTypes;
 
+        private const string NULL_STRING = "\u16A0\u16D8\u270C";
+
         private readonly ISerializer _serializer;
         private readonly ICompressor _compressor;
         public ParameterTransferHelper(ISerializer serializer, ICompressor compressor)
@@ -204,7 +206,7 @@ namespace ServiceWire
                         case ParameterTypes.ArrayString:
                             var strings = (string[])parameter;
                             writer.Write(strings.Length);
-                            foreach (var st in strings) writer.Write(st);
+                            foreach (var st in strings) writer.Write(st ?? NULL_STRING);
                             break;
                         case ParameterTypes.ArrayType:
                             var types = (Type[])parameter;
@@ -403,7 +405,11 @@ namespace ServiceWire
                         case ParameterTypes.ArrayString:
                             var slen = reader.ReadInt32();
                             var ss = new string[slen];
-                            for (int x = 0; x < slen; x++) ss[x] = reader.ReadString();
+                            for (int x = 0; x < slen; x++)
+                            {
+                                ss[x] = reader.ReadString();
+                                if (ss[x] == NULL_STRING) ss[x] = null;
+                            }
                             parameters[i] = ss;
                             break;
                         case ParameterTypes.ArrayType:
