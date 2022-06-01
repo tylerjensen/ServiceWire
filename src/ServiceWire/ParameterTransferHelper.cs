@@ -12,7 +12,7 @@ namespace ServiceWire
         [ThreadStatic]
         private static Dictionary<Type, byte> _parameterTypes;
 
-        private const string NULL_STRING = "\u16A0\u16D8\u270C";
+        private const string NULL_STRING = "\u2811\u16D8\u270C"; //3 chars from 3 different unicode sets
 
         private readonly ISerializer _serializer;
         private readonly ICompressor _compressor;
