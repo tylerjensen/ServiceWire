@@ -3,6 +3,12 @@
 ServiceWire
 ===========
 
+### Replaces BinaryFormatter with System.Text.Json 5.5.0
+
+1. Replaces BinaryFormatter in DefaultSerializer with System.Text.Json. Improves performance and reduces allocations in serializing small object graphs which is the most common use case in any RPC library.
+2. Fixes null value in string array bug #50. 
+3. See source for former DefaultSerializer in ServiceWire.Serializers in BinaryFormatterSerializer. Use that code as a custom injected serializer if this version breaks your serialization.
+
 ### Capture serialization error bug fix in 5.4.2
 
 1. Single target of NetStandard 2.0 for a smaller NuGet package.
