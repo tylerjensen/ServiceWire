@@ -8,6 +8,7 @@ ServiceWire
 1. Replaces BinaryFormatter in DefaultSerializer with System.Text.Json. Improves performance and reduces allocations in serializing small object graphs which is the most common use case in any RPC library.
 2. Fixes null value in string array bug #50. 
 3. See source for former DefaultSerializer in ServiceWire.Serializers in BinaryFormatterSerializer. Use that code as a custom injected serializer if this version breaks your serialization.
+4. Using ServiceWire in an ASP.NET app no longer requires the use of the EnableUnsafeBinaryFormatterSerialization flag in your project file.
 
 ### Capture serialization error bug fix in 5.4.2
 
