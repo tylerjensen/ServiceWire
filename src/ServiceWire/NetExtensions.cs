@@ -5,15 +5,24 @@ namespace ServiceWire
 {
     public static class NetExtensions
     {
+        private const string _netFwCoreLib = "mscorlib";
+        private const string _netCoreCoreLib = "System.Private.CoreLib";
+
         public static string ToConfigName(this Type t)
         {
             // Do not qualify types from mscorlib/System.Private.CoreLib otherwise calling between process running with different frameworks won't work
             // i.e. "System.String, mscorlib" (.NET FW) != "System.String, System.Private.CoreLib" (.NET CORE)
-            var name = ((t.Assembly.GetName().Name == "mscorlib" || t.Assembly.GetName().Name == "System.Private.CoreLib")) ? t.FullName : t.AssemblyQualifiedName;
+            var name = t.Assembly.GetName().Name == _netFwCoreLib || t.Assembly.GetName().Name == _netCoreCoreLib
+                ? t.FullName
+                : t.AssemblyQualifiedName;
+
             // But since an mscorlib generic container can contain fully qualified types we always need to clean up the name
             name = Regex.Replace(name, @", Version=\d+.\d+.\d+.\d+", string.Empty);
             name = Regex.Replace(name, @", Culture=\w+", string.Empty);
             name = Regex.Replace(name, @", PublicKeyToken=\w+", string.Empty);
+            name = name.Replace(", " + _netFwCoreLib, string.Empty);
+            name = name.Replace(", " + _netCoreCoreLib, string.Empty);
+
             return name;
         }
 
