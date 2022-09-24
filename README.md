@@ -1,5 +1,3 @@
-[![tylerjensen](https://circleci.com/gh/tylerjensen/ServiceWire.svg?style=shield)](https://circleci.com/gh/tylerjensen/ServiceWire)  --.NET 6.0 not yet supported.
-
 ServiceWire
 ===========
 
