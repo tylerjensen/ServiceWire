@@ -1,4 +1,4 @@
-name: .NET
+name: .NET Build and Tests in Linux and Windows
 
 on:
   push:
