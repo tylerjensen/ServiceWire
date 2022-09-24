@@ -1,4 +1,5 @@
-[![.NET](https://github.com/tylerjensen/ServiceWire/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/tylerjensen/ServiceWire/actions/workflows/build-and-test.yml) Linux and Windows Build and Tests
+[![.NET](https://github.com/tylerjensen/ServiceWire/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/tylerjensen/ServiceWire/actions/workflows/build-and-test.yml) 
+Linux and Windows Build and Tests
 
 ServiceWire
 ===========
