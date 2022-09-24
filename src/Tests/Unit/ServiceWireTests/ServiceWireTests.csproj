@@ -9,6 +9,11 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
+		<IsWin>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::get_Windows())))</IsWin>
+		<DefineConstants Condition=" '$(IsWin)' == 'true' ">$(DefineConstants);ISWIN</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup>
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
