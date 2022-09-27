@@ -6,24 +6,27 @@ using Xunit;
 
 namespace ServiceWireTests
 {
-    // #if ISWIN
     public class NpTests : IDisposable
     {
         private INetTester _tester;
 
         private NpHost _nphost;
 
-        private const string PipeName = "ServiceWireTestHost";
+        private readonly string _pipeName = "ServiceWireTestHost";
 
-        private static NpEndPoint CreateEndPoint()
+        private NpEndPoint CreateEndPoint()
         {
-            return new NpEndPoint(PipeName);
+            return new NpEndPoint(_pipeName);
         }
 
         public NpTests()
         {
+            var rnd = new Random(DateTime.UtcNow.Millisecond);
+            var val = rnd.NextInt64(99999, 99999999);
+            _pipeName += val.ToString();
+
             _tester = new NetTester();
-            _nphost = new NpHost(PipeName);
+            _nphost = new NpHost(_pipeName);
             _nphost.AddService<INetTester>(_tester);
             _nphost.Open();
         }
@@ -46,7 +49,7 @@ namespace ServiceWireTests
         [Fact]
         public void SimpleNewtonsoftSerializerTest()
         {
-            using (var nphost = new NpHost(PipeName + "Json", serializer: new NewtonsoftSerializer()))
+            using (var nphost = new NpHost(_pipeName + "Json", serializer: new NewtonsoftSerializer()))
             {
                 nphost.AddService<INetTester>(_tester);
                 nphost.Open();
@@ -56,7 +59,7 @@ namespace ServiceWireTests
                 var a = rnd.Next(0, 100);
                 var b = rnd.Next(0, 100);
 
-                using (var clientProxy = new NpClient<INetTester>(new NpEndPoint(PipeName + "Json"), new NewtonsoftSerializer()))
+                using (var clientProxy = new NpClient<INetTester>(new NpEndPoint(_pipeName + "Json"), new NewtonsoftSerializer()))
                 {
                     var result = clientProxy.Proxy.Min(a, b);
                     Assert.Equal(Math.Min(a, b), result);
@@ -67,7 +70,7 @@ namespace ServiceWireTests
         [Fact]
         public void SimpleProtobufSerializerTest()
         {
-            using (var nphost = new NpHost(PipeName + "Proto", serializer: new ProtobufSerializer()))
+            using (var nphost = new NpHost(_pipeName + "Proto", serializer: new ProtobufSerializer()))
             {
                 nphost.AddService<INetTester>(_tester);
                 nphost.Open();
@@ -77,7 +80,7 @@ namespace ServiceWireTests
                 var a = rnd.Next(0, 100);
                 var b = rnd.Next(0, 100);
 
-                using (var clientProxy = new NpClient<INetTester>(new NpEndPoint(PipeName + "Proto"), new ProtobufSerializer()))
+                using (var clientProxy = new NpClient<INetTester>(new NpEndPoint(_pipeName + "Proto"), new ProtobufSerializer()))
                 {
                     var result = clientProxy.Proxy.Min(a, b);
                     Assert.Equal(Math.Min(a, b), result);
@@ -184,12 +187,12 @@ namespace ServiceWireTests
         [Fact]
         public void ResponseWithOutParameterNewtonsoftSerializerTest()
         {
-            using (var nphost = new NpHost(PipeName + "JsonResponseOut", serializer: new NewtonsoftSerializer()))
+            using (var nphost = new NpHost(_pipeName + "JsonResponseOut", serializer: new NewtonsoftSerializer()))
             {
                 nphost.AddService<INetTester>(_tester);
                 nphost.Open();
 
-                using (var clientProxy = new NpClient<INetTester>(new NpEndPoint(PipeName + "JsonResponseOut"), new NewtonsoftSerializer()))
+                using (var clientProxy = new NpClient<INetTester>(new NpEndPoint(_pipeName + "JsonResponseOut"), new NewtonsoftSerializer()))
                 {
                     int quantity = 0;
                     var result = clientProxy.Proxy.Get(Guid.NewGuid(), "SomeLabel", 45.65, out quantity);
@@ -216,5 +219,4 @@ namespace ServiceWireTests
             _nphost.Close();
         }
     }
-    // #endif
 }
