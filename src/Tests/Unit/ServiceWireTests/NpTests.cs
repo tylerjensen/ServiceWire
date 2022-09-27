@@ -6,7 +6,7 @@ using Xunit;
 
 namespace ServiceWireTests
 {
-    #if ISWIN
+    // #if ISWIN
     public class NpTests : IDisposable
     {
         private INetTester _tester;
@@ -216,5 +216,5 @@ namespace ServiceWireTests
             _nphost.Close();
         }
     }
-    #endif
+    // #endif
 }

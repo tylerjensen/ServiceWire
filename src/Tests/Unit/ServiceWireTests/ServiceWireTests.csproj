@@ -2,16 +2,18 @@
 
 	<!-- ** Tests by OS targets only on LTS releases. -->
 	<PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-		<TargetFrameworks>net7.0;net6.0;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net7.0;net6.0</TargetFrameworks>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
 		<TargetFrameworks>net7.0;net6.0;netcoreapp3.1;net48</TargetFrameworks>
 	</PropertyGroup>
 
+	<!-- 
 	<PropertyGroup>
 		<IsWin>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::get_Windows())))</IsWin>
 		<DefineConstants Condition=" '$(IsWin)' == 'true' ">$(DefineConstants);ISWIN</DefineConstants>
 	</PropertyGroup>
+	-->
 
 	<PropertyGroup>
 		<IsPackable>false</IsPackable>
