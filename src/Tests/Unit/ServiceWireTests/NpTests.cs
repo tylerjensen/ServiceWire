@@ -22,7 +22,7 @@ namespace ServiceWireTests
         public NpTests()
         {
             var rnd = new Random(DateTime.UtcNow.Millisecond);
-            var val = rnd.NextInt64(99999, 99999999);
+            var val = rnd.Next(999, 99999);
             _pipeName += val.ToString();
 
             _tester = new NetTester();
