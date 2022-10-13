@@ -11,6 +11,7 @@ namespace ServiceWire.TcpIp
         private Socket _client;
         private string _username;
         private string _password;
+        private TcpChannelIdentifier _channelIdentifier;
 
         /// <summary>
         /// Creates a connection to the concrete object handling method calls on the server side
@@ -61,6 +62,7 @@ namespace ServiceWire.TcpIp
             _username = username;
             _password = password;
             _serviceType = serviceType;
+            _channelIdentifier = new TcpChannelIdentifier(endpoint);
             _client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp); // TcpClient(AddressFamily.InterNetwork);
             _client.LingerState.Enabled = false;
 
@@ -109,6 +111,8 @@ namespace ServiceWire.TcpIp
                 throw;
             }
         }
+
+        protected override IChannelIdentifier ChannelIdentifier => _channelIdentifier;
 
         public override bool IsConnected { get { return (null != _client) && _client.Connected; } }
 

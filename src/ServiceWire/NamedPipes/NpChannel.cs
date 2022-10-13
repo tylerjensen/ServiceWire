@@ -7,6 +7,7 @@ namespace ServiceWire.NamedPipes
     public class NpChannel : StreamingChannel
     {
         private NamedPipeClientStream _clientStream;
+        private NpChannelIdentifier _channelIdentifier;
 
         /// <summary>
         /// Creates a connection to the concrete object handling method calls on the pipeName server side
@@ -18,6 +19,7 @@ namespace ServiceWire.NamedPipes
             : base(serializer, compressor)
         {
             _serviceType = serviceType;
+            _channelIdentifier = new NpChannelIdentifier(npEndPoint);
             _clientStream = new NamedPipeClientStream(npEndPoint.ServerName, npEndPoint.PipeName, PipeDirection.InOut);
             _clientStream.Connect(npEndPoint.ConnectTimeOutMs);
             _stream = new BufferedStream(_clientStream);
@@ -33,6 +35,8 @@ namespace ServiceWire.NamedPipes
                 throw;
             }
         }
+
+        protected override IChannelIdentifier ChannelIdentifier => _channelIdentifier;
 
         public override bool IsConnected { get { return (null != _clientStream) && _clientStream.IsConnected; } }
     }
