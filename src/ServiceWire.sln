@@ -44,7 +44,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceWire.Benchmarks", "B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Serializers", "Serializers", "{04D8746E-D49E-4704-9906-163ED424D677}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWire.Serializers", "Serializers\ServiceWire.Serializers\ServiceWire.Serializers.csproj", "{FD65CE8A-64B0-424E-A311-867416C1741A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceWire.Serializers", "Serializers\ServiceWire.Serializers\ServiceWire.Serializers.csproj", "{FD65CE8A-64B0-424E-A311-867416C1741A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AA5FE88F-8DE5-43B1-8894-C32C3F64DA63}"
+	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\build-and-test.yml = ..\.github\workflows\build-and-test.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
