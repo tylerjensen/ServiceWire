@@ -20,13 +20,15 @@ namespace ServiceWire
         private ZkCrypto _zkCrypto;
 
         // keep cached sync info to avoid redundant wire trips
-        private static readonly ConcurrentDictionary<Type, ServiceSyncInfo> SyncInfoCache = new ConcurrentDictionary<Type, ServiceSyncInfo>();
+        private static readonly ConcurrentDictionary<ServiceSyncInfoCacheKey, ServiceSyncInfo> SyncInfoCache = new ConcurrentDictionary<ServiceSyncInfoCacheKey, ServiceSyncInfo>();
 
         public StreamingChannel(ISerializer serializer, ICompressor compressor)
             : base(serializer, compressor)
         {
             _parameterTransferHelper = new ParameterTransferHelper(_serializer, _compressor);
         }
+
+        protected virtual IChannelIdentifier ChannelIdentifier { get; }
 
         /// <summary>
         /// Returns true if client is connected to the server.
@@ -109,7 +111,9 @@ namespace ServiceWire
                 _stats.Log("ZkAuthentication", sw.ElapsedMilliseconds);
             }
 
-            if (!SyncInfoCache.TryGetValue(serviceType, out _syncInfo))
+            var serviceSyncInfoCacheKey = new ServiceSyncInfoCacheKey(serviceType, ChannelIdentifier);
+
+            if (!SyncInfoCache.TryGetValue(serviceSyncInfoCacheKey, out _syncInfo))
             {
                 //write the message type
                 _binWriter.Write((int)MessageType.SyncInterface);
@@ -136,7 +140,7 @@ namespace ServiceWire
                     _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(bytes));
                 }
                 _syncInfo = _serializer.Deserialize<ServiceSyncInfo>(bytes);
-                SyncInfoCache.AddOrUpdate(serviceType, _syncInfo, (t, info) => _syncInfo);
+                SyncInfoCache.AddOrUpdate(serviceSyncInfoCacheKey, _syncInfo, (t, info) => _syncInfo);
             }
         }
 
