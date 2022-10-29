@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ServiceWire.NamedPipes;
 using Xunit;
@@ -147,6 +148,7 @@ namespace ServiceWireTests
         {
             Parallel.For(0, 4, (index, state) =>
             {
+                Thread.Sleep(100);
                 using (var clientProxy = new NpClient<INetTester>(CreateEndPoint()))
                 {
                     const int count = 5;
