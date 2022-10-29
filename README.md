@@ -3,6 +3,10 @@
 ServiceWire
 ===========
 
+### Bug Fix for Important Edge Case 5.5.2
+
+1. Contributed fix to case service on a host with same interface was called previously on a different host.
+
 ### Replaces BinaryFormatter with System.Text.Json 5.5.0
 
 1. Replaces BinaryFormatter in DefaultSerializer with System.Text.Json. Improves performance and reduces allocations in serializing small object graphs which is the most common use case in any RPC library.
