@@ -69,6 +69,12 @@ namespace ServiceWire.TcpIp
 
         protected override void StartListener()
         {
+            _listener.Bind(_endPoint);
+            _listener.Listen(8192);
+
+            _acceptEventArg = new SocketAsyncEventArgs();
+            _acceptEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(acceptEventArg_Completed);
+
             Task.Factory.StartNew(Listen, TaskCreationOptions.LongRunning);
         }
 
@@ -81,12 +87,6 @@ namespace ServiceWire.TcpIp
         {
             try
             {
-                _listener.Bind(_endPoint);
-                _listener.Listen(8192);
-
-                _acceptEventArg = new SocketAsyncEventArgs();
-                _acceptEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(acceptEventArg_Completed);
-
                 while (!_disposed)
                 {
                     // Set the event to nonsignaled state.
@@ -192,7 +192,7 @@ namespace ServiceWire.TcpIp
                 if (disposing)
                 {
                     _listenResetEvent.Set();
-                    _acceptEventArg.Dispose();
+                    _acceptEventArg?.Dispose();
                     _listener.Close();
                     _listenResetEvent.Close();
                 }
