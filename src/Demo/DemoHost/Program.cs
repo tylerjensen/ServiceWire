@@ -34,8 +34,9 @@ namespace DemoHost
             var compressionThreshold = 131072; //128KB
             var zkRepository = new DemoZkRepository();
 
-            var tcphost = new TcpHost(ipEndpoint, logger, stats, zkRepository);
-            tcphost.UseCompression = useCompression;
+			//var tcphost = new TcpHost(ipEndpoint, logger, stats, zkRepository);
+			var tcphost = new TcpHost(ipEndpoint, logger, stats);
+			tcphost.UseCompression = useCompression;
             tcphost.CompressionThreshold = compressionThreshold;
 
 			var simpleContract = new DataContractImpl();
@@ -43,6 +44,9 @@ namespace DemoHost
 
 			var complexContract = new ComplexDataContractImpl();
 			tcphost.AddService<IComplexDataContract>(complexContract);
+
+            var bridge = new IPCBridge();
+			tcphost.AddService<IIPCBridge>(bridge);
 
 			var test = new Test();
 			tcphost.AddService<ITest>(test);
@@ -57,6 +61,16 @@ namespace DemoHost
             Console.WriteLine("Press Enter to quit.");
             Console.ReadLine();
         }
+    }
+
+    public class IPCBridge : IIPCBridge
+    {
+        public List<float> GetData()
+        {
+			List<float> list = new();
+			list.Add(99.625F);
+			return list;
+		}
     }
 
     public class Test : ITest

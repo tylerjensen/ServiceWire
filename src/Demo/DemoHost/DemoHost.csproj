@@ -4,7 +4,8 @@
 		<TargetFrameworks>net6.0;netcoreapp3.1</TargetFrameworks>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-		<TargetFrameworks>net6.0;netcoreapp3.1;net48;net462</TargetFrameworks>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<!-- <TargetFrameworks>net6.0;netcoreapp3.1;net48;net462</TargetFrameworks> -->
 	</PropertyGroup>
 
 	<PropertyGroup>

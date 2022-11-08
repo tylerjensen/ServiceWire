@@ -27,10 +27,12 @@ namespace DemoClient
 
             var ip = addr[0];
             var port = Convert.ToInt32(addr[1]);
-            var zkEndpoint = new TcpZkEndPoint("username", "password", 
-                new IPEndPoint(IPAddress.Parse(ip), port), connectTimeOutMs: 2500);
+            //var zkEndpoint = new TcpZkEndPoint("username", "password", 
+            //    new IPEndPoint(IPAddress.Parse(ip), port), connectTimeOutMs: 250000);
 
-            Console.WriteLine("Iteration 1");
+            var zkEndpoint = new IPEndPoint(IPAddress.Parse(ip), port);
+
+			Console.WriteLine("Iteration 1");
             await RunTest(zkEndpoint, ip, logger, stats);
 
             Console.WriteLine("Iteration 2");
@@ -39,7 +41,45 @@ namespace DemoClient
             Console.ReadLine();
         }
 
-        private static async Task RunTest(TcpZkEndPoint zkEndpoint, string ip, Logger logger, Stats stats)
+		private static async Task RunTest(IPEndPoint zkEndpoint, string ip, Logger logger, Stats stats)
+		{
+			var sw = Stopwatch.StartNew();
+			using (var client = new TcpClient<ITest>(zkEndpoint))
+			{
+				client.InjectLoggerStats(logger, stats);
+				await client.Proxy.SetAsync(1);
+				int value = await client.Proxy.GetAsync();
+			}
+
+			using (var client = new TcpClient<IDataContract>(zkEndpoint))
+			{
+				client.InjectLoggerStats(logger, stats);
+
+				decimal abc = client.Proxy.GetDecimal(4.5m);
+				bool result = client.Proxy.OutDecimal(abc);
+			}
+
+			using (var client = new TcpClient<IComplexDataContract>(zkEndpoint))
+			{
+				client.InjectLoggerStats(logger, stats);
+
+				var id = client.Proxy.GetId("test1", 3.314, 42, DateTime.Now);
+				long q = 3;
+				var response = client.Proxy.Get(id, "mirror", 4.123, out q);
+				var list = client.Proxy.GetItems(id);
+			}
+
+			using (var client = new TcpClient<IIPCBridge>(zkEndpoint))
+			{
+				client.InjectLoggerStats(logger, stats);
+				var response = client.Proxy.GetData();
+				Console.WriteLine(response.First());
+			}
+
+			Console.WriteLine("elapsed ms: {0}", sw.ElapsedMilliseconds);
+		}
+
+		private static async Task RunTest(TcpZkEndPoint zkEndpoint, string ip, Logger logger, Stats stats)
         {
             var sw = Stopwatch.StartNew();
 			using (var client = new TcpClient<ITest>(zkEndpoint))
@@ -67,7 +107,16 @@ namespace DemoClient
 				var list = client.Proxy.GetItems(id);
 			}
 
+            using (var client = new TcpClient<IIPCBridge>(zkEndpoint))
+            {
+				client.InjectLoggerStats(logger, stats);
+                var response = client.Proxy.GetData();
+                Console.WriteLine(response.First());
+			}
+
 			Console.WriteLine("elapsed ms: {0}", sw.ElapsedMilliseconds);
         }
+
+
     }
 }

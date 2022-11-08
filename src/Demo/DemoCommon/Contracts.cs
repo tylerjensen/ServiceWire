@@ -15,8 +15,12 @@ namespace DemoCommon
         decimal GetDecimal(decimal input);
         bool OutDecimal(decimal val);
     }
+	public interface IIPCBridge
+	{
+		List<float> GetData();
+	}
 
-    public interface IComplexDataContract
+	public interface IComplexDataContract
     {
         Guid GetId(string source, double weight, int quantity, DateTime dt);
         ComplexResponse Get(Guid id, string label, double weight, out long quantity);
