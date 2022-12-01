@@ -114,9 +114,16 @@ namespace ServiceWireTestHost
             id2 = 24;
             return 25;
         }
-	}
 
-	public class MyTester : IMyTester
+        public eResult TestEnum(out eResult e1, ref eResult e2)
+		{
+			e1 = eResult.OK;
+			e2 = eResult.OK;
+			return eResult.OK;
+        }
+    }
+
+    public class MyTester : IMyTester
 	{
 		private string longLabel = string.Empty;
         private const int totalKilobytes = 140;
