@@ -49,6 +49,12 @@ namespace ServiceWire
         private static void AnalyzeType(Type type, List<string> nonSerializableTypes)
         {
             if (type.IsValueType || type == typeof(string)) return;
+            if (type.IsEnum)
+            {
+                //enum with a supported underlying type is converted to that underlying type
+                Type underlyingTypeEnum = Enum.GetUnderlyingType(type);
+                if (underlyingTypeEnum.IsValueType || underlyingTypeEnum == typeof(string)) return;
+            }
 
             if (!IsSerializable(type))
                 nonSerializableTypes.Add(type.Name);

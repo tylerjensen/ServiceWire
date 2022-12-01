@@ -215,6 +215,12 @@ namespace ServiceWire
                         {
                             mIL.Emit(ldindOpCodeTypeMap[inputType]);
                             mIL.Emit(OpCodes.Box, inputType);
+                        } else if (inputType.IsEnum && ldindOpCodeTypeMap.ContainsKey(Enum.GetUnderlyingType(inputType)))
+                        {
+                            //enum with a supported underlying type is converted to that underlying type
+                            Type underlyingTypeEnum = Enum.GetUnderlyingType(inputType);
+                            mIL.Emit(ldindOpCodeTypeMap[underlyingTypeEnum]);
+                            mIL.Emit(OpCodes.Box, inputType);
                         } else
                         {
                             throw new NotSupportedException("Non-primitive native types (e.g. Decimal and Guid) ByRef are not supported.");
@@ -242,7 +248,14 @@ namespace ServiceWire
                     mIL.Emit(OpCodes.Ldloc, resultLB.LocalIndex); //load the result array
                     mIL.Emit(OpCodes.Ldc_I4, i + 1); //load the index into the result array
                     mIL.Emit(OpCodes.Ldelem_Ref); //load the value in the index of the array
-                    if (inputType.IsValueType)
+                    if (inputType.IsEnum && ldindOpCodeTypeMap.ContainsKey(Enum.GetUnderlyingType(inputType)))
+                    {
+                        //enum with a supported underlying type is converted to that underlying type
+                        Type underlyingTypeEnum = Enum.GetUnderlyingType(inputType);
+                        mIL.Emit(OpCodes.Unbox, underlyingTypeEnum);
+                        mIL.Emit(ldindOpCodeTypeMap[underlyingTypeEnum]);
+                        mIL.Emit(stindOpCodeTypeMap[underlyingTypeEnum]);
+                    } else if (inputType.IsValueType)
                     {
                         mIL.Emit(OpCodes.Unbox, inputArgTypes[i].GetElementType());
                         mIL.Emit(ldindOpCodeTypeMap[inputArgTypes[i].GetElementType()]);

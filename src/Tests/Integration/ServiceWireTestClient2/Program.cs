@@ -112,6 +112,10 @@ namespace ServiceWireTestClient2
                             long id1;
                             long id2;
                             long id3 = client.TestLong(out id1, out id2);
+
+                            eResult e1 = eResult.FAILED;
+                            eResult e2 = eResult.FAILED;
+                            eResult eRet =  client.TestEnum(out e1, ref e2);
                         }
                     }
                     using (var client = new NetNpMyTesterProxy(new NpEndPoint(pipeName)))

@@ -7,6 +7,12 @@ using System.Threading.Tasks;
 
 namespace ServiceWireTestCommon
 {
+    public enum eResult : UInt16
+    {
+        FAILED = 0,
+        OK = 1
+    }
+
     public interface IValTypes
     {
         decimal GetDecimal(decimal input);
@@ -20,6 +26,7 @@ namespace ServiceWireTestCommon
         Guid GetId(string source, double weight, int quantity, DateTime dt);
         TestResponse Get(Guid id, string label, double weight, out long quantity);
         long TestLong(out long id1, out long id2);
+        eResult TestEnum(out eResult e1, ref eResult e2);
         List<string> GetItems(Guid id);
         Task<List<string>> GetItemsAsync(Guid id);
     }
@@ -76,6 +83,13 @@ namespace ServiceWireTestCommon
             id2 = 24;
             return 25;
         }
+
+        public eResult TestEnum(out eResult e1, ref eResult e2)
+        {
+            e1 = eResult.OK;
+            e2 = eResult.OK;
+            return eResult.OK;
+        }
     }
 
     public class NetNpTesterProxy : NpClient<INetTester>, INetTester
@@ -107,6 +121,11 @@ namespace ServiceWireTestCommon
         public long TestLong(out long id1, out long id2)
         {
             return Proxy.TestLong(out id1, out id2);
+        }
+
+        public eResult TestEnum(out eResult e1, ref eResult e2)
+        {
+            return Proxy.TestEnum(out e1, ref e2);
         }
     }
 
