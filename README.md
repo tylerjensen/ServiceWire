@@ -53,6 +53,10 @@ Portions of this library are a derivative of [RemotingLite][].
 
 ## History
 
+### Support for Enum by Ref 5.5.3
+
+1. Contributed support for Enum by ref parameters.
+
 ### Bug Fix for Important Edge Case 5.5.2
 
 1. Contributed fix to case service on a host with same interface was called previously on a different host.
