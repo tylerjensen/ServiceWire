@@ -254,6 +254,9 @@ namespace ServiceWire
                     outParams = _parameterTransferHelper.ReceiveParameters(_binReader);
                 }
 
+                if (messageType == MessageType.ThrowException)
+                    throw (Exception)outParams[0];
+
                 MethodSyncInfo methodSyncInfo = _syncInfo.MethodInfos[ident];
                 var returnType = methodSyncInfo.MethodReturnType.ToType();
                 if (IsTaskType(returnType) && outParams.Length > 0)
@@ -268,9 +271,6 @@ namespace ServiceWire
                         outParams[0] = Task.CompletedTask;
                     }
                 }
-
-                if (messageType == MessageType.ThrowException)
-                    throw (Exception)outParams[0];
 
                 return outParams;
             }
