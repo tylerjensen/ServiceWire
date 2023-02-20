@@ -53,6 +53,10 @@ Portions of this library are a derivative of [RemotingLite][].
 
 ## History
 
+### Support for Enum by Ref 5.5.4
+
+1. Contributed support for proper async exceptions.
+
 ### Support for Enum by Ref 5.5.3
 
 1. Contributed support for Enum by ref parameters.
