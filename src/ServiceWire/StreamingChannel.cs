@@ -255,7 +255,10 @@ namespace ServiceWire
                 }
 
                 if (messageType == MessageType.ThrowException)
-                    throw (Exception)outParams[0];
+                {
+                    var originalException = (Exception)outParams[0];
+                    throw new Exception(originalException.Message, originalException);
+                }
 
                 MethodSyncInfo methodSyncInfo = _syncInfo.MethodInfos[ident];
                 var returnType = methodSyncInfo.MethodReturnType.ToType();
