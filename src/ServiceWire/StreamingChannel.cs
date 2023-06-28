@@ -257,7 +257,7 @@ namespace ServiceWire
                 if (messageType == MessageType.ThrowException)
                 {
                     var originalException = (Exception)outParams[0];
-                    throw new Exception(originalException.Message, originalException);
+                    throw new Exception($"{originalException.GetType().FullName}: {originalException.Message}, originalException);
                 }
 
                 MethodSyncInfo methodSyncInfo = _syncInfo.MethodInfos[ident];
