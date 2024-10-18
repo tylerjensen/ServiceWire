@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IO.Pipes;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,17 +12,19 @@ namespace ServiceWire.NamedPipes
         private int _maxConnections = 254;
         private ILog _log = new NullLogger();
         private IStats _stats = new NullStats();
+        private INamedPipeServerStreamFactory _streamFactory = new DefaultNamedPipeServerStreamFactory();
 
         public string PipeName { get; set; }
         public event EventHandler<PipeClientConnectionEventArgs> RequestReieved;
 
-        public NpListener(string pipeName, int maxConnections = 254, ILog log = null, IStats stats = null)
+        public NpListener(string pipeName, int maxConnections = 254, ILog log = null, IStats stats = null, INamedPipeServerStreamFactory streamFactory = null)
         {
             _log = log ?? _log;
             _stats = stats ?? _stats;
             if (maxConnections > 254) maxConnections = 254;
             _maxConnections = maxConnections;
             this.PipeName = pipeName;
+            _streamFactory= streamFactory ?? _streamFactory;
         }
 
         public void Start()
@@ -98,7 +98,7 @@ namespace ServiceWire.NamedPipes
         {
             try
             {
-                var pipeStream = new NamedPipeServerStream(PipeName, PipeDirection.InOut, _maxConnections, PipeTransmissionMode.Byte, PipeOptions.None, 512, 512);
+                var pipeStream = _streamFactory.Create(PipeName, PipeDirection.InOut, _maxConnections, PipeTransmissionMode.Byte, PipeOptions.None, 512, 512);
                 pipeStream.WaitForConnection();
                 //Task.Factory.StartNew(() => ProcessClientThread(pipeStream), TaskCreationOptions.LongRunning);
                 Task.Factory.StartNew(() => ProcessClientThread(pipeStream));
