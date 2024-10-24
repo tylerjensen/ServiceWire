@@ -12,7 +12,7 @@ namespace ServiceWire.NamedPipes
         private int _maxConnections = 254;
         private ILog _log = new NullLogger();
         private IStats _stats = new NullStats();
-        private INamedPipeServerStreamFactory _streamFactory = new DefaultNamedPipeServerStreamFactory();
+        private INamedPipeServerStreamFactory _streamFactory;
 
         public string PipeName { get; set; }
         public event EventHandler<PipeClientConnectionEventArgs> RequestReieved;
@@ -24,7 +24,7 @@ namespace ServiceWire.NamedPipes
             if (maxConnections > 254) maxConnections = 254;
             _maxConnections = maxConnections;
             this.PipeName = pipeName;
-            _streamFactory= streamFactory ?? _streamFactory;
+            _streamFactory = streamFactory ?? new DefaultNamedPipeServerStreamFactory();
         }
 
         public void Start()
