@@ -67,7 +67,7 @@ namespace DemoHost
     {
         public List<float> GetData()
         {
-			List<float> list = new();
+            List<float> list = new List<float>();
 			list.Add(99.625F);
 			return list;
 		}

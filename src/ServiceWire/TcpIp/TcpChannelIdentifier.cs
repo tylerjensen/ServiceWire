@@ -5,7 +5,7 @@ namespace ServiceWire.TcpIp
 {
     internal class TcpChannelIdentifier : IChannelIdentifier, IEquatable<TcpChannelIdentifier>
     {
-        public string IpAddressAndPort { get; }
+        public string IpAddressAndPort { get; private set; }
 
         public TcpChannelIdentifier(IPEndPoint ipEndpoint)
         {
@@ -23,7 +23,6 @@ namespace ServiceWire.TcpIp
             {
                 return Equals(other);
             }
-
             return false;
         }
 

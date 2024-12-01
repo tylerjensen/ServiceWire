@@ -5,8 +5,8 @@ namespace ServiceWire.NamedPipes
 {
     public class NpHost : Host
     {
-        private NpListener _listener;
-        private string _pipeName;
+        private readonly NpListener _listener;
+        private readonly string _pipeName;
         private bool _useThreadPool = false;
 
         /// <summary>

@@ -16,7 +16,7 @@ namespace ServiceWire
         //pooled dictionary achieves same or better performance as ThreadStatic without creating as many builders under average load
         private static PooledDictionary<string, ProxyBuilder> _proxies = new PooledDictionary<string, ProxyBuilder>();
 
-        public static TInterface CreateProxy<TInterface>(Type channelType, Type ctorArgType, object channelCtorValue, ISerializer serializer, ICompressor compressor) where TInterface : class
+        public static TInterface CreateProxy<TInterface>(Type channelType, Type ctorArgType, object channelCtorValue, ISerializer serializer, ICompressor compressor, ILog logger, IStats stats) where TInterface : class
         {
             if (!channelType.InheritsFrom(typeof(Channel))) throw new ArgumentException("channelType does not inherit from Channel");
             Type interfaceType = typeof(TInterface);
@@ -32,7 +32,7 @@ namespace ServiceWire
             try
             {
                 proxyBuilder = _proxies.Request(proxyName, () => CreateProxyBuilder(proxyName, interfaceType, localChannelType, localCtorArgType));
-                proxy = CreateProxy<TInterface>(proxyBuilder, channelCtorValue, serializer, compressor);
+                proxy = CreateProxy<TInterface>(proxyBuilder, channelCtorValue, serializer, compressor, logger, stats);
             }
             finally
             {
@@ -42,15 +42,15 @@ namespace ServiceWire
             return proxy;
         }
 
-        private static TInterface CreateProxy<TInterface>(ProxyBuilder proxyBuilder, object channelCtorValue, ISerializer serializer, ICompressor compressor) where TInterface : class
+        private static TInterface CreateProxy<TInterface>(ProxyBuilder proxyBuilder, object channelCtorValue, ISerializer serializer, ICompressor compressor, ILog logger, IStats stats) where TInterface : class
         {
             //create the type and construct an instance
-            Type[] ctorArgTypes = new Type[] { typeof(Type), proxyBuilder.CtorType, typeof(ISerializer), typeof(ICompressor) };
+            Type[] ctorArgTypes = new Type[] { typeof(Type), proxyBuilder.CtorType, typeof(ISerializer), typeof(ICompressor), typeof(ILog), typeof(IStats) };
             Type t = proxyBuilder.TypeBuilder.CreateTypeInfo();
             var constructorInfo = t.GetConstructor(ctorArgTypes);
             if (constructorInfo != null)
             {
-                TInterface instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface), channelCtorValue, serializer, compressor });
+                TInterface instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface), channelCtorValue, serializer, compressor, logger, stats });
                 return instance;
             }
             return null;
@@ -77,7 +77,7 @@ namespace ServiceWire
             typeBuilder.AddInterfaceImplementation(interfaceType);
 
             //construct the constructor
-            Type[] ctorArgTypes = new Type[] { typeof(Type), ctorArgType, typeof(ISerializer), typeof(ICompressor) };
+            Type[] ctorArgTypes = new Type[] { typeof(Type), ctorArgType, typeof(ISerializer), typeof(ICompressor), typeof(ILog), typeof(IStats) };
             CreateConstructor(channelType, typeBuilder, ctorArgTypes);
 
             //construct the type maps
@@ -148,6 +148,8 @@ namespace ServiceWire
             ctorIL.Emit(OpCodes.Ldarg_2); //load "endpoint"
             ctorIL.Emit(OpCodes.Ldarg_3); //load "serializer"
             ctorIL.Emit(OpCodes.Ldarg_S, 4); //load "compressor"
+            ctorIL.Emit(OpCodes.Ldarg_S, 5); //load "logger"
+            ctorIL.Emit(OpCodes.Ldarg_S, 6); //load "stats"
             ctorIL.Emit(OpCodes.Call, baseCtor); //call "base(...)"
             ctorIL.Emit(OpCodes.Ret);
         }

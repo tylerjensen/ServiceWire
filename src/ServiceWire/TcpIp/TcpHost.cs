@@ -10,9 +10,9 @@ namespace ServiceWire.TcpIp
 {
     public class TcpHost : Host
     {
-        private Socket _listener;
-        private IPEndPoint _endPoint;
-        private ManualResetEvent _listenResetEvent = new ManualResetEvent(false);
+        private readonly Socket _listener;
+        private readonly IPEndPoint _endPoint;
+        private readonly ManualResetEvent _listenResetEvent = new ManualResetEvent(false);
 
         /// <summary>
         /// Constructs an instance of the host and starts listening for incoming connections on any ip address.
@@ -27,7 +27,12 @@ namespace ServiceWire.TcpIp
             IZkRepository zkRepository = null, ISerializer serializer = null, ICompressor compressor = null)
             : base(serializer, compressor)
         {
-            Initialize(new IPEndPoint(IPAddress.Any, port), log, stats, zkRepository);
+            _endPoint = new IPEndPoint(IPAddress.Any, port);
+            _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            base.Log = log;
+            base.Stats = stats;
+            base.ZkRepository = zkRepository ?? new ZkNullRepository();
         }
 
         /// <summary>
@@ -46,17 +51,12 @@ namespace ServiceWire.TcpIp
             IZkRepository zkRepository = null, ISerializer serializer = null, ICompressor compressor = null)
             : base(serializer, compressor)
         {
-            Initialize(endpoint, log, stats, zkRepository);
-        }
-
-        private void Initialize(IPEndPoint endpoint, ILog log, IStats stats, IZkRepository zkRepository)
-        {
-            base.Log = log;
-            base.Stats = stats;
-            base.ZkRepository = zkRepository ?? new ZkNullRepository();
             _endPoint = endpoint;
             _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            base.Log = log;
+            base.Stats = stats;
+            base.ZkRepository = zkRepository ?? new ZkNullRepository();
         }
 
         /// <summary>

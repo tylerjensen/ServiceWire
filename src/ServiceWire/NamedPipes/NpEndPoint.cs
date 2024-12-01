@@ -2,7 +2,8 @@ namespace ServiceWire.NamedPipes
 {
     public class NpEndPoint
     {
-        public NpEndPoint(string pipeName, int connectTimeOutMs = 2500) : this(".", pipeName, connectTimeOutMs)
+        public NpEndPoint(string pipeName, int connectTimeOutMs = 2500) 
+            : this(".", pipeName, connectTimeOutMs)
         {
         }
 
@@ -13,8 +14,8 @@ namespace ServiceWire.NamedPipes
             this.ConnectTimeOutMs = connectTimeOutMs;
         }
 
-        public string ServerName { get; set; }
-        public string PipeName { get; set; }
-        public int ConnectTimeOutMs { get; set; }
+        public string ServerName { get; private set; }
+        public string PipeName { get; private set; }
+        public int ConnectTimeOutMs { get; private set; }
     }
 }

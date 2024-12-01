@@ -9,6 +9,6 @@ namespace ServiceWire.NamedPipes
         {
             this.PipeStream = pipeStream;
         }
-        public NamedPipeServerStream PipeStream { get; set; }
+        public NamedPipeServerStream PipeStream { get; private set; }
     }
 }

@@ -7,20 +7,21 @@ namespace ServiceWire.NamedPipes
 {
     public class NpListener
     {
-        private bool running;
-        private EventWaitHandle terminateHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
-        private int _maxConnections = 254;
-        private ILog _log = new NullLogger();
-        private IStats _stats = new NullStats();
-        private INamedPipeServerStreamFactory _streamFactory;
+        private bool _running;
+        private readonly EventWaitHandle _terminateHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
+        private readonly int _maxConnections = 254;
+        private readonly ILog _log;
+        private readonly IStats _stats;
+        private readonly INamedPipeServerStreamFactory _streamFactory;
 
         public string PipeName { get; set; }
+
         public event EventHandler<PipeClientConnectionEventArgs> RequestReieved;
 
         public NpListener(string pipeName, int maxConnections = 254, ILog log = null, IStats stats = null, INamedPipeServerStreamFactory streamFactory = null)
         {
-            _log = log ?? _log;
-            _stats = stats ?? _stats;
+            _log = log ?? new NullLogger();
+            _stats = stats ?? new NullStats();
             if (maxConnections > 254) maxConnections = 254;
             _maxConnections = maxConnections;
             this.PipeName = pipeName;
@@ -29,15 +30,15 @@ namespace ServiceWire.NamedPipes
 
         public void Start()
         {
-            running = true;
+            _running = true;
             Task.Factory.StartNew(() => ServerLoop(), TaskCreationOptions.LongRunning);
         }
 
         public void Stop()
         {
-            if (running)
+            if (_running)
             {
-                running = false;
+                _running = false;
                 //make fake connection to terminate the waiting stream
                 try
                 {
@@ -50,7 +51,7 @@ namespace ServiceWire.NamedPipes
                 {
                     _log.Error("Stop error: {0}", e.ToString().Flatten());
                 }
-                terminateHandle.WaitOne();
+                _terminateHandle.WaitOne();
             }
         }
 
@@ -58,7 +59,7 @@ namespace ServiceWire.NamedPipes
         {
             try
             {
-                while (running)
+                while (_running)
                 {
                     ProcessNextClient();
                 }
@@ -69,7 +70,7 @@ namespace ServiceWire.NamedPipes
             }
             finally
             {
-                terminateHandle.Set();
+                _terminateHandle.Set();
             }
         }
 

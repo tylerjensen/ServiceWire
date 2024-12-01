@@ -26,8 +26,8 @@ namespace ServiceWireTests
 
 			var exception = await Assert.ThrowsAsync<PipeException>(async () =>
 			{
-				await npClient.Proxy.Divide(4.0, 0).ConfigureAwait(false);
-			}).ConfigureAwait(false);
+				await npClient.Proxy.Divide(4.0, 0);
+			});
 
 			Assert.IsType<PipeException>(exception);
 		}

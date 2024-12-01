@@ -6,8 +6,8 @@ namespace ServiceWire.NamedPipes
 {
     public class NpChannel : StreamingChannel
     {
-        private NamedPipeClientStream _clientStream;
-        private NpChannelIdentifier _channelIdentifier;
+        private readonly NamedPipeClientStream _clientStream;
+        private readonly NpChannelIdentifier _channelIdentifier;
 
         /// <summary>
         /// Creates a connection to the concrete object handling method calls on the pipeName server side
@@ -15,8 +15,8 @@ namespace ServiceWire.NamedPipes
         /// <param name="serviceType"></param>
         /// <param name="npEndPoint"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
-        public NpChannel(Type serviceType, NpEndPoint npEndPoint, ISerializer serializer, ICompressor compressor)
-            : base(serializer, compressor)
+        public NpChannel(Type serviceType, NpEndPoint npEndPoint, ISerializer serializer, ICompressor compressor, ILog logger = null, IStats stats = null)
+            : base(serializer, compressor, logger, stats)
         {
             _serviceType = serviceType;
             _channelIdentifier = new NpChannelIdentifier(npEndPoint);

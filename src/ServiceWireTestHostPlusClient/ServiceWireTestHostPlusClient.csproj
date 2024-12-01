@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-		<TargetFrameworks>net6.0;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-		<TargetFrameworks>net6.0;netcoreapp3.1;net48;net462</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0;net48</TargetFrameworks>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -13,6 +13,14 @@
 		<StartupObject />
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Private.Uri" Version="4.3.2" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<ProjectReference Include="..\ServiceWire\ServiceWire.csproj" />
 	</ItemGroup>

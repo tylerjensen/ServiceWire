@@ -4,7 +4,7 @@ namespace ServiceWire.NamedPipes
 {
     public class NpClient<TInterface> : IDisposable where TInterface : class
     {
-        private TInterface _proxy;
+        private readonly TInterface _proxy;
 
         public TInterface Proxy { get { return _proxy; } }
 
@@ -22,11 +22,13 @@ namespace ServiceWire.NamedPipes
         /// <param name="npAddress"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
-        public NpClient(NpEndPoint npAddress, ISerializer serializer = null, ICompressor compressor = null)
+        public NpClient(NpEndPoint npAddress, ISerializer serializer = null, ICompressor compressor = null, ILog logger = null, IStats stats = null)
         {
             if (null == serializer) serializer = new DefaultSerializer();
             if (null == compressor) compressor = new DefaultCompressor();
-            _proxy = NpProxy.CreateProxy<TInterface>(npAddress, serializer, compressor);
+            if (null == logger) logger = new NullLogger();
+            if (null == stats) stats = new NullStats();
+            _proxy = NpProxy.CreateProxy<TInterface>(npAddress, serializer, compressor, logger, stats);
         }
 
         #region IDisposable Members

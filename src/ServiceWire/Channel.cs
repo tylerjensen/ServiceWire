@@ -6,17 +6,20 @@ namespace ServiceWire
     {
         protected Type _serviceType;
 
-        protected ILog _logger = new NullLogger();
-        protected IStats _stats = new NullStats();
+        protected ILog _logger;
+        protected IStats _stats;
         internal readonly ISerializer _serializer;
         internal readonly ICompressor _compressor;
 
-        public Channel(ISerializer serializer, ICompressor compressor)
+        public Channel(ISerializer serializer, ICompressor compressor, ILog logger = null, IStats stats = null)
         {
             _serializer = serializer ?? new DefaultSerializer();
             _compressor = compressor ?? new DefaultCompressor();
+            _logger = logger ?? new NullLogger();
+            _stats = stats ?? new NullStats();
         }
 
+        [Obsolete]
         public void InjectLoggerStats(ILog logger, IStats stats)
         {
             _logger = logger;

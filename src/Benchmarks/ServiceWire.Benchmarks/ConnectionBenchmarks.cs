@@ -12,7 +12,8 @@ namespace ServiceWire.Benchmarks
     [MinIterationCount(4)]
     [MaxIterationCount(16)]
     [InvocationCount(64)]
-    [SimpleJob(RuntimeMoniker.Net60, baseline: true)]
+    [SimpleJob(RuntimeMoniker.Net80, baseline: true)]
+    [SimpleJob(RuntimeMoniker.Net60)]
     [SimpleJob(RuntimeMoniker.Net48)]
     [MemoryDiagnoser]
     public class ConnectionBenchmarks

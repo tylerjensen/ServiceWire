@@ -22,8 +22,8 @@ namespace ServiceWire
         // keep cached sync info to avoid redundant wire trips
         private static readonly ConcurrentDictionary<ServiceSyncInfoCacheKey, ServiceSyncInfo> SyncInfoCache = new ConcurrentDictionary<ServiceSyncInfoCacheKey, ServiceSyncInfo>();
 
-        public StreamingChannel(ISerializer serializer, ICompressor compressor)
-            : base(serializer, compressor)
+        public StreamingChannel(ISerializer serializer, ICompressor compressor, ILog logger = null, IStats stats = null)
+            : base(serializer, compressor, logger, stats)
         {
             _parameterTransferHelper = new ParameterTransferHelper(_serializer, _compressor);
         }

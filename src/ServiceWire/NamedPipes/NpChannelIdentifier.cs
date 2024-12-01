@@ -4,8 +4,8 @@ namespace ServiceWire.NamedPipes
 {
     internal class NpChannelIdentifier : IChannelIdentifier, IEquatable<NpChannelIdentifier>
     {
-        public string ServerName { get; }
-        public string PipeName { get; }
+        public string ServerName { get; private set; }
+        public string PipeName { get; private set; }
 
         public NpChannelIdentifier(NpEndPoint npEndPoint)
         {

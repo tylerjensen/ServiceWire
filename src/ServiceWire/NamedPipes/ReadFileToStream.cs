@@ -4,19 +4,18 @@ namespace ServiceWire.NamedPipes
 {
     public class ReadFileToStream
     {
-        private string fn;
-        private StreamString ss;
+        private readonly string _fileName;
+        private readonly StreamString _streamString;
 
         public ReadFileToStream(StreamString str, string filename)
         {
-            fn = filename;
-            ss = str;
+            _fileName = filename;
+            _streamString = str;
         }
 
         public void Start()
         {
-            string contents = File.ReadAllText(fn);
-            ss.WriteString(contents);
+            _streamString.WriteString(File.ReadAllText(_fileName));
         }
     }
 }

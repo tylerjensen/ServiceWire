@@ -45,13 +45,22 @@ Get the [NuGet package here][].
 
 -   Protocol, serialization and execution strategy extension
 
-Portions of this library are a derivative of [RemotingLite][].  
+Portions of this library (dynamic proxy) are a derivative of RemotingLite by Frank Thomsen.  
 
   [NuGet package here]: http://www.nuget.org/packages/ServiceWire/
-  [RemotingLite]: http://remotinglite.codeplex.com/
+  [RemotingLite by Frank Thomsen]: https://codeplexarchive.org/codeplex/project/RemotingLite
   [ServiceWire documentation]: https://github.com/tylerjensen/ServiceWire/wiki
 
 ## History
+
+### NamedPipeServerStreamFactory and Other Improvements 5.6.0
+
+1. Contributed fix where accepting TCP clients synchronously may block new clients from being accepted until the terminating request is received on the synchronous client.
+1. Contributed NamedPipeServerStreamFactory to allow greater level of permissions control in using named pipes.
+1. Introducted injectable ILog and IStats across channels and clients with default NullLogger and NullStats, making InjectLoggerStats obsolete.
+1. Code improvements for code consistency and eliminating outdated frameworks from tests and supporting projects.
+1. Updated several dependencies in supporting projects.
+1. Updated System.Text.Json to 9.0.0 to resolve known vulnerabilities in previous versions.
 
 ### Support for Enum by Ref 5.5.4
 
@@ -166,6 +175,61 @@ Note: Use of async/await and Task<T> not recommended. Use of Task return type no
 5. For the .NET 4.0 and 3.5 versions, changed to "Client Profile" for the target framework.
 
 6. Removed dependency on System.Numerics in order to support .NET 3.5 and introduced ZkBigInt class taken from Scott Garland's BigInteger class. See license text for full attribution.
+
+
+### AllBenchmarks Update (12/1/2024)
+
+We recommend using .NET 8. There is an average 21% performance improvement.
+
+```
+BenchmarkDotNet v0.14.0, Windows 11 (10.0.22631.4460/23H2/2023Update/SunValley3)
+AMD Ryzen Threadripper PRO 5975WX 32-Cores, 1 CPU, 64 logical and 32 physical cores
+.NET SDK 9.0.100
+  [Host]   : .NET 8.0.11 (8.0.1124.51707), X64 RyuJIT AVX2
+  .NET 6.0 : .NET 6.0.36 (6.0.3624.51421), X64 RyuJIT AVX2
+  .NET 8.0 : .NET 8.0.11 (8.0.1124.51707), X64 RyuJIT AVX2
+
+InvocationCount=1024  MaxIterationCount=64  MinIterationCount=8
+UnrollFactor=1
+
+| Method       | Job                | Runtime            | Mean     | Error    | StdDev   | Median   | Ratio | RatioSD | Gen0   | Allocated | Alloc Ratio |
+|------------- |------------------- |------------------- |---------:|---------:|---------:|---------:|------:|--------:|-------:|----------:|------------:|
+| TcpSim       | .NET 6.0           | .NET 6.0           | 27.78 us | 0.542 us | 0.845 us | 27.80 us |  1.05 |    0.11 |      - |     569 B |        0.89 |
+| TcpSim       | .NET 8.0           | .NET 8.0           | 26.69 us | 1.311 us | 2.986 us | 25.21 us |  1.01 |    0.15 |      - |     641 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| TcpSimJson   | .NET 6.0           | .NET 6.0           | 28.40 us | 0.567 us | 0.296 us | 28.42 us |  1.14 |    0.04 |      - |     569 B |        0.89 |
+| TcpSimJson   | .NET 8.0           | .NET 8.0           | 25.02 us | 0.497 us | 0.908 us | 24.83 us |  1.00 |    0.05 |      - |     641 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| TcpRg        | .NET 6.0           | .NET 6.0           | 73.61 us | 0.911 us | 0.404 us | 73.50 us |  1.37 |    0.03 |      - |   15417 B |        1.05 |
+| TcpRg        | .NET 8.0           | .NET 8.0           | 53.87 us | 0.866 us | 1.064 us | 53.64 us |  1.00 |    0.03 |      - |   14738 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| TcpRgJson    | .NET 6.0           | .NET 6.0           | 73.03 us | 1.345 us | 0.890 us | 72.85 us |  1.32 |    0.05 |      - |   15417 B |        1.05 |
+| TcpRgJson    | .NET 8.0           | .NET 8.0           | 55.51 us | 1.104 us | 2.073 us | 54.88 us |  1.00 |    0.05 |      - |   14738 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| TcpCxOut     | .NET 6.0           | .NET 6.0           | 62.84 us | 1.198 us | 0.626 us | 62.64 us |  1.30 |    0.03 |      - |    6929 B |        0.86 |
+| TcpCxOut     | .NET 8.0           | .NET 8.0           | 48.35 us | 0.802 us | 1.224 us | 47.99 us |  1.00 |    0.03 |      - |    8066 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| TcpCxOutJson | .NET 6.0           | .NET 6.0           | 64.35 us | 1.194 us | 0.932 us | 64.21 us |  1.33 |    0.05 |      - |    6929 B |        0.86 |
+| TcpCxOutJson | .NET 8.0           | .NET 8.0           | 48.61 us | 0.970 us | 2.004 us | 47.87 us |  1.00 |    0.06 |      - |    8066 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| NpSim        | .NET 6.0           | .NET 6.0           | 22.64 us | 0.540 us | 1.229 us | 22.29 us |  1.36 |    0.15 |      - |     569 B |        0.89 |
+| NpSim        | .NET 8.0           | .NET 8.0           | 16.88 us | 0.870 us | 1.873 us | 16.35 us |  1.01 |    0.15 |      - |     641 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| NpSimJson    | .NET 6.0           | .NET 6.0           | 21.77 us | 0.421 us | 0.643 us | 21.59 us |  1.33 |    0.12 |      - |     569 B |        0.89 |
+| NpSimJson    | .NET 8.0           | .NET 8.0           | 16.50 us | 0.760 us | 1.604 us | 15.83 us |  1.01 |    0.13 |      - |     641 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| NpRg         | .NET 6.0           | .NET 6.0           | 63.31 us | 0.994 us | 1.144 us | 63.18 us |  1.37 |    0.04 |      - |   15417 B |        1.05 |
+| NpRg         | .NET 8.0           | .NET 8.0           | 46.07 us | 0.650 us | 1.031 us | 45.96 us |  1.00 |    0.03 |      - |   14738 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| NpRgJson     | .NET 6.0           | .NET 6.0           | 71.55 us | 0.990 us | 0.518 us | 71.49 us |  1.40 |    0.07 | 0.9766 |   27194 B |        1.09 |
+| NpRgJson     | .NET 8.0           | .NET 8.0           | 51.35 us | 1.348 us | 2.783 us | 50.50 us |  1.00 |    0.07 | 0.9766 |   24882 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| NpCxOut      | .NET 6.0           | .NET 6.0           | 55.37 us | 0.802 us | 0.670 us | 55.17 us |  1.22 |    0.09 |      - |    6929 B |        0.86 |
+| NpCxOut      | .NET 8.0           | .NET 8.0           | 45.83 us | 1.780 us | 3.831 us | 44.24 us |  1.01 |    0.11 |      - |    8066 B |        1.00 |
+|              |                    |                    |          |          |          |          |       |         |        |           |             |
+| NpCxOutJson  | .NET 6.0           | .NET 6.0           | 58.59 us | 1.109 us | 1.037 us | 58.35 us |  1.27 |    0.08 |      - |   10857 B |        0.91 |
+| NpCxOutJson  | .NET 8.0           | .NET 8.0           | 46.39 us | 1.478 us | 2.986 us | 44.93 us |  1.00 |    0.09 |      - |   11890 B |        1.00 |
+```
 
 
 ### ConnBenchmarks (6/6/2022)
