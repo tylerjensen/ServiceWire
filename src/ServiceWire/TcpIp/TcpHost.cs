@@ -94,9 +94,11 @@ namespace ServiceWire.TcpIp
                     _acceptEventArg.AcceptSocket = null;
                     try
                     {
+                        // If AcceptAsync returns false - it must be handled synchronously.
+                        // https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.acceptasync#system-net-sockets-socket-acceptasync(system-net-sockets-socketasynceventargs)
                         if (!_listener.AcceptAsync(_acceptEventArg))
                         {
-                            AcceptNewClient(_acceptEventArg);
+                            AcceptNewClient(_acceptEventArg, true);
                         }
                     }
                     catch (Exception ex)
@@ -117,10 +119,10 @@ namespace ServiceWire.TcpIp
 
         private void acceptEventArg_Completed(object sender, SocketAsyncEventArgs e)
         {
-            AcceptNewClient(e);
+            AcceptNewClient(e, false);
         }
 
-        private void AcceptNewClient(SocketAsyncEventArgs e)
+        private void AcceptNewClient(SocketAsyncEventArgs e, bool processRequestsOnTask)
         {
             try
             {
@@ -130,53 +132,64 @@ namespace ServiceWire.TcpIp
                     return;
                 }
 
-                Socket activeSocket = null;
-                BufferedStream stream = null;
-                try
+                Socket activeSocket = e.AcceptSocket;
+
+                // Signal the listening thread to continue.
+                _listenResetEvent.Set();
+
+                if (processRequestsOnTask)
                 {
-                    activeSocket = e.AcceptSocket;
-
-                    // Signal the listening thread to continue.
-                    _listenResetEvent.Set();
-
-                    stream = new BufferedStream(new NetworkStream(activeSocket), 8192);
-                    base.ProcessRequest(stream);
+                    Task.Factory.StartNew(() => StartProcessingRequestsOnSocket(activeSocket), TaskCreationOptions.LongRunning);
                 }
-                catch (Exception ex)
+                else
                 {
-                    _log.Error("AcceptNewClient_ProcessRequest error: {0}", ex.ToString().Flatten());
-                }
-                finally
-                {
-                    if (null != stream)
-                    {
-                        stream.Close();
-                    }
-                    if (null != activeSocket && activeSocket.Connected)
-                    {
-                        try
-                        {
-                            activeSocket.Shutdown(SocketShutdown.Both);
-                        }
-                        catch (Exception shutdownException)
-                        {
-                            _log.Error("AcceptNewClient_ActiveSocketShutdown error: {0}", shutdownException.ToString().Flatten());
-                        }
-
-                        try
-                        {
-                            activeSocket.Close();
-                        }
-                        catch (Exception closeException)
-                        {
-                            _log.Error("AcceptNewClient_ActiveSocketClose error: {0}", closeException.ToString().Flatten());
-                        }
-                    }
+                    StartProcessingRequestsOnSocket(activeSocket);
                 }
             }
             catch (Exception fatalException)
             {
                 _log.Fatal("AcceptNewClient fatal error: {0}", fatalException.ToString().Flatten());
+            }
+        }
+
+        private void StartProcessingRequestsOnSocket(Socket activeSocket)
+        {
+            BufferedStream stream = null;
+            try
+            {
+                stream = new BufferedStream(new NetworkStream(activeSocket), 8192);
+                base.ProcessRequest(stream);
+            }
+            catch (Exception ex)
+            {
+                _log.Error("AcceptNewClient_ProcessRequest error: {0}", ex.ToString().Flatten());
+            }
+            finally
+            {
+                if (null != stream)
+                {
+                    stream.Close();
+                }
+                if (null != activeSocket && activeSocket.Connected)
+                {
+                    try
+                    {
+                        activeSocket.Shutdown(SocketShutdown.Both);
+                    }
+                    catch (Exception shutdownException)
+                    {
+                        _log.Error("AcceptNewClient_ActiveSocketShutdown error: {0}", shutdownException.ToString().Flatten());
+                    }
+
+                    try
+                    {
+                        activeSocket.Close();
+                    }
+                    catch (Exception closeException)
+                    {
+                        _log.Error("AcceptNewClient_ActiveSocketClose error: {0}", closeException.ToString().Flatten());
+                    }
+                }
             }
         }
 

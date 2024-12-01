@@ -28,6 +28,11 @@ namespace ServiceWire
             _parameterTransferHelper = new ParameterTransferHelper(_serializer, _compressor);
         }
 
+        public static void ClearCachedSyncInfo()
+        {
+            SyncInfoCache.Clear();
+        }
+
         protected virtual IChannelIdentifier ChannelIdentifier { get; }
 
         /// <summary>
