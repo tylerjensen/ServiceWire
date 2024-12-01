@@ -34,13 +34,14 @@ namespace ServiceWire.NamedPipes
         /// <param name="stats"></param>
         /// <param name="serializer">Inject your own serializer for complex objects and avoid using the Newtonsoft JSON DefaultSerializer.</param>
         /// <param name="compressor">Inject your own compressor and avoid using the standard GZIP DefaultCompressor.</param>
-        public NpHost(string pipeName, ILog log = null, IStats stats = null, ISerializer serializer = null, ICompressor compressor = null)
+        /// <param name="streamFactory">Inject your own factory for creating the named pipe server. Can be used with NamedPipeServerStreamAcl to set the ACL on Windows platforms.</param>
+        public NpHost(string pipeName, ILog log = null, IStats stats = null, ISerializer serializer = null, ICompressor compressor = null, INamedPipeServerStreamFactory streamFactory = null)
             : base(serializer, compressor)
         {
             base.Log = log;
             base.Stats = stats;
             _pipeName = pipeName;
-            _listener = new NpListener(_pipeName, log: base.Log, stats: base.Stats);
+            _listener = new NpListener(_pipeName, log: base.Log, stats: base.Stats, streamFactory: streamFactory);
             _listener.RequestReieved += ClientConnectionMade;
         }
 
