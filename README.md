@@ -178,10 +178,9 @@ Note: Use of async/await and Task<T> not recommended. Use of Task return type no
 
 6. Removed dependency on System.Numerics in order to support .NET 3.5 and introduced ZkBigInt class taken from Scott Garland's BigInteger class. See license text for full attribution.
 
+### Updated Benchmarks (12/5/2024) with latest contribution
 
-### AllBenchmarks Update (12/1/2024)
-
-We recommend using .NET 8. There is an average 21% performance improvement.
+NOTE: In this and previous runs of the benchmarks, .NET 8 is consistently 21% faster than .NET 6 when the benchmark differences are averaged.
 
 ```
 BenchmarkDotNet v0.14.0, Windows 11 (10.0.22631.4460/23H2/2023Update/SunValley3)
@@ -191,123 +190,48 @@ AMD Ryzen Threadripper PRO 5975WX 32-Cores, 1 CPU, 64 logical and 32 physical co
   .NET 6.0 : .NET 6.0.36 (6.0.3624.51421), X64 RyuJIT AVX2
   .NET 8.0 : .NET 8.0.11 (8.0.1124.51707), X64 RyuJIT AVX2
 
-InvocationCount=1024  MaxIterationCount=64  MinIterationCount=8
-UnrollFactor=1
 
-| Method       | Job                | Runtime            | Mean     | Error    | StdDev   | Median   | Ratio | RatioSD | Gen0   | Allocated | Alloc Ratio |
-|------------- |------------------- |------------------- |---------:|---------:|---------:|---------:|------:|--------:|-------:|----------:|------------:|
-| TcpSim       | .NET 6.0           | .NET 6.0           | 27.78 us | 0.542 us | 0.845 us | 27.80 us |  1.05 |    0.11 |      - |     569 B |        0.89 |
-| TcpSim       | .NET 8.0           | .NET 8.0           | 26.69 us | 1.311 us | 2.986 us | 25.21 us |  1.01 |    0.15 |      - |     641 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| TcpSimJson   | .NET 6.0           | .NET 6.0           | 28.40 us | 0.567 us | 0.296 us | 28.42 us |  1.14 |    0.04 |      - |     569 B |        0.89 |
-| TcpSimJson   | .NET 8.0           | .NET 8.0           | 25.02 us | 0.497 us | 0.908 us | 24.83 us |  1.00 |    0.05 |      - |     641 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| TcpRg        | .NET 6.0           | .NET 6.0           | 73.61 us | 0.911 us | 0.404 us | 73.50 us |  1.37 |    0.03 |      - |   15417 B |        1.05 |
-| TcpRg        | .NET 8.0           | .NET 8.0           | 53.87 us | 0.866 us | 1.064 us | 53.64 us |  1.00 |    0.03 |      - |   14738 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| TcpRgJson    | .NET 6.0           | .NET 6.0           | 73.03 us | 1.345 us | 0.890 us | 72.85 us |  1.32 |    0.05 |      - |   15417 B |        1.05 |
-| TcpRgJson    | .NET 8.0           | .NET 8.0           | 55.51 us | 1.104 us | 2.073 us | 54.88 us |  1.00 |    0.05 |      - |   14738 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| TcpCxOut     | .NET 6.0           | .NET 6.0           | 62.84 us | 1.198 us | 0.626 us | 62.64 us |  1.30 |    0.03 |      - |    6929 B |        0.86 |
-| TcpCxOut     | .NET 8.0           | .NET 8.0           | 48.35 us | 0.802 us | 1.224 us | 47.99 us |  1.00 |    0.03 |      - |    8066 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| TcpCxOutJson | .NET 6.0           | .NET 6.0           | 64.35 us | 1.194 us | 0.932 us | 64.21 us |  1.33 |    0.05 |      - |    6929 B |        0.86 |
-| TcpCxOutJson | .NET 8.0           | .NET 8.0           | 48.61 us | 0.970 us | 2.004 us | 47.87 us |  1.00 |    0.06 |      - |    8066 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| NpSim        | .NET 6.0           | .NET 6.0           | 22.64 us | 0.540 us | 1.229 us | 22.29 us |  1.36 |    0.15 |      - |     569 B |        0.89 |
-| NpSim        | .NET 8.0           | .NET 8.0           | 16.88 us | 0.870 us | 1.873 us | 16.35 us |  1.01 |    0.15 |      - |     641 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| NpSimJson    | .NET 6.0           | .NET 6.0           | 21.77 us | 0.421 us | 0.643 us | 21.59 us |  1.33 |    0.12 |      - |     569 B |        0.89 |
-| NpSimJson    | .NET 8.0           | .NET 8.0           | 16.50 us | 0.760 us | 1.604 us | 15.83 us |  1.01 |    0.13 |      - |     641 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| NpRg         | .NET 6.0           | .NET 6.0           | 63.31 us | 0.994 us | 1.144 us | 63.18 us |  1.37 |    0.04 |      - |   15417 B |        1.05 |
-| NpRg         | .NET 8.0           | .NET 8.0           | 46.07 us | 0.650 us | 1.031 us | 45.96 us |  1.00 |    0.03 |      - |   14738 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| NpRgJson     | .NET 6.0           | .NET 6.0           | 71.55 us | 0.990 us | 0.518 us | 71.49 us |  1.40 |    0.07 | 0.9766 |   27194 B |        1.09 |
-| NpRgJson     | .NET 8.0           | .NET 8.0           | 51.35 us | 1.348 us | 2.783 us | 50.50 us |  1.00 |    0.07 | 0.9766 |   24882 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| NpCxOut      | .NET 6.0           | .NET 6.0           | 55.37 us | 0.802 us | 0.670 us | 55.17 us |  1.22 |    0.09 |      - |    6929 B |        0.86 |
-| NpCxOut      | .NET 8.0           | .NET 8.0           | 45.83 us | 1.780 us | 3.831 us | 44.24 us |  1.01 |    0.11 |      - |    8066 B |        1.00 |
-|              |                    |                    |          |          |          |          |       |         |        |           |             |
-| NpCxOutJson  | .NET 6.0           | .NET 6.0           | 58.59 us | 1.109 us | 1.037 us | 58.35 us |  1.27 |    0.08 |      - |   10857 B |        0.91 |
-| NpCxOutJson  | .NET 8.0           | .NET 8.0           | 46.39 us | 1.478 us | 2.986 us | 44.93 us |  1.00 |    0.09 |      - |   11890 B |        1.00 |
-```
-
-
-### ConnBenchmarks (6/6/2022)
-
-No real change from previous benchmarks. Making a connection is still expensive. About 15ms.
-
-```
-BenchmarkDotNet=v0.13.1, OS=Windows 10.0.22000
-Intel Core i7-10750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
-.NET SDK=6.0.300
-  [Host]     : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
-  Job-OBEYHZ : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
-  Job-REVQDN : .NET Framework 4.8 (4.8.4510.0), X64 RyuJIT
-
-InvocationCount=64  MaxIterationCount=16  MinIterationCount=4
-UnrollFactor=1
-
-|  Method |        Job |            Runtime |        Mean |     Error |    StdDev | Ratio | RatioSD |   Gen 0 | Allocated |
-|-------- |----------- |------------------- |------------:|----------:|----------:|------:|--------:|--------:|----------:|
-| TcpConn | Job-OBEYHZ |           .NET 6.0 | 15,225.3 us | 314.91 us | 294.56 us |  1.00 |    0.00 |       - |     52 KB |
-| TcpConn | Job-REVQDN | .NET Framework 4.8 |    736.5 us |  62.61 us |  55.50 us |  0.05 |    0.00 | 15.6250 |     96 KB |
-|         |            |                    |             |           |           |       |         |         |           |
-|  NpConn | Job-OBEYHZ |           .NET 6.0 |    265.1 us |   8.23 us |   8.08 us |  1.00 |    0.00 |       - |     63 KB |
-|  NpConn | Job-REVQDN | .NET Framework 4.8 |    307.5 us |  16.52 us |  16.23 us |  1.16 |    0.07 | 15.6250 |    107 KB |
-```
-
-### AllBenchmarks (6/6/2022)
-
-These benchmarks so the improvements in switching to System.Text.Json in the CxOut tests. Faster and fewer allocations that previous benchmarks. Performance improvement is 17% on average on those specific benchmarks.
-
-```
-BenchmarkDotNet=v0.13.1, OS=Windows 10.0.22000
-Intel Core i7-10750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
-.NET SDK=6.0.300
-  [Host]     : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
-  Job-NJJOJB : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
-  Job-VIKKWS : .NET Framework 4.8 (4.8.4510.0), X64 RyuJIT
-
-InvocationCount=1024  MaxIterationCount=64  MinIterationCount=8
-UnrollFactor=1
-
-|       Method |        Job |            Runtime |      Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Allocated |
-|------------- |----------- |------------------- |----------:|---------:|---------:|------:|--------:|-------:|----------:|
-|       TcpSim | Job-NJJOJB |           .NET 6.0 |  32.93 us | 0.626 us | 0.696 us |  1.00 |    0.00 |      - |     569 B |
-|       TcpSim | Job-VIKKWS | .NET Framework 4.8 |  34.36 us | 0.661 us | 0.904 us |  1.04 |    0.04 |      - |     776 B |
-|              |            |                    |           |          |          |       |         |        |           |
-|   TcpSimJson | Job-NJJOJB |           .NET 6.0 |  31.79 us | 0.635 us | 0.680 us |  1.00 |    0.00 |      - |     569 B |
-|   TcpSimJson | Job-VIKKWS | .NET Framework 4.8 |  32.46 us | 0.641 us | 0.536 us |  1.02 |    0.03 |      - |     784 B |
-|              |            |                    |           |          |          |       |         |        |           |
-|        TcpRg | Job-NJJOJB |           .NET 6.0 |  88.75 us | 1.625 us | 1.269 us |  1.00 |    0.00 | 1.9531 |  15,298 B |
-|        TcpRg | Job-VIKKWS | .NET Framework 4.8 | 123.68 us | 2.293 us | 1.199 us |  1.39 |    0.03 | 3.9063 |  24,682 B |
-|              |            |                    |           |          |          |       |         |        |           |
-|    TcpRgJson | Job-NJJOJB |           .NET 6.0 |  90.42 us | 1.683 us | 1.217 us |  1.00 |    0.00 | 1.9531 |  15,298 B |
-|    TcpRgJson | Job-VIKKWS | .NET Framework 4.8 | 138.37 us | 3.860 us | 8.791 us |  1.50 |    0.13 | 3.9063 |  24,671 B |
-|              |            |                    |           |          |          |       |         |        |           |
-|     TcpCxOut | Job-NJJOJB |           .NET 6.0 |  68.30 us | 1.305 us | 1.019 us |  1.00 |    0.00 | 0.9766 |   6,810 B |
-|     TcpCxOut | Job-VIKKWS | .NET Framework 4.8 |  92.20 us | 2.251 us | 5.081 us |  1.28 |    0.04 | 1.9531 |  13,910 B |
-|              |            |                    |           |          |          |       |         |        |           |
-| TcpCxOutJson | Job-NJJOJB |           .NET 6.0 |  69.14 us | 1.319 us | 1.234 us |  1.00 |    0.00 | 0.9766 |   6,810 B |
-| TcpCxOutJson | Job-VIKKWS | .NET Framework 4.8 |  86.90 us | 1.424 us | 1.949 us |  1.27 |    0.04 | 1.9531 |  13,908 B |
-|              |            |                    |           |          |          |       |         |        |           |
-|        NpSim | Job-NJJOJB |           .NET 6.0 |  23.71 us | 0.469 us | 0.716 us |  1.00 |    0.00 |      - |     569 B |
-|        NpSim | Job-VIKKWS | .NET Framework 4.8 |  25.19 us | 0.485 us | 0.519 us |  1.06 |    0.04 |      - |     936 B |
-|              |            |                    |           |          |          |       |         |        |           |
-|    NpSimJson | Job-NJJOJB |           .NET 6.0 |  24.02 us | 0.477 us | 0.783 us |  1.00 |    0.00 |      - |     569 B |
-|    NpSimJson | Job-VIKKWS | .NET Framework 4.8 |  27.08 us | 0.540 us | 0.887 us |  1.13 |    0.05 |      - |     936 B |
-|              |            |                    |           |          |          |       |         |        |           |
-|         NpRg | Job-NJJOJB |           .NET 6.0 |  76.97 us | 1.453 us | 0.961 us |  1.00 |    0.00 | 1.9531 |  15,298 B |
-|         NpRg | Job-VIKKWS | .NET Framework 4.8 | 107.98 us | 2.029 us | 1.342 us |  1.40 |    0.03 | 3.9063 |  24,698 B |
-|              |            |                    |           |          |          |       |         |        |           |
-|     NpRgJson | Job-NJJOJB |           .NET 6.0 |  86.54 us | 1.679 us | 0.999 us |  1.00 |    0.00 | 3.9063 |  27,139 B |
-|     NpRgJson | Job-VIKKWS | .NET Framework 4.8 | 116.80 us | 2.208 us | 4.846 us |  1.35 |    0.06 | 4.8828 |  36,338 B |
-|              |            |                    |           |          |          |       |         |        |           |
-|      NpCxOut | Job-NJJOJB |           .NET 6.0 |  60.93 us | 1.180 us | 1.312 us |  1.00 |    0.00 | 0.9766 |   6,810 B |
-|      NpCxOut | Job-VIKKWS | .NET Framework 4.8 |  82.04 us | 1.506 us | 2.715 us |  1.36 |    0.05 | 1.9531 |  14,211 B |
-|              |            |                    |           |          |          |       |         |        |           |
-|  NpCxOutJson | Job-NJJOJB |           .NET 6.0 |  66.24 us | 1.223 us | 0.955 us |  1.00 |    0.00 | 0.9766 |  10,858 B |
-|  NpCxOutJson | Job-VIKKWS | .NET Framework 4.8 |  82.45 us | 1.641 us | 2.133 us |  1.27 |    0.04 | 2.9297 |  18,729 B |
+| Type                 | Method       | Job                | Runtime            | Mean         | Error      | StdDev     | Ratio | RatioSD | Gen0   | Gen1   | Allocated | Alloc Ratio |
+|--------------------- |------------- |------------------- |------------------- |-------------:|-----------:|-----------:|------:|--------:|-------:|-------:|----------:|------------:|
+| ConnectionBenchmarks | TcpConn      | .NET 6.0           | .NET 6.0           | 15,400.91 us | 204.477 us | 191.267 us |  0.99 |    0.01 |      - |      - |   62874 B |        1.00 |
+| ConnectionBenchmarks | TcpConn      | .NET 8.0           | .NET 8.0           | 15,505.96 us |  76.118 us |  71.201 us |  1.00 |    0.01 |      - |      - |   62893 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| NamedPipesBenchmarks | NpSim        | .NET 6.0           | .NET 6.0           |     21.64 us |   0.132 us |   0.110 us |  1.37 |    0.04 | 0.0305 |      - |     568 B |        0.89 |
+| NamedPipesBenchmarks | NpSim        | .NET 8.0           | .NET 8.0           |     15.86 us |   0.311 us |   0.415 us |  1.00 |    0.04 | 0.0305 |      - |     640 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| TcpBenchmarks        | TcpSim       | .NET 6.0           | .NET 6.0           |     27.60 us |   0.215 us |   0.201 us |  1.11 |    0.02 | 0.0305 |      - |     568 B |        0.89 |
+| TcpBenchmarks        | TcpSim       | .NET 8.0           | .NET 8.0           |     24.94 us |   0.484 us |   0.497 us |  1.00 |    0.03 | 0.0305 |      - |     640 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| ConnectionBenchmarks | NpConn       | .NET 6.0           | .NET 6.0           |    235.46 us |   3.600 us |   3.192 us |  1.16 |    0.03 | 4.3945 | 0.4883 |   68798 B |        1.02 |
+| ConnectionBenchmarks | NpConn       | .NET 8.0           | .NET 8.0           |    203.27 us |   3.865 us |   3.969 us |  1.00 |    0.03 | 4.3945 | 0.4883 |   67196 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| NamedPipesBenchmarks | NpSimJson    | .NET 6.0           | .NET 6.0           |     21.44 us |   0.150 us |   0.125 us |  1.35 |    0.02 | 0.0305 |      - |     568 B |        0.89 |
+| NamedPipesBenchmarks | NpSimJson    | .NET 8.0           | .NET 8.0           |     15.94 us |   0.306 us |   0.286 us |  1.00 |    0.02 | 0.0305 |      - |     640 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| TcpBenchmarks        | TcpSimJson   | .NET 6.0           | .NET 6.0           |     27.80 us |   0.550 us |   0.564 us |  1.14 |    0.03 | 0.0305 |      - |     568 B |        0.89 |
+| TcpBenchmarks        | TcpSimJson   | .NET 8.0           | .NET 8.0           |     24.44 us |   0.299 us |   0.280 us |  1.00 |    0.02 | 0.0305 |      - |     640 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| NamedPipesBenchmarks | NpRg         | .NET 6.0           | .NET 6.0           |     61.25 us |   0.710 us |   0.554 us |  1.38 |    0.03 | 0.8545 |      - |   15416 B |        1.05 |
+| NamedPipesBenchmarks | NpRg         | .NET 8.0           | .NET 8.0           |     44.48 us |   0.800 us |   1.122 us |  1.00 |    0.03 | 0.9766 |      - |   14737 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| TcpBenchmarks        | TcpRg        | .NET 6.0           | .NET 6.0           |     72.16 us |   1.325 us |   1.174 us |  1.37 |    0.03 | 0.8545 |      - |   15416 B |        1.05 |
+| TcpBenchmarks        | TcpRg        | .NET 8.0           | .NET 8.0           |     52.70 us |   0.834 us |   0.739 us |  1.00 |    0.02 | 0.7324 |      - |   14737 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| NamedPipesBenchmarks | NpRgJson     | .NET 6.0           | .NET 6.0           |     68.63 us |   0.631 us |   0.590 us |  1.39 |    0.04 | 1.7090 |      - |   27193 B |        1.09 |
+| NamedPipesBenchmarks | NpRgJson     | .NET 8.0           | .NET 8.0           |     49.40 us |   0.979 us |   1.239 us |  1.00 |    0.03 | 1.4648 |      - |   24881 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| TcpBenchmarks        | TcpRgJson    | .NET 6.0           | .NET 6.0           |     73.17 us |   1.181 us |   0.986 us |  1.38 |    0.03 | 0.8545 |      - |   15416 B |        1.05 |
+| TcpBenchmarks        | TcpRgJson    | .NET 8.0           | .NET 8.0           |     53.03 us |   0.824 us |   0.771 us |  1.00 |    0.02 | 0.7324 |      - |   14737 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| NamedPipesBenchmarks | NpCxOut      | .NET 6.0           | .NET 6.0           |     54.18 us |   0.444 us |   0.416 us |  1.25 |    0.02 | 0.3662 |      - |    6928 B |        0.86 |
+| NamedPipesBenchmarks | NpCxOut      | .NET 8.0           | .NET 8.0           |     43.36 us |   0.608 us |   0.569 us |  1.00 |    0.02 | 0.3662 |      - |    8064 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| TcpBenchmarks        | TcpCxOut     | .NET 6.0           | .NET 6.0           |     64.20 us |   1.172 us |   1.565 us |  1.36 |    0.04 | 0.3662 |      - |    6929 B |        0.86 |
+| TcpBenchmarks        | TcpCxOut     | .NET 8.0           | .NET 8.0           |     47.21 us |   0.782 us |   0.732 us |  1.00 |    0.02 | 0.3662 |      - |    8064 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| NamedPipesBenchmarks | NpCxOutJson  | .NET 6.0           | .NET 6.0           |     58.34 us |   0.904 us |   0.801 us |  1.34 |    0.02 | 0.6104 |      - |   10856 B |        0.91 |
+| NamedPipesBenchmarks | NpCxOutJson  | .NET 8.0           | .NET 8.0           |     43.61 us |   0.655 us |   0.581 us |  1.00 |    0.02 | 0.7324 |      - |   11888 B |        1.00 |
+|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
+| TcpBenchmarks        | TcpCxOutJson | .NET 6.0           | .NET 6.0           |     63.73 us |   1.143 us |   1.069 us |  1.34 |    0.03 | 0.3662 |      - |    6929 B |        0.86 |
+| TcpBenchmarks        | TcpCxOutJson | .NET 8.0           | .NET 8.0           |     47.49 us |   0.641 us |   0.600 us |  1.00 |    0.02 | 0.3662 |      - |    8064 B |        1.00 |
 ```
