@@ -1,19 +1,15 @@
 ﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
 using ServiceWire.NamedPipes;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 
 namespace ServiceWire.Benchmarks
 {
-    [MinIterationCount(8)]
-    [MaxIterationCount(64)]
-    [InvocationCount(1024)]
     [SimpleJob(RuntimeMoniker.Net80, baseline: true)]
     [SimpleJob(RuntimeMoniker.Net60)]
     [SimpleJob(RuntimeMoniker.Net48)]
     [MemoryDiagnoser]
+    [HtmlExporter]
     public class NamedPipesBenchmarks
     {
         private INetTester _tester;

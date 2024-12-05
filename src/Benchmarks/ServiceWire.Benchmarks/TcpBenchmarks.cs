@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using ServiceWire.TcpIp;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
@@ -7,13 +6,11 @@ using System.Net;
 
 namespace ServiceWire.Benchmarks
 {
-    [MinIterationCount(8)]
-    [MaxIterationCount(64)]
-    [InvocationCount(1024)]
     [SimpleJob(RuntimeMoniker.Net80, baseline: true)]
     [SimpleJob(RuntimeMoniker.Net60)]
     [SimpleJob(RuntimeMoniker.Net48)]
     [MemoryDiagnoser]
+    [HtmlExporter]
     public class TcpBenchmarks
     {
         private INetTester _tester;
