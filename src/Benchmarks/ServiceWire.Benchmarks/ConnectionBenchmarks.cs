@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
 using ServiceWire.NamedPipes;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
@@ -9,13 +7,11 @@ using System.Net;
 
 namespace ServiceWire.Benchmarks
 {
-    [MinIterationCount(4)]
-    [MaxIterationCount(16)]
-    [InvocationCount(64)]
     [SimpleJob(RuntimeMoniker.Net80, baseline: true)]
     [SimpleJob(RuntimeMoniker.Net60)]
     [SimpleJob(RuntimeMoniker.Net48)]
     [MemoryDiagnoser]
+    [HtmlExporter]
     public class ConnectionBenchmarks
     {
         private INetTester _tester;
