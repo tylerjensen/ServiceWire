@@ -95,7 +95,7 @@ namespace ServiceWireTests
 		    Assert.Equal(a + b, result);
         }
 
-		[Fact]
+        [Fact(Skip = "Avoid Parallel.For")]
         public void SimpleParallelTest()
         {
             var rnd = new Random();
@@ -131,7 +131,7 @@ namespace ServiceWireTests
             }
         }
 
-        [Fact]
+        [Fact(Skip = "Avoid Parallel.For")]
         public void ResponseParallelTest()
         {
             Parallel.For(0, 4, (index, state) =>

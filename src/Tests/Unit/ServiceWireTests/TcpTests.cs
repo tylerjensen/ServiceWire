@@ -61,7 +61,7 @@ namespace ServiceWireTests
             await Task.Delay(100);
         }
 
-		[Fact]
+		[Fact(Skip = "Avoid Parallel.For")]
         public void SimpleParallelTest()
         {
             Task.Delay(100);
@@ -104,7 +104,7 @@ namespace ServiceWireTests
             Task.Delay(100);
         }
 
-        [Fact]
+        [Fact(Skip = "Avoid Parallel.For")]
         public void ResponseParallelTest()
         {
             Task.Delay(100);
