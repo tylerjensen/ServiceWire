@@ -39,7 +39,7 @@ namespace ServiceWireTests
 
         private TcpZkEndPoint CreateZkClientEndPoint()
         {
-            return new TcpZkEndPoint(username, password, new IPEndPoint(_ipAddress, Port));
+            return new TcpZkEndPoint(username, password, new IPEndPoint(_ipAddress, Port), connectTimeOutMs: 5000); //expand timeout for CI/CD pipeline
         }
 
         public TcpZkTests()
