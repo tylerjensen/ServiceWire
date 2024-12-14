@@ -105,10 +105,13 @@ namespace ServiceWireTests
                 var a = rnd.Next(0, 100);
                 var b = rnd.Next(0, 100);
 
-                var result = _clientProxy.Proxy.Min(a, b);
-
-                if (Math.Min(a, b) != result) state.Break();
-                Assert.Equal(Math.Min(a, b), result);
+                using (var clientProxy = new NpClient<INetTester>(CreateEndPoint()))
+                {
+                    var result = clientProxy.Proxy.Min(a, b);
+                    if (Math.Min(a, b) != result) state.Break();
+                    Assert.Equal(Math.Min(a, b), result);
+                }
+                Task.Delay(100);
             });
         }
 
@@ -137,21 +140,25 @@ namespace ServiceWireTests
                 const int count = 5;
                 const int start = 0;
 
-                var result = _clientProxy.Proxy.Range(start, count);
-                for (var i = start; i < count; i++)
+                using (var clientProxy = new NpClient<INetTester>(CreateEndPoint()))
                 {
-                    int temp;
-                    if (result.TryGetValue(i, out temp))
+                    var result = clientProxy.Proxy.Range(start, count);
+                    for (var i = start; i < count; i++)
                     {
-                        if (i != temp) state.Break();
-                        Assert.Equal(i, temp);
-                    }
-                    else
-                    {
-                        state.Break();
-                        Assert.True(false);
+                        int temp;
+                        if (result.TryGetValue(i, out temp))
+                        {
+                            if (i != temp) state.Break();
+                            Assert.Equal(i, temp);
+                        }
+                        else
+                        {
+                            state.Break();
+                            Assert.True(false);
+                        }
                     }
                 }
+                Task.Delay(100);
             });
         }
 

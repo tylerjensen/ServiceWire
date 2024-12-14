@@ -52,14 +52,14 @@ namespace ServiceWireTests
             _tcphost = new TcpHost(CreateEndPoint(), zkRepository: _repo);
             _tcphost.AddService<INetTester>(_tester);
             _tcphost.Open();
-            Task.Delay(500);
+            Task.Delay(100);
             _clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint());
         }
 
         [Fact]
         public void SimpleZkTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             var rnd = new Random();
 
             var a = rnd.Next(0, 100);
@@ -67,13 +67,13 @@ namespace ServiceWireTests
 
             var result = _clientProxy.Proxy.Min(a, b);
             Assert.Equal<int>(Math.Min(a, b), result);
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
         [Fact]
         public async Task CalculateAsyncTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             var rnd = new Random();
 
 	        var a = rnd.Next(0, 100);
@@ -81,35 +81,37 @@ namespace ServiceWireTests
 
 		    var result = await _clientProxy.Proxy.CalculateAsync(a, b);
 		    Assert.Equal(a + b, result);
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
 		[Fact]
         public void SimpleParallelZkTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             var rnd = new Random();
             Parallel.For(0, 12, (index, state) =>
             {
                 var a = rnd.Next(0, 100);
                 var b = rnd.Next(0, 100);
 
-                var result = _clientProxy.Proxy.Min(a, b);
-
-                if (Math.Min(a, b) != result)
+                using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
                 {
-                    state.Break();
-                    Assert.Equal(Math.Min(a, b), result);
+                    var result = _clientProxy.Proxy.Min(a, b);
+                    if (Math.Min(a, b) != result)
+                    {
+                        state.Break();
+                        Assert.Equal(Math.Min(a, b), result);
+                    }
                 }
-                Task.Delay(500);
+                Task.Delay(100);
             });
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
         [Fact]
         public void ResponseZkTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             const int count = 50;
             const int start = 0;
 
@@ -127,38 +129,41 @@ namespace ServiceWireTests
                     Assert.True(false);
                 }
             }
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
         [Fact]
         public void ResponseParallelTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             Random rnd = new Random(DateTime.Now.Millisecond);
             Parallel.For(0, 12, (index, state) =>
             {
                 const int count = 50;
                 const int start = 0;
 
-                var result = _clientProxy.Proxy.Range(start, count);
-
-                for (var i = start; i < count; i++)
+                using (var clientProxy = new TcpClient<INetTester>(CreateZkClientEndPoint()))
                 {
-                    int temp;
-                    if (result.TryGetValue(i, out temp))
+                    var result = clientProxy.Proxy.Range(start, count);
+
+                    for (var i = start; i < count; i++)
                     {
-                        if(i != temp) state.Break();
-                        Assert.Equal(i, temp);
-                    }
-                    else
-                    {
-                        state.Break();
-                        Assert.True(false);
+                        int temp;
+                        if (result.TryGetValue(i, out temp))
+                        {
+                            if (i != temp) state.Break();
+                            Assert.Equal(i, temp);
+                        }
+                        else
+                        {
+                            state.Break();
+                            Assert.True(false);
+                        }
                     }
                 }
-                Task.Delay(500);
+                Task.Delay(100);
             });
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
         public void Dispose()

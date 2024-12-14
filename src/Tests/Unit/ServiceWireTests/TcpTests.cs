@@ -29,14 +29,14 @@ namespace ServiceWireTests
             _tcphost = new TcpHost(CreateEndPoint());
             _tcphost.AddService<INetTester>(_tester);
             _tcphost.Open();
-            Task.Delay(500);
+            Task.Delay(100);
             _clientProxy = new TcpClient<INetTester>(CreateEndPoint());
         }
 
         [Fact]
         public void SimpleTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             var rnd = new Random();
 
             var a = rnd.Next(0, 100);
@@ -44,13 +44,13 @@ namespace ServiceWireTests
 
             var result = _clientProxy.Proxy.Min(a, b);
             Assert.Equal(Math.Min(a, b), result);
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
         [Fact]
         public async Task CalculateAsyncTest()
         {
-            await Task.Delay(500);
+            await Task.Delay(100);
             var rnd = new Random();
 
 	        var a = rnd.Next(0, 100);
@@ -58,13 +58,13 @@ namespace ServiceWireTests
 
 		    var result = await _clientProxy.Proxy.CalculateAsync(a, b);
 		    Assert.Equal(a + b, result);
-            await Task.Delay(500);
+            await Task.Delay(100);
         }
 
 		[Fact]
         public void SimpleParallelTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             var rnd = new Random();
 
             Parallel.For(0, 4, (index, state) =>
@@ -72,22 +72,24 @@ namespace ServiceWireTests
                 var a = rnd.Next(0, 100);
                 var b = rnd.Next(0, 100);
 
-                var result = _clientProxy.Proxy.Min(a, b);
-
-                if (Math.Min(a, b) != result)
+                using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
                 {
-                    state.Break();
-                    Assert.Equal(Math.Min(a, b), result);
+                    var result = clientProxy.Proxy.Min(a, b);
+                    if (Math.Min(a, b) != result)
+                    {
+                        state.Break();
+                        Assert.Equal(Math.Min(a, b), result);
+                    }
                 }
-                Task.Delay(500);
+                Task.Delay(100);
             });
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
         [Fact]
         public void ResponseTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             const int count = 50;
             const int start = 0;
 
@@ -99,58 +101,61 @@ namespace ServiceWireTests
                 Assert.True(result.TryGetValue(i, out temp));
                 Assert.Equal(i, temp);
             }
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
         [Fact]
         public void ResponseParallelTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             Parallel.For(0, 4, (index, state) =>
             {
                 const int count = 50;
                 const int start = 0;
 
-                var result = _clientProxy.Proxy.Range(start, count);
-                for (var i = start; i < count; i++)
+                using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
                 {
-                    int temp;
-                    if (result.TryGetValue(i, out temp))
+                    var result = clientProxy.Proxy.Range(start, count);
+                    for (var i = start; i < count; i++)
                     {
-                        if (i != temp) state.Break();
-                        Assert.Equal(i, temp);
-                    }
-                    else
-                    {
-                        state.Break();
-                        Assert.True(false);
+                        int temp;
+                        if (result.TryGetValue(i, out temp))
+                        {
+                            if (i != temp) state.Break();
+                            Assert.Equal(i, temp);
+                        }
+                        else
+                        {
+                            state.Break();
+                            Assert.True(false);
+                        }
                     }
                 }
-                Task.Delay(500);
+                Task.Delay(100);
             });
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
         [Fact]
         public void ResponseWithOutParameterTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             int quantity = 0;
             var result = _clientProxy.Proxy.Get(Guid.NewGuid(), "SomeLabel", 45.65, out quantity);
             Assert.Equal(44, quantity);
             Assert.NotEqual(default(TestResponse), result);
             Assert.Equal("MyLabel", result.Label);
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
         [Fact]
         public void GetStringsTest()
         {
-            Task.Delay(500);
+            Task.Delay(100);
             var result = _clientProxy.Proxy.GetStrings();
             Assert.Equal(4, result.Length);
             Assert.Null(result[2]);
-            Task.Delay(500);
+            Task.Delay(100);
         }
 
 
