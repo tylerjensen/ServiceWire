@@ -20,7 +20,6 @@ namespace ServiceWireTests
         }
     }
 
-    [Collection("Sequential Collection")]
     public class TcpZkTests : IDisposable
     {
         private INetTester _tester;
