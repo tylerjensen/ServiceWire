@@ -6,6 +6,7 @@ using Xunit;
 
 namespace ServiceWireTests
 {
+    [Collection("Sequential Collection")]
     public class TcpTests : IDisposable
     {
         private INetTester _tester;
