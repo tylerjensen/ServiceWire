@@ -6,7 +6,7 @@ using Xunit;
 
 namespace ServiceWireTests
 {
-    [Collection("Sequential Collection")]
+    [Collection("Sequential Collection Tcp")]
     public class TcpTests : IDisposable
     {
         private INetTester _tester;
@@ -29,13 +29,14 @@ namespace ServiceWireTests
             _tcphost = new TcpHost(CreateEndPoint());
             _tcphost.AddService<INetTester>(_tester);
             _tcphost.Open();
-
+            Task.Delay(500);
             _clientProxy = new TcpClient<INetTester>(CreateEndPoint());
         }
 
         [Fact]
         public void SimpleTest()
         {
+            Task.Delay(500);
             var rnd = new Random();
 
             var a = rnd.Next(0, 100);
@@ -43,23 +44,27 @@ namespace ServiceWireTests
 
             var result = _clientProxy.Proxy.Min(a, b);
             Assert.Equal(Math.Min(a, b), result);
+            Task.Delay(500);
         }
 
         [Fact]
         public async Task CalculateAsyncTest()
         {
-	        var rnd = new Random();
+            await Task.Delay(500);
+            var rnd = new Random();
 
 	        var a = rnd.Next(0, 100);
 	        var b = rnd.Next(0, 100);
 
 		    var result = await _clientProxy.Proxy.CalculateAsync(a, b);
 		    Assert.Equal(a + b, result);
+            await Task.Delay(500);
         }
 
 		[Fact]
         public void SimpleParallelTest()
         {
+            Task.Delay(500);
             var rnd = new Random();
 
             Parallel.For(0, 4, (index, state) =>
@@ -74,12 +79,15 @@ namespace ServiceWireTests
                     state.Break();
                     Assert.Equal(Math.Min(a, b), result);
                 }
+                Task.Delay(500);
             });
+            Task.Delay(500);
         }
 
         [Fact]
         public void ResponseTest()
         {
+            Task.Delay(500);
             const int count = 50;
             const int start = 0;
 
@@ -91,11 +99,13 @@ namespace ServiceWireTests
                 Assert.True(result.TryGetValue(i, out temp));
                 Assert.Equal(i, temp);
             }
+            Task.Delay(500);
         }
 
         [Fact]
         public void ResponseParallelTest()
         {
+            Task.Delay(500);
             Parallel.For(0, 4, (index, state) =>
             {
                 const int count = 50;
@@ -116,25 +126,31 @@ namespace ServiceWireTests
                         Assert.True(false);
                     }
                 }
+                Task.Delay(500);
             });
+            Task.Delay(500);
         }
 
         [Fact]
         public void ResponseWithOutParameterTest()
         {
+            Task.Delay(500);
             int quantity = 0;
             var result = _clientProxy.Proxy.Get(Guid.NewGuid(), "SomeLabel", 45.65, out quantity);
             Assert.Equal(44, quantity);
             Assert.NotEqual(default(TestResponse), result);
             Assert.Equal("MyLabel", result.Label);
+            Task.Delay(500);
         }
 
         [Fact]
         public void GetStringsTest()
         {
+            Task.Delay(500);
             var result = _clientProxy.Proxy.GetStrings();
             Assert.Equal(4, result.Length);
             Assert.Null(result[2]);
+            Task.Delay(500);
         }
 
 

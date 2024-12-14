@@ -7,8 +7,13 @@ using Xunit;
 
 namespace ServiceWireTests
 {
-    [CollectionDefinition("Sequential Collection", DisableParallelization = true)]
-    public class SequentialCollection
+    [CollectionDefinition("Sequential Collection Tcp", DisableParallelization = true)]
+    public class SequentialCollectionTcp
+    {
+    }
+
+    [CollectionDefinition("Sequential Collection TcpZk", DisableParallelization = true)]
+    public class SequentialCollectionTcpZk
     {
     }
 }
