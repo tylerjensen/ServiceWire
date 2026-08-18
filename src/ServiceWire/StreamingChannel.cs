@@ -19,6 +19,11 @@ namespace ServiceWire
         private readonly ParameterTransferHelper _parameterTransferHelper;
         private ServiceSyncInfo _syncInfo;
         private ZkCrypto _zkCrypto;
+        private bool _useWireV2;
+        private bool _syncInfoFromCache;
+        private volatile bool _v2Confirmed;
+        private int _nextCorrelationId;
+        private ServiceSyncInfoCacheKey _syncInfoCacheKey;
         private readonly Dictionary<string, MethodSyncInfo> _methodCache = new Dictionary<string, MethodSyncInfo>(StringComparer.Ordinal);
         private readonly Dictionary<int, Type> _returnTypeCache = new Dictionary<int, Type>();
         private readonly Dictionary<int, Func<object, object>> _taskFromResultCache = new Dictionary<int, Func<object, object>>();
@@ -125,8 +130,10 @@ namespace ServiceWire
             }
 
             var serviceSyncInfoCacheKey = new ServiceSyncInfoCacheKey(serviceType, ChannelIdentifier);
+            _syncInfoCacheKey = serviceSyncInfoCacheKey;
 
-            if (!SyncInfoCache.TryGetValue(serviceSyncInfoCacheKey, out _syncInfo))
+            _syncInfoFromCache = SyncInfoCache.TryGetValue(serviceSyncInfoCacheKey, out _syncInfo);
+            if (!_syncInfoFromCache)
             {
                 //write the message type
                 _binWriter.Write((int)MessageType.SyncInterface);
@@ -155,6 +162,9 @@ namespace ServiceWire
                 _syncInfo = _serializer.Deserialize<ServiceSyncInfo>(bytes);
                 SyncInfoCache.AddOrUpdate(serviceSyncInfoCacheKey, _syncInfo, (t, info) => _syncInfo);
             }
+
+            //a pre-7.0 server leaves CapabilityFlags at 0 and the channel stays on the v1 wire
+            _useWireV2 = 0 != (_syncInfo.CapabilityFlags & (int)ProtocolCapabilities.WireV2);
         }
 
         /// <summary>
@@ -172,6 +182,8 @@ namespace ServiceWire
                 var useCrypto = null != _zkCrypto;
                 var debugEnabled = _logger.IsDebugEnabled();
                 var methodSyncInfo = ResolveMethod(metaData);
+                if (_useWireV2)
+                    return InvokeMethodV2(methodSyncInfo, useCrypto, debugEnabled, parameters);
                 var ident = methodSyncInfo.MethodIdent;
 
                 //write the message type
@@ -241,21 +253,129 @@ namespace ServiceWire
                 if (messageType == MessageType.ThrowException)
                     throw (Exception)outParams[0];
 
-                var returnType = GetReturnType(methodSyncInfo);
-                if (IsTaskType(returnType) && outParams.Length > 0)
+                return ApplyTaskConversion(methodSyncInfo, outParams);
+            }
+        }
+
+        /// <summary>
+        /// Sends a framed MethodInvocation2 request and reads its Response2 frame.
+        /// Only called after the server advertised ProtocolCapabilities.WireV2.
+        /// </summary>
+        private object[] InvokeMethodV2(MethodSyncInfo methodSyncInfo, bool useCrypto, bool debugEnabled, object[] parameters)
+        {
+            //build the payload first so the frame length is known
+            byte[] payload;
+            using (var ms = new MemoryStream())
+            using (var bw = new BinaryWriter(ms))
+            {
+                if (useCrypto)
                 {
-                    if (returnType.IsGenericType)
+                    byte[] callData;
+                    using (var innerMs = new MemoryStream())
+                    using (var innerBw = new BinaryWriter(innerMs))
                     {
-                        var taskFromResult = GetTaskFromResultConverter(methodSyncInfo.MethodIdent, returnType);
-                        outParams[0] = taskFromResult(outParams[0]);
+                        _parameterTransferHelper.SendParameters(_syncInfo.UseCompression,
+                            _syncInfo.CompressionThreshold, innerBw, WireVersion.V2, parameters);
+                        callData = innerMs.ToArray();
+                    }
+                    if (debugEnabled) _logger.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(callData));
+                    var encData = _zkCrypto.Encrypt(callData);
+                    bw.Write(encData.Length);
+                    bw.Write(encData);
+                    if (debugEnabled) _logger.Debug("Encrypted data sent to server: {0}", Convert.ToBase64String(encData));
+                } else
+                {
+                    _parameterTransferHelper.SendParameters(_syncInfo.UseCompression,
+                        _syncInfo.CompressionThreshold, bw, WireVersion.V2, parameters);
+                }
+                bw.Flush();
+                payload = ms.ToArray();
+            }
+
+            const int requestHeaderLength = 13; //correlationId + serviceKey + methodIdent + flags
+            var correlationId = System.Threading.Interlocked.Increment(ref _nextCorrelationId);
+            try
+            {
+                _binWriter.Write((int)MessageType.MethodInvocation2);
+                _binWriter.Write(requestHeaderLength + payload.Length);
+                _binWriter.Write(correlationId);
+                _binWriter.Write(_syncInfo.ServiceKeyIndex);
+                _binWriter.Write(methodSyncInfo.MethodIdent);
+                _binWriter.Write((byte)(useCrypto ? 1 : 0));
+                _binWriter.Write(payload);
+                _binWriter.Flush();
+
+                var messageType = (MessageType)_binReader.ReadInt32();
+                if (messageType != MessageType.Response2)
+                    throw new IOException(string.Format("Expected Response2 but received message type {0}; stream is desynchronized.", messageType));
+                var frameLength = _binReader.ReadInt32();
+                var responseCorrelationId = _binReader.ReadInt32();
+                var status = _binReader.ReadByte();
+                var frameFlags = _binReader.ReadByte();
+                const int responseHeaderLength = 6; //correlationId + status + flags
+                var responsePayloadLength = frameLength - responseHeaderLength;
+                var responsePayload = responsePayloadLength > 0 ? _binReader.ReadBytes(responsePayloadLength) : new byte[0];
+                if (responseCorrelationId != correlationId)
+                    throw new IOException("Response correlation id does not match the request; stream is desynchronized.");
+                _v2Confirmed = true;
+
+                if (status == 2) throw new Exception("Unknown method.");
+
+                object[] outParams;
+                using (var ms = new MemoryStream(responsePayload))
+                using (var br = new BinaryReader(ms))
+                {
+                    if (0 != (frameFlags & 1))
+                    {
+                        var len = br.ReadInt32();
+                        var encData = br.ReadBytes(len);
+                        if (debugEnabled) _logger.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
+                        var data = _zkCrypto.Decrypt(encData);
+                        if (debugEnabled) _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
+                        using (var decMs = new MemoryStream(data))
+                        using (var decBr = new BinaryReader(decMs))
+                        {
+                            outParams = _parameterTransferHelper.ReceiveParameters(decBr, WireVersion.V2);
+                        }
                     } else
                     {
-                        outParams[0] = Task.CompletedTask;
+                        outParams = _parameterTransferHelper.ReceiveParameters(br, WireVersion.V2);
                     }
                 }
 
-                return outParams;
+                if (status == 1) throw (Exception)outParams[0];
+
+                return ApplyTaskConversion(methodSyncInfo, outParams);
             }
+            catch (Exception e) when (!_v2Confirmed && _syncInfoFromCache && (e is EndOfStreamException || e is IOException))
+            {
+                //the WireV2 capability came from the process-wide cache, and the very first
+                //v2 exchange died before any response byte: the server was likely replaced
+                //by one that does not understand v2 (it drops the connection after reading
+                //only the message type, before executing anything). Evict the stale entry
+                //so the next channel renegotiates, and surface a descriptive error.
+                SyncInfoCache.TryRemove(_syncInfoCacheKey, out _);
+                throw new InvalidOperationException(
+                    "The server rejected a v2 framed request that was sent based on cached capability data. " +
+                    "The stale cache entry has been evicted; create a new channel to renegotiate.", e);
+            }
+        }
+
+        private object[] ApplyTaskConversion(MethodSyncInfo methodSyncInfo, object[] outParams)
+        {
+            var returnType = GetReturnType(methodSyncInfo);
+            if (IsTaskType(returnType) && outParams.Length > 0)
+            {
+                if (returnType.IsGenericType)
+                {
+                    var taskFromResult = GetTaskFromResultConverter(methodSyncInfo.MethodIdent, returnType);
+                    outParams[0] = taskFromResult(outParams[0]);
+                } else
+                {
+                    outParams[0] = Task.CompletedTask;
+                }
+            }
+            return outParams;
         }
 
         private MethodSyncInfo ResolveMethod(string metaData)

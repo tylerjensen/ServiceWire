@@ -102,7 +102,8 @@ namespace ServiceWire.Aspects
                 ServiceKeyIndex = 0,
                 CompressionThreshold = 131072,
                 UseCompression = false,
-                MethodInfos = syncSyncInfos.ToArray()
+                MethodInfos = syncSyncInfos.ToArray(),
+                CapabilityFlags = (int)ProtocolCapabilities.WireV2
             };
             _serviceInstance.ServiceSyncInfo = serviceSyncInfo;
         }

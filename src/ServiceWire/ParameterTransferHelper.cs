@@ -62,6 +62,11 @@ namespace ServiceWire
 
         public void SendParameters(bool useCompression, int compressionThreshold, BinaryWriter writer, params object[] parameters)
         {
+            SendParameters(useCompression, compressionThreshold, writer, WireVersion.V1, parameters);
+        }
+
+        internal void SendParameters(bool useCompression, int compressionThreshold, BinaryWriter writer, WireVersion version, object[] parameters)
+        {
             //write how many parameters are coming
             writer.Write(parameters.Length);
             //write data for each parameter
@@ -74,7 +79,14 @@ namespace ServiceWire
                 {
                     Type type = parameter.GetType();
                     byte typeByte = GetParameterType(type);
-                    
+
+                    if (version == WireVersion.V2)
+                    {
+                        //v2 peers negotiated binary DateTime encodings
+                        if (typeByte == ParameterTypes.DateTime) typeByte = ParameterTypes.DateTime2;
+                        else if (typeByte == ParameterTypes.ArrayDateTime) typeByte = ParameterTypes.ArrayDateTime2;
+                    }
+
                     byte[] dataBytes = null;
 
                     switch (typeByte)
@@ -203,6 +215,9 @@ namespace ServiceWire
                         case ParameterTypes.DateTime:
                             writer.Write(((DateTime)parameter).ToString("o"));
                             break;
+                        case ParameterTypes.DateTime2:
+                            writer.Write(((DateTime)parameter).ToBinary());
+                            break;
 
                         case ParameterTypes.ArrayBool:
                             var bools = (bool[])parameter;
@@ -315,6 +330,11 @@ namespace ServiceWire
                             writer.Write(dts.Length);
                             foreach (var dt in dts) writer.Write(dt.ToString("o"));
                             break;
+                        case ParameterTypes.ArrayDateTime2:
+                            var dts2 = (DateTime[])parameter;
+                            writer.Write(dts2.Length);
+                            foreach (var dt in dts2) writer.Write(dt.ToBinary());
+                            break;
 
                         case ParameterTypes.ByteArray:
                         case ParameterTypes.CompressedByteArray:
@@ -342,6 +362,11 @@ namespace ServiceWire
         }
 
         public object[] ReceiveParameters(BinaryReader reader)
+        {
+            return ReceiveParameters(reader, WireVersion.V1);
+        }
+
+        internal object[] ReceiveParameters(BinaryReader reader, WireVersion version)
         {
             int parameterCount = reader.ReadInt32();
             object[] parameters = new object[parameterCount];
@@ -425,6 +450,10 @@ namespace ServiceWire
                         case ParameterTypes.DateTime:
                             var dtstr = reader.ReadString();
                             parameters[i] = DateTime.Parse(dtstr, null, DateTimeStyles.RoundtripKind);
+                            break;
+                        case ParameterTypes.DateTime2:
+                            if (version == WireVersion.V1) goto default; //v2 codes are illegal in v1 streams
+                            parameters[i] = DateTime.FromBinary(reader.ReadInt64());
                             break;
 
                         case ParameterTypes.ArrayBool:
@@ -548,6 +577,13 @@ namespace ServiceWire
                                 dts[x] = DateTime.Parse(adtstr, null, DateTimeStyles.RoundtripKind);
                             }
                             parameters[i] = dts;
+                            break;
+                        case ParameterTypes.ArrayDateTime2:
+                            if (version == WireVersion.V1) goto default; //v2 codes are illegal in v1 streams
+                            var d2len = reader.ReadInt32();
+                            var dts2 = new DateTime[d2len];
+                            for (int x = 0; x < d2len; x++) dts2[x] = DateTime.FromBinary(reader.ReadInt64());
+                            parameters[i] = dts2;
                             break;
 
                         case ParameterTypes.Unknown:

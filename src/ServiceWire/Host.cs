@@ -99,6 +99,13 @@ namespace ServiceWire
         }
 
         /// <summary>
+        /// When true (the default), services added to this host advertise the v2 wire
+        /// protocol to 7.0+ clients. Set false before calling AddService to force all
+        /// clients onto the v1 wire (useful when phasing a mixed-version fleet).
+        /// </summary>
+        public bool EnableWireV2 { get; set; } = true;
+
+        /// <summary>
         /// Enable parameter compression. Default is false. There is a performance penalty
         /// when using compression that should be weighed against network transmission
         /// costs of large data parameters being serialized across the wire.
@@ -234,7 +241,8 @@ namespace ServiceWire
                 ServiceKeyIndex = keyIndex,
                 CompressionThreshold = _compressionThreshold,
                 UseCompression = _useCompression,
-                MethodInfos = syncSyncInfos.ToArray()
+                MethodInfos = syncSyncInfos.ToArray(),
+                CapabilityFlags = EnableWireV2 ? (int)ProtocolCapabilities.WireV2 : (int)ProtocolCapabilities.None
             };
             instance.ServiceSyncInfo = serviceSyncInfo;
             return instance;
@@ -322,6 +330,10 @@ namespace ServiceWire
                             case MessageType.MethodInvocation:
                                 if (_stats.IsEnabled()) sw = Stopwatch.StartNew();
                                 ProcessInvocation(zkSession, binReader, binWriter, sw);
+                                break;
+                            case MessageType.MethodInvocation2:
+                                if (_stats.IsEnabled()) sw = Stopwatch.StartNew();
+                                ProcessInvocation2(zkSession, binReader, binWriter, sw);
                                 break;
                             case MessageType.TerminateConnection:
                                 doContinue = false;
@@ -415,12 +427,114 @@ namespace ServiceWire
             if (debugEnabled) _log.Debug("SyncInterface for {0} in {1}ms.", syncCat, sw.ElapsedMilliseconds);
         }
 
+        /// <summary>
+        /// Reads (and, when ZK is enabled, decrypts) the parameter block.
+        /// </summary>
+        private object[] MaterializeParameters(ZkSession session, BinaryReader binReader, WireVersion version)
+        {
+            if (_requireZk)
+            {
+                var debugEnabled = _log.IsDebugEnabled();
+                var len = binReader.ReadInt32();
+                var encData = binReader.ReadBytes(len);
+                if (debugEnabled) _log.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
+                var data = session.Crypto.Decrypt(encData);
+                if (debugEnabled) _log.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
+                using (var ms = new MemoryStream(data))
+                using (var br = new BinaryReader(ms))
+                {
+                    return _parameterTransferHelper.ReceiveParameters(br, version);
+                }
+            }
+            return _parameterTransferHelper.ReceiveParameters(binReader, version);
+        }
+
+        /// <summary>
+        /// Invokes the service method and packs return value plus byref parameter
+        /// echoes. Returns ReturnValues, or ThrowException with the exception in
+        /// returnParameters[0]. This block is shared verbatim between wire versions;
+        /// its exception semantics (conditional TargetInvocationException unwrap)
+        /// must not change.
+        /// </summary>
+        private MessageType ExecuteMethod(ServiceInstance invokedInstance, MethodInfo method, int methodHashCode,
+            object[] parameters, bool[] isByRef, out object[] returnParameters)
+        {
+            try
+            {
+                Func<object, object[], object> invoker;
+                object returnValue = (null != invokedInstance.CompiledMethods
+                        && invokedInstance.CompiledMethods.TryGetValue(methodHashCode, out invoker))
+                    ? invoker(invokedInstance.SingletonInstance, parameters)
+                    : method.Invoke(invokedInstance.SingletonInstance, parameters);
+                if (returnValue is Task task)
+                {
+                    task.GetAwaiter().GetResult();
+                    var taskType = task.GetType();
+                    Func<Task, object> resultGetter;
+                    if (!_taskResultGetters.TryGetValue(taskType, out resultGetter))
+                    {
+                        resultGetter = MethodInvokerCompiler.TryCompileTaskResultGetter(taskType);
+                        _taskResultGetters.TryAdd(taskType, resultGetter);
+                    }
+                    returnValue = resultGetter?.Invoke(task);
+                }
+                //the result to the client is the return value (null if void) and the input parameters
+                returnParameters = new object[1 + parameters.Length];
+                returnParameters[0] = returnValue;
+                for (int i = 0; i < parameters.Length; i++)
+                    returnParameters[i + 1] = isByRef[i] ? parameters[i] : null;
+                return MessageType.ReturnValues;
+            }
+            catch (Exception ex)
+            {
+                //an exception was caught. Rethrow it client side
+                returnParameters = new object[] { (ex is TargetInvocationException && ex.InnerException != null) ? ex.InnerException : ex };
+                return MessageType.ThrowException;
+            }
+        }
+
+        /// <summary>
+        /// Writes (and, when ZK is enabled, encrypts) the return parameter block.
+        /// </summary>
+        private void WriteReturnParameters(ZkSession session, BinaryWriter binWriter, ServiceInstance invokedInstance,
+            object[] returnParameters, WireVersion version)
+        {
+            if (_requireZk)
+            {
+                var debugEnabled = _log.IsDebugEnabled();
+                byte[] data;
+                using (var ms = new MemoryStream())
+                using (var bw = new BinaryWriter(ms))
+                {
+                    _parameterTransferHelper.SendParameters(
+                        invokedInstance.ServiceSyncInfo.UseCompression,
+                        invokedInstance.ServiceSyncInfo.CompressionThreshold,
+                        bw,
+                        version,
+                        returnParameters);
+                    data = ms.ToArray();
+                }
+                if (debugEnabled) _log.Debug("Unencrypted data sent server: {0}", Convert.ToBase64String(data));
+                var encData = session.Crypto.Encrypt(data);
+                if (debugEnabled) _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
+                binWriter.Write(encData.Length);
+                binWriter.Write(encData);
+            } else
+            {
+                _parameterTransferHelper.SendParameters(
+                    invokedInstance.ServiceSyncInfo.UseCompression,
+                    invokedInstance.ServiceSyncInfo.CompressionThreshold,
+                    binWriter,
+                    version,
+                    returnParameters);
+            }
+        }
+
         private void ProcessInvocation(ZkSession session, BinaryReader binReader, BinaryWriter binWriter, Stopwatch sw)
         {
             //read service instance key
             var cat = "unknown";
             var stat = "MethodInvocation";
-            var debugEnabled = _log.IsDebugEnabled();
             int invokedServiceKey = binReader.ReadInt32();
             ServiceInstance invokedInstance;
             if (_services.TryGetValue(invokedServiceKey, out invokedInstance))
@@ -437,90 +551,18 @@ namespace ServiceWire
                     invokedInstance.MethodParametersByRef.TryGetValue(methodHashCode, out isByRef);
 
                     //read parameter data
-                    object[] parameters;
-                    if (_requireZk)
-                    {
-                        var len = binReader.ReadInt32();
-                        var encData = binReader.ReadBytes(len);
-                        if (debugEnabled) _log.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
-                        var data = session.Crypto.Decrypt(encData);
-                        if (debugEnabled) _log.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
-                        using (var ms = new MemoryStream(data))
-                        using (var br = new BinaryReader(ms))
-                        {
-                            parameters = _parameterTransferHelper.ReceiveParameters(br);
-                        }
-                    } else
-                    {
-                        parameters = _parameterTransferHelper.ReceiveParameters(binReader);
-                    }
+                    object[] parameters = MaterializeParameters(session, binReader, WireVersion.V1);
 
                     //invoke the method
                     object[] returnParameters;
-                    var returnMessageType = MessageType.ReturnValues;
-                    try
-                    {
-                        Func<object, object[], object> invoker;
-                        object returnValue = (null != invokedInstance.CompiledMethods
-                                && invokedInstance.CompiledMethods.TryGetValue(methodHashCode, out invoker))
-                            ? invoker(invokedInstance.SingletonInstance, parameters)
-                            : method.Invoke(invokedInstance.SingletonInstance, parameters);
-                        if (returnValue is Task task)
-                        {
-                            task.GetAwaiter().GetResult();
-                            var taskType = task.GetType();
-                            Func<Task, object> resultGetter;
-                            if (!_taskResultGetters.TryGetValue(taskType, out resultGetter))
-                            {
-                                resultGetter = MethodInvokerCompiler.TryCompileTaskResultGetter(taskType);
-                                _taskResultGetters.TryAdd(taskType, resultGetter);
-                            }
-                            returnValue = resultGetter?.Invoke(task);
-                        }
-                        //the result to the client is the return value (null if void) and the input parameters
-                        returnParameters = new object[1 + parameters.Length];
-                        returnParameters[0] = returnValue;
-                        for (int i = 0; i < parameters.Length; i++)
-                            returnParameters[i + 1] = isByRef[i] ? parameters[i] : null;
-                    }
-                    catch (Exception ex)
-                    {
-                        //an exception was caught. Rethrow it client side
-                        returnParameters = new object[] { (ex is TargetInvocationException && ex.InnerException != null) ? ex.InnerException : ex };
-                        returnMessageType = MessageType.ThrowException;
-                    }
+                    var returnMessageType = ExecuteMethod(invokedInstance, method, methodHashCode, parameters, isByRef, out returnParameters);
 
                     //send the result back to the client
                     // (1) write the message type
                     binWriter.Write((int)returnMessageType);
 
                     // (2) write the return parameters
-                    if (_requireZk)
-                    {
-                        byte[] data;
-                        using (var ms = new MemoryStream())
-                        using (var bw = new BinaryWriter(ms))
-                        {
-                            _parameterTransferHelper.SendParameters(
-                                invokedInstance.ServiceSyncInfo.UseCompression,
-                                invokedInstance.ServiceSyncInfo.CompressionThreshold,
-                                bw,
-                                returnParameters);
-                            data = ms.ToArray();
-                        }
-                        if (debugEnabled) _log.Debug("Unencrypted data sent server: {0}", Convert.ToBase64String(data));
-                        var encData = session.Crypto.Encrypt(data);
-                        if (debugEnabled) _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
-                        binWriter.Write(encData.Length);
-                        binWriter.Write(encData);
-                    } else
-                    {
-                        _parameterTransferHelper.SendParameters(
-                            invokedInstance.ServiceSyncInfo.UseCompression,
-                            invokedInstance.ServiceSyncInfo.CompressionThreshold,
-                            binWriter,
-                            returnParameters);
-                    }
+                    WriteReturnParameters(session, binWriter, invokedInstance, returnParameters, WireVersion.V1);
                 } else
                 {
                     binWriter.Write((int)MessageType.UnknownMethod);
@@ -531,6 +573,86 @@ namespace ServiceWire
             }
 
             //flush
+            binWriter.Flush();
+            if (_stats.IsEnabled()) _stats.Log(cat, stat, sw.ElapsedMilliseconds);
+        }
+
+        /// <summary>
+        /// Handles a framed v2 invocation. The whole request payload is buffered up
+        /// front (bounded by the frame length), so a payload that fails to decode is
+        /// fully consumed and answered with an error response instead of killing the
+        /// connection the way a v1 decode failure must.
+        /// </summary>
+        private void ProcessInvocation2(ZkSession session, BinaryReader binReader, BinaryWriter binWriter, Stopwatch sw)
+        {
+            const int requestHeaderLength = 13; //correlationId + serviceKey + methodIdent + flags
+            var cat = "unknown";
+            var stat = "MethodInvocation2";
+
+            var frameLength = binReader.ReadInt32();
+            var correlationId = binReader.ReadInt32();
+            var invokedServiceKey = binReader.ReadInt32();
+            var methodHashCode = binReader.ReadInt32();
+            binReader.ReadByte(); //frameFlags; ZK is a connection-level property server side
+            var payloadLength = frameLength - requestHeaderLength;
+            var payload = payloadLength > 0 ? binReader.ReadBytes(payloadLength) : new byte[0];
+            if (payloadLength > 0 && payload.Length < payloadLength)
+                throw new EndOfStreamException("Truncated MethodInvocation2 frame.");
+
+            byte status;
+            object[] returnParameters = null;
+            ServiceInstance invokedInstance;
+            MethodInfo method = null;
+            if (_services.TryGetValue(invokedServiceKey, out invokedInstance)
+                && invokedInstance.InterfaceMethods.TryGetValue(methodHashCode, out method))
+            {
+                cat = invokedInstance.InterfaceType.Name;
+                stat = method.Name;
+                bool[] isByRef;
+                invokedInstance.MethodParametersByRef.TryGetValue(methodHashCode, out isByRef);
+                try
+                {
+                    object[] parameters;
+                    using (var ms = new MemoryStream(payload))
+                    using (var br = new BinaryReader(ms))
+                    {
+                        parameters = MaterializeParameters(session, br, WireVersion.V2);
+                    }
+                    var messageType = ExecuteMethod(invokedInstance, method, methodHashCode, parameters, isByRef, out returnParameters);
+                    status = messageType == MessageType.ReturnValues ? (byte)0 : (byte)1;
+                }
+                catch (Exception ex)
+                {
+                    //decode failure: the frame is already consumed, so the connection survives
+                    _log.Error("MethodInvocation2 decode error: {0}", ex.ToString().Flatten());
+                    status = 1;
+                    returnParameters = new object[] { new InvalidOperationException("Failed to decode request: " + ex.Message) };
+                }
+            } else
+            {
+                status = 2; //unknown service or method, correlated to the exact call
+            }
+
+            //buffer the response payload to compute the frame length
+            byte[] responsePayload = new byte[0];
+            if (status != 2)
+            {
+                using (var ms = new MemoryStream())
+                using (var bw = new BinaryWriter(ms))
+                {
+                    WriteReturnParameters(session, bw, invokedInstance, returnParameters, WireVersion.V2);
+                    bw.Flush();
+                    responsePayload = ms.ToArray();
+                }
+            }
+
+            const int responseHeaderLength = 6; //correlationId + status + flags
+            binWriter.Write((int)MessageType.Response2);
+            binWriter.Write(responseHeaderLength + responsePayload.Length);
+            binWriter.Write(correlationId);
+            binWriter.Write(status);
+            binWriter.Write((byte)(_requireZk ? 1 : 0));
+            binWriter.Write(responsePayload);
             binWriter.Flush();
             if (_stats.IsEnabled()) _stats.Log(cat, stat, sw.ElapsedMilliseconds);
         }

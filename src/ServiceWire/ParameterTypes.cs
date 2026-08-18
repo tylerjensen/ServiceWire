@@ -23,6 +23,9 @@ namespace ServiceWire
         internal const byte Type        = 0x12;
         internal const byte Guid        = 0x13;
         internal const byte DateTime    = 0x14;
+        //v2 frames only: DateTime.ToBinary() as int64 (preserves Kind semantics
+        //across machines like the v1 round-trip "o" string, without parsing)
+        internal const byte DateTime2   = 0x15;
 
         internal const byte CompressedByteArray     = 0x20;
         internal const byte CompressedCharArray     = 0x21;
@@ -44,5 +47,7 @@ namespace ServiceWire
         internal const byte ArrayType        = 0x52;
         internal const byte ArrayGuid        = 0x53;
         internal const byte ArrayDateTime    = 0x54;
+        //v2 frames only: int32 length + int64 DateTime.ToBinary() per element
+        internal const byte ArrayDateTime2   = 0x55;
     }
 }
