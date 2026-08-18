@@ -23,10 +23,19 @@ namespace ServiceWire.Benchmarks
         private TcpClient<INetTester> _tcpClientJson;
 
         private IPAddress _ipAddress;
-        private const int Port = 8084;
-        private IPEndPoint CreateTcpEndPoint(int portOffset)
+        private IPEndPoint _endPoint;
+        private IPEndPoint _endPointJson;
+
+        //fixed ports fail intermittently with address-in-use: each benchmark child
+        //process rebinds the same port, and connections closed by the previous
+        //child's server linger in TIME_WAIT, which blocks the next bind on Windows
+        private static IPEndPoint GetFreeEndPoint()
         {
-            return new IPEndPoint(_ipAddress, Port + portOffset);
+            var probe = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
+            probe.Start();
+            var endPoint = (IPEndPoint)probe.LocalEndpoint;
+            probe.Stop();
+            return endPoint;
         }
 
         public TcpBenchmarks()
@@ -43,16 +52,19 @@ namespace ServiceWire.Benchmarks
         [GlobalSetup]
         public void GlobalSetup()
         {
-            _tcphost = new TcpHost(CreateTcpEndPoint(0));
+            _endPoint = GetFreeEndPoint();
+            _endPointJson = GetFreeEndPoint();
+
+            _tcphost = new TcpHost(_endPoint);
             _tcphost.AddService<INetTester>(_tester);
             _tcphost.Open();
 
-            _tcphostJson = new TcpHost(CreateTcpEndPoint(1));
+            _tcphostJson = new TcpHost(_endPointJson);
             _tcphostJson.AddService<INetTester>(_tester);
             _tcphostJson.Open();
 
-            _tcpClient = new TcpClient<INetTester>(CreateTcpEndPoint(0));
-            _tcpClientJson = new TcpClient<INetTester>(CreateTcpEndPoint(1));
+            _tcpClient = new TcpClient<INetTester>(_endPoint);
+            _tcpClientJson = new TcpClient<INetTester>(_endPointJson);
         }
 
         [GlobalCleanup]
