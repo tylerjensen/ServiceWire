@@ -9,12 +9,9 @@ namespace ServiceWire
         {
             using (var msCompressed = new MemoryStream())
             {
-                using (var msObj = new MemoryStream(data))
+                using (GZipStream gzs = new GZipStream(msCompressed, CompressionMode.Compress))
                 {
-                    using (GZipStream gzs = new GZipStream(msCompressed, CompressionMode.Compress))
-                    {
-                        msObj.CopyTo(gzs);
-                    }
+                    gzs.Write(data, 0, data.Length);
                 }
                 return msCompressed.ToArray();
             }
@@ -28,7 +25,6 @@ namespace ServiceWire
                 {
                     gzs.CopyTo(msObj);
                 }
-                msObj.Seek(0, SeekOrigin.Begin);
                 return msObj.ToArray();
             }
         }

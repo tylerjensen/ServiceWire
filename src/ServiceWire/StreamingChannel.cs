@@ -1,6 +1,7 @@
 using ServiceWire.ZeroKnowledge;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -18,6 +19,9 @@ namespace ServiceWire
         private readonly ParameterTransferHelper _parameterTransferHelper;
         private ServiceSyncInfo _syncInfo;
         private ZkCrypto _zkCrypto;
+        private readonly Dictionary<string, MethodSyncInfo> _methodCache = new Dictionary<string, MethodSyncInfo>(StringComparer.Ordinal);
+        private readonly Dictionary<int, Type> _returnTypeCache = new Dictionary<int, Type>();
+        private readonly Dictionary<int, MethodInfo> _taskFromResultCache = new Dictionary<int, MethodInfo>();
 
         // keep cached sync info to avoid redundant wire trips
         private static readonly ConcurrentDictionary<ServiceSyncInfoCacheKey, ServiceSyncInfo> SyncInfoCache = new ConcurrentDictionary<ServiceSyncInfoCacheKey, ServiceSyncInfo>();
@@ -47,9 +51,10 @@ namespace ServiceWire
         protected override void SyncInterface(Type serviceType,
             string username = null, string password = null)
         {
+            var debugEnabled = _logger.IsDebugEnabled();
             if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
             {
-                var sw = Stopwatch.StartNew();
+                var sw = _stats.IsEnabled() ? Stopwatch.StartNew() : null;
                 _logger.Debug("Zk authentiation started for: {0}, {1}", username, password);
                 //do zk protocol authentication
                 var sr = new ZkProtocol();
@@ -64,7 +69,7 @@ namespace ServiceWire
                 _logger.Debug("username sent to server: {0}", username);
 
                 _binWriter.Write(aClientEphemeral); //always 32 bytes
-                _logger.Debug("ClientEphemeral (A) sent to server: {0}", Convert.ToBase64String(aClientEphemeral));
+                if (debugEnabled) _logger.Debug("ClientEphemeral (A) sent to server: {0}", Convert.ToBase64String(aClientEphemeral));
 
                 // get response from server
                 var userFound = _binReader.ReadBoolean();
@@ -74,9 +79,9 @@ namespace ServiceWire
                     throw new InvalidCredentialException("authentication failed");
                 }
                 var salt = _binReader.ReadBytes(32);
-                _logger.Debug("Salt received from server: {0}", Convert.ToBase64String(salt));
+                if (debugEnabled) _logger.Debug("Salt received from server: {0}", Convert.ToBase64String(salt));
                 var bServerEphemeral = _binReader.ReadBytes(32);
-                _logger.Debug("ServerEphemeral (B) received from server: {0}", Convert.ToBase64String(bServerEphemeral));
+                if (debugEnabled) _logger.Debug("ServerEphemeral (B) received from server: {0}", Convert.ToBase64String(bServerEphemeral));
 
                 // Step 3. Client and server calculate random scramble of ephemeral hash values exchanged.
                 var clientScramble = sr.CalculateRandomScramble(aClientEphemeral, bServerEphemeral);
@@ -92,7 +97,7 @@ namespace ServiceWire
                 _binWriter.Write((int)MessageType.ZkProof);
                 _binWriter.Write(clientSessionHash); //always 32 bytes
 
-                _logger.Debug("ClientSessionKey Hash sent to server: {0}", Convert.ToBase64String(clientSessionHash));
+                if (debugEnabled) _logger.Debug("ClientSessionKey Hash sent to server: {0}", Convert.ToBase64String(clientSessionHash));
 
                 // get response
                 var serverVerified = _binReader.ReadBoolean();
@@ -106,14 +111,17 @@ namespace ServiceWire
                     clientSessionHash, clientSessionKey);
                 if (!serverSessionHash.IsEqualTo(clientServerSessionHash))
                 {
-                    _logger.Debug("Server hash mismatch. InvalidCredentialException thrown. Has received: {0}", Convert.ToBase64String(serverSessionHash));
+                    if (debugEnabled) _logger.Debug("Server hash mismatch. InvalidCredentialException thrown. Has received: {0}", Convert.ToBase64String(serverSessionHash));
                     throw new InvalidCredentialException("authentication failed");
                 }
-                _logger.Debug("Server Hash match. Received from server: {0}", Convert.ToBase64String(serverSessionHash));
+                if (debugEnabled) _logger.Debug("Server Hash match. Received from server: {0}", Convert.ToBase64String(serverSessionHash));
                 _zkCrypto = new ZkCrypto(clientSessionKey, clientScramble);
                 _logger.Debug("Zk authentiation completed successfully.");
-                sw.Stop();
-                _stats.Log("ZkAuthentication", sw.ElapsedMilliseconds);
+                if (sw != null)
+                {
+                    sw.Stop();
+                    _stats.Log("ZkAuthentication", sw.ElapsedMilliseconds);
+                }
             }
 
             var serviceSyncInfoCacheKey = new ServiceSyncInfoCacheKey(serviceType, ChannelIdentifier);
@@ -140,9 +148,9 @@ namespace ServiceWire
                 var bytes = _binReader.ReadBytes(len);
                 if (null != _zkCrypto)
                 {
-                    _logger.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(bytes));
+                    if (debugEnabled) _logger.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(bytes));
                     bytes = _zkCrypto.Decrypt(bytes);
-                    _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(bytes));
+                    if (debugEnabled) _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(bytes));
                 }
                 _syncInfo = _serializer.Deserialize<ServiceSyncInfo>(bytes);
                 SyncInfoCache.AddOrUpdate(serviceSyncInfoCacheKey, _syncInfo, (t, info) => _syncInfo);
@@ -162,37 +170,9 @@ namespace ServiceWire
             lock (_syncRoot)
             {
                 var useCrypto = null != _zkCrypto;
-                var mdata = metaData.Split('|');
-
-                //find the matching server side method ident
-                var ident = -1;
-                for (int index = 0; index < _syncInfo.MethodInfos.Length; index++)
-                {
-                    var si = _syncInfo.MethodInfos[index];
-                    //first of all the method names must match
-                    if (si.MethodName == mdata[0])
-                    {
-                        //second of all the parameter types and -count must match
-                        if (mdata.Length - 1 == si.ParameterTypes.Length)
-                        {
-                            var matchingParameterTypes = true;
-                            for (int i = 0; i < si.ParameterTypes.Length; i++)
-                                if (!mdata[i + 1].Equals(si.ParameterTypes[i]))
-                                {
-                                    matchingParameterTypes = false;
-                                    break;
-                                }
-                            if (matchingParameterTypes)
-                            {
-                                ident = si.MethodIdent;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (ident < 0)
-                    throw new Exception(string.Format("Cannot match method '{0}' to its server side equivalent", mdata[0]));
+                var debugEnabled = _logger.IsDebugEnabled();
+                var methodSyncInfo = ResolveMethod(metaData);
+                var ident = methodSyncInfo.MethodIdent;
 
                 //write the message type
                 _binWriter.Write((int)MessageType.MethodInvocation);
@@ -217,11 +197,11 @@ namespace ServiceWire
                             parameters);
                         callData = ms.ToArray();
                     }
-                    _logger.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(callData));
+                    if (debugEnabled) _logger.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(callData));
                     var encData = _zkCrypto.Encrypt(callData);
                     _binWriter.Write(encData.Length);
                     _binWriter.Write(encData);
-                    _logger.Debug("Encrypted data sent to server: {0}", Convert.ToBase64String(encData));
+                    if (debugEnabled) _logger.Debug("Encrypted data sent to server: {0}", Convert.ToBase64String(encData));
                 } else
                 {
                     //send the parameters
@@ -232,7 +212,6 @@ namespace ServiceWire
                 }
 
                 _binWriter.Flush();
-                _stream.Flush();
 
                 // Read the result of the invocation.
                 MessageType messageType = (MessageType)_binReader.ReadInt32();
@@ -245,9 +224,9 @@ namespace ServiceWire
                     var len = _binReader.ReadInt32();
                     var encData = _binReader.ReadBytes(len);
 
-                    _logger.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
+                    if (debugEnabled) _logger.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
                     var data = _zkCrypto.Decrypt(encData);
-                    _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
+                    if (debugEnabled) _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
 
                     using (var ms = new MemoryStream(data))
                     using (var br = new BinaryReader(ms))
@@ -262,14 +241,12 @@ namespace ServiceWire
                 if (messageType == MessageType.ThrowException)
                     throw (Exception)outParams[0];
 
-                MethodSyncInfo methodSyncInfo = _syncInfo.MethodInfos[ident];
-                var returnType = methodSyncInfo.MethodReturnType.ToType();
+                var returnType = GetReturnType(methodSyncInfo);
                 if (IsTaskType(returnType) && outParams.Length > 0)
                 {
                     if (returnType.IsGenericType)
                     {
-                        MethodInfo methodInfo = typeof(Task).GetMethod(nameof(Task.FromResult))
-                            .MakeGenericMethod(new[] { returnType.GenericTypeArguments[0] });
+                        var methodInfo = GetTaskFromResultMethod(methodSyncInfo.MethodIdent, returnType);
                         outParams[0] = methodInfo.Invoke(null, new[] { outParams[0] });
                     } else
                     {
@@ -279,6 +256,63 @@ namespace ServiceWire
 
                 return outParams;
             }
+        }
+
+        private MethodSyncInfo ResolveMethod(string metaData)
+        {
+            MethodSyncInfo cachedMethod;
+            if (_methodCache.TryGetValue(metaData, out cachedMethod))
+                return cachedMethod;
+
+            var mdata = metaData.Split('|');
+            for (int index = 0; index < _syncInfo.MethodInfos.Length; index++)
+            {
+                var method = _syncInfo.MethodInfos[index];
+                if (method.MethodName != mdata[0] || mdata.Length - 1 != method.ParameterTypes.Length)
+                    continue;
+
+                var matchingParameterTypes = true;
+                for (int i = 0; i < method.ParameterTypes.Length; i++)
+                {
+                    if (!mdata[i + 1].Equals(method.ParameterTypes[i]))
+                    {
+                        matchingParameterTypes = false;
+                        break;
+                    }
+                }
+
+                if (matchingParameterTypes)
+                {
+                    _methodCache.Add(metaData, method);
+                    return method;
+                }
+            }
+
+            throw new Exception(string.Format("Cannot match method '{0}' to its server side equivalent", mdata[0]));
+        }
+
+        private Type GetReturnType(MethodSyncInfo methodSyncInfo)
+        {
+            Type returnType;
+            if (_returnTypeCache.TryGetValue(methodSyncInfo.MethodIdent, out returnType))
+                return returnType;
+
+            returnType = methodSyncInfo.MethodReturnType.ToType();
+            if (returnType != null)
+                _returnTypeCache.Add(methodSyncInfo.MethodIdent, returnType);
+            return returnType;
+        }
+
+        private MethodInfo GetTaskFromResultMethod(int methodIdent, Type returnType)
+        {
+            MethodInfo methodInfo;
+            if (_taskFromResultCache.TryGetValue(methodIdent, out methodInfo))
+                return methodInfo;
+
+            methodInfo = typeof(Task).GetMethod(nameof(Task.FromResult))
+                .MakeGenericMethod(new[] { returnType.GenericTypeArguments[0] });
+            _taskFromResultCache.Add(methodIdent, methodInfo);
+            return methodInfo;
         }
 
         private static bool IsTaskType(Type type)

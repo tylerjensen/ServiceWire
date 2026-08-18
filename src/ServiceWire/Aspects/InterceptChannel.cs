@@ -9,6 +9,7 @@ namespace ServiceWire.Aspects
     {
         private InterceptPoint _interceptPoint;
         private ServiceInstance _serviceInstance;
+        private readonly ConcurrentDictionary<string, MethodSyncInfo> _methodCache = new ConcurrentDictionary<string, MethodSyncInfo>(StringComparer.Ordinal);
 
         public InterceptPoint InterceptPoint { get { return _interceptPoint; } }
 
@@ -107,44 +108,12 @@ namespace ServiceWire.Aspects
             Type returnType = null;
             try
             {
-                var mdata = metaData.Split('|');
-                var ident = -1;
-                for (int index = 0; index < _serviceInstance.ServiceSyncInfo.MethodInfos.Length; index++)
+                var methodSyncInfo = ResolveMethod(metaData);
+                var ident = methodSyncInfo.MethodIdent;
+
+                MethodInfo method;
+                if (_serviceInstance.InterfaceMethods.TryGetValue(ident, out method))
                 {
-                    var si = _serviceInstance.ServiceSyncInfo.MethodInfos[index];
-                    //first of all the method names must match
-                    if (si.MethodName == mdata[0])
-                    {
-                        //second of all the parameter types and -count must match
-                        if (mdata.Length - 1 == si.ParameterTypes.Length)
-                        {
-                            var matchingParameterTypes = true;
-                            for (int i = 0; i < si.ParameterTypes.Length; i++)
-                            {
-                                if (!mdata[i + 1].Equals(si.ParameterTypes[i]))
-                                {
-                                    matchingParameterTypes = false;
-                                    break;
-                                }
-                            }
-
-                            if (matchingParameterTypes)
-                            {
-                                ident = si.MethodIdent;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (ident < 0)
-                    throw new Exception(string.Format("Cannot match method '{0}' to its implementation.", mdata[0]));
-
-                if (_serviceInstance.InterfaceMethods.ContainsKey(ident))
-                {
-                    MethodInfo method;
-                    _serviceInstance.InterfaceMethods.TryGetValue(ident, out method);
-
                     bool[] isByRef;
                     _serviceInstance.MethodParametersByRef.TryGetValue(ident, out isByRef);
 
@@ -155,7 +124,7 @@ namespace ServiceWire.Aspects
                     {
                         if (null != _interceptPoint.Cut && null != _interceptPoint.Cut.PreInvoke)
                         {
-                            _interceptPoint.Cut.PreInvoke(_interceptPoint.Id, mdata[0], parameters);
+                            _interceptPoint.Cut.PreInvoke(_interceptPoint.Id, methodSyncInfo.MethodName, parameters);
                         }
 
                         object returnValue = method.Invoke(_serviceInstance.SingletonInstance, parameters);
@@ -175,7 +144,7 @@ namespace ServiceWire.Aspects
                         bool shouldThrow = true;
                         if (null != _interceptPoint.Cut && null != _interceptPoint.Cut.ExceptionHandler)
                         {
-                            shouldThrow = _interceptPoint.Cut.ExceptionHandler(_interceptPoint.Id, mdata[0], parameters,
+                            shouldThrow = _interceptPoint.Cut.ExceptionHandler(_interceptPoint.Id, methodSyncInfo.MethodName, parameters,
                                 exceptionOfConcern);
                         }
                         if (shouldThrow)
@@ -194,18 +163,51 @@ namespace ServiceWire.Aspects
                     {
                         if (null != _interceptPoint.Cut && null != _interceptPoint.Cut.PostInvoke)
                         {
-                            _interceptPoint.Cut.PostInvoke(_interceptPoint.Id, mdata[0], returnParameters);
+                            _interceptPoint.Cut.PostInvoke(_interceptPoint.Id, methodSyncInfo.MethodName, returnParameters);
                         }
                     }
                     return returnParameters;
                 }
-                throw new Exception(string.Format("Cannot match method '{0}' to its implementation.", mdata[0]));
+                throw new Exception(string.Format("Cannot match method '{0}' to its implementation.", methodSyncInfo.MethodName));
             }
             catch
             {
                 //log?
                 throw;
             }
+        }
+
+        private MethodSyncInfo ResolveMethod(string metaData)
+        {
+            MethodSyncInfo cachedMethod;
+            if (_methodCache.TryGetValue(metaData, out cachedMethod))
+                return cachedMethod;
+
+            var mdata = metaData.Split('|');
+            for (int index = 0; index < _serviceInstance.ServiceSyncInfo.MethodInfos.Length; index++)
+            {
+                var method = _serviceInstance.ServiceSyncInfo.MethodInfos[index];
+                if (method.MethodName != mdata[0] || mdata.Length - 1 != method.ParameterTypes.Length)
+                    continue;
+
+                var matchingParameterTypes = true;
+                for (int i = 0; i < method.ParameterTypes.Length; i++)
+                {
+                    if (!mdata[i + 1].Equals(method.ParameterTypes[i]))
+                    {
+                        matchingParameterTypes = false;
+                        break;
+                    }
+                }
+
+                if (matchingParameterTypes)
+                {
+                    _methodCache.TryAdd(metaData, method);
+                    return method;
+                }
+            }
+
+            throw new Exception(string.Format("Cannot match method '{0}' to its implementation.", mdata[0]));
         }
 
         protected override void Dispose(bool disposing)

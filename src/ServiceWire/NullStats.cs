@@ -14,4 +14,12 @@
         {
         }
     }
+
+    internal static class StatsExtensions
+    {
+        public static bool IsEnabled(this IStats stats)
+        {
+            return stats != null && !(stats is NullStats);
+        }
+    }
 }

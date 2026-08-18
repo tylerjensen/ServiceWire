@@ -55,6 +55,16 @@ Portions of this library (dynamic proxy) are a derivative of RemotingLite by Fra
 
 ## History
 
+### .NET 10 Compatibility and Performance Improvements 6.0.0
+
+1. Fixed dynamic proxy channel validation on .NET 10 by using `Type.IsAssignableFrom`. Many thanks to [IvoTops](https://github.com/IvoTops) for contributing this fix in [pull request #98](https://github.com/tylerjensen/ServiceWire/pull/98).
+2. Updated unit and integration test runs to .NET 10 while retaining .NET Framework 4.8 coverage on Windows. The ServiceWire package continues to target .NET Standard 2.0 for broad compatibility.
+3. Cached method resolution, return-type conversion, and task reflection metadata to reduce repeated work during RPC calls.
+4. Avoided stopwatch, statistics, debug formatting, and Base64 conversion overhead when the corresponding instrumentation is disabled.
+5. Removed a redundant stream flush after the binary writer has already been flushed.
+6. Reduced dictionary lookups and allocations in parameter-type mapping, service method dispatch, and pooled value storage.
+7. Simplified the default GZip compression path to avoid an unnecessary input stream and decompression seek.
+
 ### NamedPipeServerStreamFactory and Other Improvements 5.6.0
 
 1. Contributed fix where accepting TCP clients synchronously may block new clients from being accepted until the terminating request is received on the synchronous client.

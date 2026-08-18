@@ -1,20 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net10.0</TargetFrameworks>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-		<TargetFrameworks>net6.0;net8.0;net48</TargetFrameworks>
+		<TargetFrameworks>net10.0;net48</TargetFrameworks>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<ApplicationIcon />
 		<OutputType>Exe</OutputType>
 		<StartupObject />
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
-		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
 	</PropertyGroup>
 
 	<ItemGroup>

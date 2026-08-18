@@ -9,8 +9,43 @@ namespace ServiceWire
 {
     public sealed class ParameterTransferHelper
     {
-        [ThreadStatic]
-        private static Dictionary<Type, byte> _parameterTypes;
+        private static readonly Dictionary<Type, byte> _parameterTypes = new Dictionary<Type, byte>
+        {
+            { typeof(bool), ParameterTypes.Bool },
+            { typeof(byte), ParameterTypes.Byte },
+            { typeof(sbyte), ParameterTypes.SByte },
+            { typeof(char), ParameterTypes.Char },
+            { typeof(decimal), ParameterTypes.Decimal },
+            { typeof(double), ParameterTypes.Double },
+            { typeof(float), ParameterTypes.Float },
+            { typeof(int), ParameterTypes.Int },
+            { typeof(uint), ParameterTypes.UInt },
+            { typeof(long), ParameterTypes.Long },
+            { typeof(ulong), ParameterTypes.ULong },
+            { typeof(short), ParameterTypes.Short },
+            { typeof(ushort), ParameterTypes.UShort },
+            { typeof(string), ParameterTypes.String },
+            { typeof(byte[]), ParameterTypes.ByteArray },
+            { typeof(char[]), ParameterTypes.CharArray },
+            { typeof(Type), ParameterTypes.Type },
+            { typeof(Guid), ParameterTypes.Guid },
+            { typeof(DateTime), ParameterTypes.DateTime },
+            { typeof(bool[]), ParameterTypes.ArrayBool },
+            { typeof(sbyte[]), ParameterTypes.ArraySByte },
+            { typeof(decimal[]), ParameterTypes.ArrayDecimal },
+            { typeof(double[]), ParameterTypes.ArrayDouble },
+            { typeof(float[]), ParameterTypes.ArrayFloat },
+            { typeof(int[]), ParameterTypes.ArrayInt },
+            { typeof(uint[]), ParameterTypes.ArrayUInt },
+            { typeof(long[]), ParameterTypes.ArrayLong },
+            { typeof(ulong[]), ParameterTypes.ArrayULong },
+            { typeof(short[]), ParameterTypes.ArrayShort },
+            { typeof(ushort[]), ParameterTypes.ArrayUShort },
+            { typeof(string[]), ParameterTypes.ArrayString },
+            { typeof(Type[]), ParameterTypes.ArrayType },
+            { typeof(Guid[]), ParameterTypes.ArrayGuid },
+            { typeof(DateTime[]), ParameterTypes.ArrayDateTime }
+        };
 
         private const string NULL_STRING = "\u2811\u16D8\u270C"; //3 chars from 3 different unicode sets
 
@@ -464,53 +499,10 @@ namespace ServiceWire
 
         private byte GetParameterType(Type type)
         {
-            InitializeParamTypes();
-            if (_parameterTypes.ContainsKey(type))
-                return _parameterTypes[type];
+            byte parameterType;
+            if (_parameterTypes.TryGetValue(type, out parameterType))
+                return parameterType;
             return ParameterTypes.Unknown;
-        }
-
-        private void InitializeParamTypes()
-        {
-            if (_parameterTypes == null)
-            {
-                _parameterTypes = new Dictionary<Type, byte>();
-                _parameterTypes.Add(typeof(bool), ParameterTypes.Bool);
-                _parameterTypes.Add(typeof(byte), ParameterTypes.Byte);
-                _parameterTypes.Add(typeof(sbyte), ParameterTypes.SByte);
-                _parameterTypes.Add(typeof(char), ParameterTypes.Char);
-                _parameterTypes.Add(typeof(decimal), ParameterTypes.Decimal);
-                _parameterTypes.Add(typeof(double), ParameterTypes.Double);
-                _parameterTypes.Add(typeof(float), ParameterTypes.Float);
-                _parameterTypes.Add(typeof(int), ParameterTypes.Int);
-                _parameterTypes.Add(typeof(uint), ParameterTypes.UInt);
-                _parameterTypes.Add(typeof(long), ParameterTypes.Long);
-                _parameterTypes.Add(typeof(ulong), ParameterTypes.ULong);
-                _parameterTypes.Add(typeof(short), ParameterTypes.Short);
-                _parameterTypes.Add(typeof(ushort), ParameterTypes.UShort);
-                _parameterTypes.Add(typeof(string), ParameterTypes.String);
-                _parameterTypes.Add(typeof(byte[]), ParameterTypes.ByteArray);
-                _parameterTypes.Add(typeof(char[]), ParameterTypes.CharArray);
-                _parameterTypes.Add(typeof(Type), ParameterTypes.Type);
-                _parameterTypes.Add(typeof(Guid), ParameterTypes.Guid);
-                _parameterTypes.Add(typeof(DateTime), ParameterTypes.DateTime);
-
-                _parameterTypes.Add(typeof(bool[]), ParameterTypes.ArrayBool);
-                _parameterTypes.Add(typeof(sbyte[]), ParameterTypes.ArraySByte);
-                _parameterTypes.Add(typeof(decimal[]), ParameterTypes.ArrayDecimal);
-                _parameterTypes.Add(typeof(double[]), ParameterTypes.ArrayDouble);
-                _parameterTypes.Add(typeof(float[]), ParameterTypes.ArrayFloat);
-                _parameterTypes.Add(typeof(int[]), ParameterTypes.ArrayInt);
-                _parameterTypes.Add(typeof(uint[]), ParameterTypes.ArrayUInt);
-                _parameterTypes.Add(typeof(long[]), ParameterTypes.ArrayLong);
-                _parameterTypes.Add(typeof(ulong[]), ParameterTypes.ArrayULong);
-                _parameterTypes.Add(typeof(short[]), ParameterTypes.ArrayShort);
-                _parameterTypes.Add(typeof(ushort[]), ParameterTypes.ArrayUShort);
-                _parameterTypes.Add(typeof(string[]), ParameterTypes.ArrayString);
-                _parameterTypes.Add(typeof(Type[]), ParameterTypes.ArrayType);
-                _parameterTypes.Add(typeof(Guid[]), ParameterTypes.ArrayGuid);
-                _parameterTypes.Add(typeof(DateTime[]), ParameterTypes.ArrayDateTime);
-            }
         }
     }
 }

@@ -22,4 +22,14 @@
         {
         }
     }
+
+    internal static class LogExtensions
+    {
+        public static bool IsDebugEnabled(this ILog logger)
+        {
+            if (logger == null || logger is NullLogger) return false;
+            var serviceWireLogger = logger as Logger;
+            return serviceWireLogger == null || serviceWireLogger.LogLevel >= LogLevel.Debug;
+        }
+    }
 }

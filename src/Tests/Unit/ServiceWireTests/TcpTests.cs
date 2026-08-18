@@ -58,6 +58,7 @@ namespace ServiceWireTests
 
 		    var result = await _clientProxy.Proxy.CalculateAsync(a, b);
 		    Assert.Equal(a + b, result);
+            Assert.Equal(a + b, await _clientProxy.Proxy.CalculateAsync(a, b));
             await Task.Delay(100);
         }
 

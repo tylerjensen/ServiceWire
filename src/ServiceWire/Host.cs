@@ -25,6 +25,7 @@ namespace ServiceWire
         protected ConcurrentDictionary<string, int> _serviceKeys = new ConcurrentDictionary<string, int>();
         protected ConcurrentDictionary<int, ServiceInstance> _services = new ConcurrentDictionary<int, ServiceInstance>();
         protected readonly ParameterTransferHelper _parameterTransferHelper;
+        private readonly ConcurrentDictionary<Type, PropertyInfo> _taskResultProperties = new ConcurrentDictionary<Type, PropertyInfo>();
 
         public Host(ISerializer serializer, ICompressor compressor)
         {
@@ -270,7 +271,7 @@ namespace ServiceWire
                 ZkSession zkSession = null;
                 do
                 {
-                    var sw = Stopwatch.StartNew();
+                    Stopwatch sw = null;
                     try
                     {
                         //read message type
@@ -286,9 +287,11 @@ namespace ServiceWire
                                 doContinue = zkSession.ProcessZkProof(binReader, binWriter, sw);
                                 break;
                             case MessageType.SyncInterface:
+                                if (_log.IsDebugEnabled()) sw = Stopwatch.StartNew();
                                 ProcessSync(zkSession, binReader, binWriter, sw);
                                 break;
                             case MessageType.MethodInvocation:
+                                if (_stats.IsEnabled()) sw = Stopwatch.StartNew();
                                 ProcessInvocation(zkSession, binReader, binWriter, sw);
                                 break;
                             case MessageType.TerminateConnection:
@@ -304,7 +307,7 @@ namespace ServiceWire
                         _log.Error("Error in ProcessRequest: {0}", e.ToString().Flatten());
                         doContinue = false;
                     }
-                    sw.Stop();
+                    if (sw != null) sw.Stop();
                 }
                 while (doContinue);
             }
@@ -322,6 +325,7 @@ namespace ServiceWire
         private void ProcessSync(ZkSession session, BinaryReader binReader, BinaryWriter binWriter, Stopwatch sw)
         {
             var syncCat = "Sync";
+            var debugEnabled = _log.IsDebugEnabled();
 
             string serviceTypeName;
             if (_requireZk)
@@ -360,11 +364,11 @@ namespace ServiceWire
                     {
                         if (_requireZk)
                         {
-                            _log.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(syncBytes));
+                            if (debugEnabled) _log.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(syncBytes));
                             var encData = session.Crypto.Encrypt(syncBytes);
                             binWriter.Write(encData.Length);
                             binWriter.Write(encData);
-                            _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
+                            if (debugEnabled) _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
                         }
                         else
                         {
@@ -379,7 +383,7 @@ namespace ServiceWire
                 binWriter.Write(0);
             }
             binWriter.Flush();
-            _log.Debug("SyncInterface for {0} in {1}ms.", syncCat, sw.ElapsedMilliseconds);
+            if (debugEnabled) _log.Debug("SyncInterface for {0} in {1}ms.", syncCat, sw.ElapsedMilliseconds);
         }
 
         private void ProcessInvocation(ZkSession session, BinaryReader binReader, BinaryWriter binWriter, Stopwatch sw)
@@ -387,6 +391,7 @@ namespace ServiceWire
             //read service instance key
             var cat = "unknown";
             var stat = "MethodInvocation";
+            var debugEnabled = _log.IsDebugEnabled();
             int invokedServiceKey = binReader.ReadInt32();
             ServiceInstance invokedInstance;
             if (_services.TryGetValue(invokedServiceKey, out invokedInstance))
@@ -394,10 +399,9 @@ namespace ServiceWire
                 cat = invokedInstance.InterfaceType.Name;
                 //read the method identifier
                 int methodHashCode = binReader.ReadInt32();
-                if (invokedInstance.InterfaceMethods.ContainsKey(methodHashCode))
+                MethodInfo method;
+                if (invokedInstance.InterfaceMethods.TryGetValue(methodHashCode, out method))
                 {
-                    MethodInfo method;
-                    invokedInstance.InterfaceMethods.TryGetValue(methodHashCode, out method);
                     stat = method.Name;
 
                     bool[] isByRef;
@@ -409,9 +413,9 @@ namespace ServiceWire
                     {
                         var len = binReader.ReadInt32();
                         var encData = binReader.ReadBytes(len);
-                        _log.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
+                        if (debugEnabled) _log.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
                         var data = session.Crypto.Decrypt(encData);
-                        _log.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
+                        if (debugEnabled) _log.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
                         using (var ms = new MemoryStream(data))
                         using (var br = new BinaryReader(ms))
                         {
@@ -431,7 +435,13 @@ namespace ServiceWire
                         if (returnValue is Task task)
                         {
                             task.GetAwaiter().GetResult();
-                            var prop = task.GetType().GetProperty("Result");
+                            var taskType = task.GetType();
+                            PropertyInfo prop;
+                            if (!_taskResultProperties.TryGetValue(taskType, out prop))
+                            {
+                                prop = taskType.GetProperty("Result");
+                                if (prop != null) _taskResultProperties.TryAdd(taskType, prop);
+                            }
                             returnValue = prop?.GetValue(task);
                         }
                         //the result to the client is the return value (null if void) and the input parameters
@@ -465,9 +475,9 @@ namespace ServiceWire
                                 returnParameters);
                             data = ms.ToArray();
                         }
-                        _log.Debug("Unencrypted data sent server: {0}", Convert.ToBase64String(data));
+                        if (debugEnabled) _log.Debug("Unencrypted data sent server: {0}", Convert.ToBase64String(data));
                         var encData = session.Crypto.Encrypt(data);
-                        _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
+                        if (debugEnabled) _log.Debug("Encrypted data sent server: {0}", Convert.ToBase64String(encData));
                         binWriter.Write(encData.Length);
                         binWriter.Write(encData);
                     } else
@@ -489,7 +499,7 @@ namespace ServiceWire
 
             //flush
             binWriter.Flush();
-            _stats.Log(cat, stat, sw.ElapsedMilliseconds);
+            if (_stats.IsEnabled()) _stats.Log(cat, stat, sw.ElapsedMilliseconds);
         }
 
         #region IDisposable Members

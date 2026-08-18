@@ -29,6 +29,7 @@ namespace ServiceWireTests
             };
             var t = Interceptor.Intercept<ISimpleMath>(new SimpleMath(), cc);
             var a = t.Add(1, 2);
+            Assert.Equal(7, t.Add(3, 4));
             Assert.False(string.IsNullOrEmpty(preInvokeInfo));
             Assert.False(string.IsNullOrEmpty(postInvokeInfo));
             Assert.True(string.IsNullOrEmpty(exceptionHandlerInfo));
