@@ -95,11 +95,44 @@ Wire protocol v2 (the default on both transports; negotiated, so it is never sen
 6. The v2 frame costs a few microseconds per call, measurable only on loopback with strictly sequential callers; on a real network it is far below the round-trip time and, on TCP, pipelining dominates. Three opt-outs force the classic v1 wire when a strictly sequential local workload matters: `Host.EnableWireV2 = false` (before `AddService`) for all clients of a host, and `TcpEndPoint.UseWireV2 = false` / `NpEndPoint.UseWireV2 = false` per client.
 7. In-place server downgrades with a stale cached capability produce a descriptive error and evict the cache so the next channel renegotiates.
 
-Measured on loopback against 6.0.1 (5,000-call batches, .NET 8, same machine, v2 defaults): named pipes sequential small calls +20-30%, named pipes 100-int array echo +5x to +9x, named pipes DateTime echo +20-50%, TCP 8-thread shared proxy up to +2x (pipelining; run-to-run variance is high), TCP DateTime echo level, TCP sequential small calls level to about -20% depending on machine load (the v1 opt-outs recover the classic path; forcing v1 on named pipes measured about +50% over 6.0.1 for sequential small calls thanks to the Tier 1 fixes alone).
-
 Opt-in additions (defaults preserve prior behavior): TCP receive/send timeouts on `TcpEndPoint` and `TcpHost`, and a persistent log file writer via `LoggerBase.PersistentFileWriter`.
 
 A new interop test matrix runs the published ServiceWire 6.0.1 package as a separate process against 7.0 in both directions across TCP and named pipes, with and without compression, in CI.
+
+#### Benchmark comparison: 6.0.1 vs 7.0.0
+
+Both versions were measured with the identical modernized benchmark suite (BenchmarkDotNet 0.15.8) on the same machine on the same day: Windows 11, AMD Ryzen Threadripper PRO 5975WX, .NET SDK 10.0.204, with 7.0.0 running its v2-wire defaults. Means are microseconds per call; lower is better. "Faster by" is the reduction in mean call time from 6.0.1 to 7.0.0.
+
+Steady-state calls (persistent host and client):
+
+| Benchmark | .NET 10 6.0.1 | .NET 10 7.0.0 | Faster by | .NET 8 6.0.1 | .NET 8 7.0.0 | Faster by | .NET 4.8 6.0.1 | .NET 4.8 7.0.0 | Faster by |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| NpSim | 27.9 | 14.9 | 47% | 27.9 | 15.3 | 45% | 32.7 | 18.0 | 45% |
+| NpSimJson | 27.7 | 14.4 | 48% | 27.9 | 15.8 | 43% | 32.7 | 18.2 | 44% |
+| NpRg | 66.5 | 19.7 | 70% | 72.7 | 22.9 | 68% | 129.5 | 46.9 | 64% |
+| NpRgJson | 68.1 | 26.9 | 60% | 80.0 | 30.1 | 62% | 137.8 | 54.2 | 61% |
+| NpCxOut | 65.1 | 20.5 | 69% | 71.0 | 22.2 | 69% | 103.3 | 36.4 | 65% |
+| NpCxOutJson | 67.0 | 22.3 | 67% | 74.8 | 24.7 | 67% | 107.4 | 43.8 | 59% |
+| TcpSim | 47.9 | 40.9 | 14% | 48.1 | 41.7 | 13% | 56.8 | 48.9 | 14% |
+| TcpSimJson | 47.4 | 40.8 | 14% | 48.1 | 41.8 | 13% | 57.5 | 49.5 | 14% |
+| TcpRg | 91.9 | 51.7 | 44% | 97.5 | 54.5 | 44% | 161.0 | 84.8 | 47% |
+| TcpRgJson | 91.9 | 51.1 | 44% | 97.6 | 55.5 | 43% | 160.1 | 84.5 | 47% |
+| TcpCxOut | 87.7 | 51.7 | 41% | 94.1 | 54.3 | 42% | 130.1 | 76.3 | 41% |
+| TcpCxOutJson | 86.6 | 51.7 | 40% | 93.3 | 54.6 | 42% | 130.5 | 76.0 | 42% |
+
+Connection setup (host and client created and torn down per operation; jobs bounded to avoid Windows ephemeral-port exhaustion):
+
+| Benchmark | .NET 10 6.0.1 | .NET 10 7.0.0 | .NET 8 6.0.1 | .NET 8 7.0.0 | .NET 4.8 6.0.1 | .NET 4.8 7.0.0 |
+|---|---:|---:|---:|---:|---:|---:|
+| TcpConn | 15,385 | 1,114 | 15,496 | 1,111 | 976 | 1,083 |
+| NpConn | 331 | 507 | 328 | 451 | 322 | 530 |
+
+Notes on the comparison:
+
+1. The 6.0.1 `TcpConn` figure of ~15.4 ms on modern runtimes is real: the old connect path busy-waited on `SpinWait.SpinUntil`, which degrades badly there. 7.0.0 replaces it with an event wait, making TCP connection setup roughly 14x faster on .NET 8/10 and about on par on .NET Framework 4.8.
+2. Named-pipe connection setup is 0.1-0.2 ms slower in 7.0.0 (split read/write buffered streams and larger pipe buffers per connection). The steady-state per-call savings repay that within a handful of calls on any connection that is actually used.
+3. These benchmarks only send small arguments from the client (large payloads flow server to client). Shapes they do not cover, measured separately on the same machine: a client sending an `int[1000]` over named pipes is roughly 10x faster in 7.0.0 (the 6.x pipe client issued one write syscall per array element), concurrent callers sharing one TCP proxy gain up to 2x from v2 pipelining, and `DateTime`-heavy payloads avoid string formatting and parsing entirely on the v2 wire.
+4. The v2 frame costs a few microseconds and a little over 1 KB of allocation per call relative to the v1 wire; the Tier 1 optimizations more than cover it in every scenario above. Strictly sequential loopback workloads that want the absolute minimum per-call overhead can force v1 via the opt-outs (item 6 above); forcing v1 on named pipes measured about 50% faster than 6.0.1 for sequential small calls with 320 B allocated per call.
 
 ### Connection and Logging Reliability Fixes 6.0.1
 

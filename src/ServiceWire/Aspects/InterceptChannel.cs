@@ -56,8 +56,6 @@ namespace ServiceWire.Aspects
                     for (int i = 0; i < isByRef.Length; i++)
                         isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
                     _serviceInstance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
-                    var compiled = MethodInvokerCompiler.TryCompile(mi);
-                    if (null != compiled) _serviceInstance.CompiledMethods.TryAdd(currentMethodIdent, compiled);
                     currentMethodIdent++;
                 }
             }
@@ -74,8 +72,6 @@ namespace ServiceWire.Aspects
                     for (int i = 0; i < isByRef.Length; i++)
                         isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
                     _serviceInstance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
-                    var compiled = MethodInvokerCompiler.TryCompile(mi);
-                    if (null != compiled) _serviceInstance.CompiledMethods.TryAdd(currentMethodIdent, compiled);
                     currentMethodIdent++;
                 }
             }
@@ -133,9 +129,11 @@ namespace ServiceWire.Aspects
                             _interceptPoint.Cut.PreInvoke(_interceptPoint.Id, methodSyncInfo.MethodName, parameters);
                         }
 
-                        Func<object, object[], object> invoker;
-                        object returnValue = (null != _serviceInstance.CompiledMethods
-                                && _serviceInstance.CompiledMethods.TryGetValue(ident, out invoker))
+                        //compiled lazily on first invocation; see Host.ExecuteMethod
+                        Func<object, object[], object> invoker = null;
+                        if (null != _serviceInstance.CompiledMethods)
+                            invoker = _serviceInstance.CompiledMethods.GetOrAdd(ident, _ => MethodInvokerCompiler.TryCompile(method));
+                        object returnValue = (null != invoker)
                             ? invoker(_serviceInstance.SingletonInstance, parameters)
                             : method.Invoke(_serviceInstance.SingletonInstance, parameters);
                         //the result to the client is the return value (null if void) and the input parameters

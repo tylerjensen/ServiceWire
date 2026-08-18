@@ -14,8 +14,8 @@ namespace ServiceWire
         public ServiceSyncInfo ServiceSyncInfo { get; set; }
 
         /// <summary>
-        /// Compiled invokers per method ident. Methods with byref parameters are
-        /// absent and fall back to MethodInfo.Invoke.
+        /// Invokers compiled lazily on each method's first invocation. Methods with
+        /// byref parameters cache null and fall back to MethodInfo.Invoke.
         /// </summary>
         internal ConcurrentDictionary<int, Func<object, object[], object>> CompiledMethods { get; set; }
     }

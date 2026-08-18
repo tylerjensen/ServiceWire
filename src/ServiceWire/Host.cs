@@ -195,8 +195,6 @@ namespace ServiceWire
                     for (int i = 0; i < isByRef.Length; i++)
                         isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
                     instance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
-                    var compiled = MethodInvokerCompiler.TryCompile(mi);
-                    if (null != compiled) instance.CompiledMethods.TryAdd(currentMethodIdent, compiled);
                     currentMethodIdent++;
                 }
             }
@@ -213,8 +211,6 @@ namespace ServiceWire
                     for (int i = 0; i < isByRef.Length; i++)
                         isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
                     instance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
-                    var compiled = MethodInvokerCompiler.TryCompile(mi);
-                    if (null != compiled) instance.CompiledMethods.TryAdd(currentMethodIdent, compiled);
                     currentMethodIdent++;
                 }
             }
@@ -464,9 +460,13 @@ namespace ServiceWire
         {
             try
             {
-                Func<object, object[], object> invoker;
-                object returnValue = (null != invokedInstance.CompiledMethods
-                        && invokedInstance.CompiledMethods.TryGetValue(methodHashCode, out invoker))
+                //compiled lazily on each method's first invocation: eager compilation at
+                //AddService costs ~half a millisecond per service, which penalizes
+                //short-lived hosts; byref methods cache null and keep the Invoke path
+                Func<object, object[], object> invoker = null;
+                if (null != invokedInstance.CompiledMethods)
+                    invoker = invokedInstance.CompiledMethods.GetOrAdd(methodHashCode, _ => MethodInvokerCompiler.TryCompile(method));
+                object returnValue = (null != invoker)
                     ? invoker(invokedInstance.SingletonInstance, parameters)
                     : method.Invoke(invokedInstance.SingletonInstance, parameters);
                 if (returnValue is Task task)
