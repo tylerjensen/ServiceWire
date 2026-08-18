@@ -18,7 +18,7 @@ namespace ServiceWire
 
         public static TInterface CreateProxy<TInterface>(Type channelType, Type ctorArgType, object channelCtorValue, ISerializer serializer, ICompressor compressor, ILog logger, IStats stats) where TInterface : class
         {
-            if (!channelType.InheritsFrom(typeof(Channel))) throw new ArgumentException("channelType does not inherit from Channel");
+            if (!typeof(Channel).IsAssignableFrom(channelType)) throw new ArgumentException("channelType does not inherit from Channel");
             Type interfaceType = typeof(TInterface);
 
             //derive unique key for this dynamic assembly by interface, channel and ctor type names
