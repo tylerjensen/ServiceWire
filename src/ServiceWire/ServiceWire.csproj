@@ -9,6 +9,7 @@
 		<Authors>Tyler Jensen</Authors>
 		<Company />
 		<PackageIcon>icon.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageProjectUrl>https://github.com/tylerjensen/ServiceWire</PackageProjectUrl>
 		<PackageLicenseFile>License.txt</PackageLicenseFile>
 		<Copyright>Tyler Jensen 2013-2021</Copyright>
@@ -20,6 +21,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="..\..\README.md" Pack="true" PackagePath="" />
 		<None Include="..\License.txt" Pack="true" PackagePath="" />
 		<None Include="..\icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>
