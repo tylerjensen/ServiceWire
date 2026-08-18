@@ -6,6 +6,10 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
+		<!-- force 64-bit for the net48 child process; a 32-bit child fails to load
+		     the benchmark assembly with BadImageFormatException -->
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<Prefer32Bit>false</Prefer32Bit>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">

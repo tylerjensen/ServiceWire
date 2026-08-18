@@ -17,10 +17,12 @@ namespace ServiceWire.Benchmarks
         private INetTester _tester;
         private Random _rnd;
 
-        private readonly string PipeName = "ServiceWireBenchmarkHost";
+        //distinct pipe name and port: sharing them with the steady-state benchmark
+        //classes lets a stray host instance in another process serve these clients
+        private readonly string PipeName = "ServiceWireBenchmarkConn";
 
         private IPAddress _ipAddress;
-        private const int Port = 8084;
+        private const int Port = 8090;
 
         private IPEndPoint CreateTcpEndPoint(int portOffset)
         {

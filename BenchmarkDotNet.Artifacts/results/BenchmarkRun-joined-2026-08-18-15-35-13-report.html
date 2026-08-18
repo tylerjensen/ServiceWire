@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>BenchmarkRun-joined-2026-08-18-15-35-13</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.14.0, Windows 11 (10.0.26200.9168)
+AMD Ryzen Threadripper PRO 5975WX 32-Cores, 1 CPU, 64 logical and 32 physical cores
+.NET SDK 10.0.204
+  [Host]   : .NET 8.0.30 (8.0.3026.36720), X64 RyuJIT AVX2
+  .NET 6.0 : .NET 6.0.36 (6.0.3624.51421), X64 RyuJIT AVX2
+  .NET 8.0 : .NET 8.0.30 (8.0.3026.36720), X64 RyuJIT AVX2
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Type          </th><th>Method</th><th>Job         </th><th>Runtime     </th><th>Mean</th><th>Error</th><th>StdDev</th><th>Median</th><th>Ratio</th><th>RatioSD</th><th>Gen0</th><th>Gen1</th><th>Allocated</th><th>Alloc Ratio</th>
+</tr>
+</thead><tbody><tr><td>ConnectionBenchmarks</td><td>TcpConn</td><td>.NET 6.0</td><td>.NET 6.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>ConnectionBenchmarks</td><td>TcpConn</td><td>.NET 8.0</td><td>.NET 8.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>ConnectionBenchmarks</td><td>TcpConn</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpSim</td><td>.NET 6.0</td><td>.NET 6.0</td><td>14.94 &mu;s</td><td>0.298 &mu;s</td><td>0.879 &mu;s</td><td>15.22 &mu;s</td><td>1.05</td><td>0.08</td><td>0.0153</td><td>-</td><td>320 B</td><td>1.00</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpSim</td><td>.NET 8.0</td><td>.NET 8.0</td><td>14.20 &mu;s</td><td>0.281 &mu;s</td><td>0.761 &mu;s</td><td>14.29 &mu;s</td><td>1.00</td><td>0.08</td><td>0.0153</td><td>-</td><td>320 B</td><td>1.00</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpSim</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpSim</td><td>.NET 6.0</td><td>.NET 6.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpSim</td><td>.NET 8.0</td><td>.NET 8.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpSim</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>ConnectionBenchmarks</td><td>NpConn</td><td>.NET 6.0</td><td>.NET 6.0</td><td>664.58 &mu;s</td><td>11.618 &mu;s</td><td>10.299 &mu;s</td><td>661.95 &mu;s</td><td>1.07</td><td>0.02</td><td>4.8828</td><td>1.9531</td><td>71887 B</td><td>1.01</td>
+</tr><tr><td>ConnectionBenchmarks</td><td>NpConn</td><td>.NET 8.0</td><td>.NET 8.0</td><td>620.45 &mu;s</td><td>10.063 &mu;s</td><td>8.403 &mu;s</td><td>623.43 &mu;s</td><td>1.00</td><td>0.02</td><td>4.8828</td><td>-</td><td>71115 B</td><td>1.00</td>
+</tr><tr><td>ConnectionBenchmarks</td><td>NpConn</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpSimJson</td><td>.NET 6.0</td><td>.NET 6.0</td><td>14.79 &mu;s</td><td>0.294 &mu;s</td><td>0.789 &mu;s</td><td>14.67 &mu;s</td><td>1.02</td><td>0.07</td><td>-</td><td>-</td><td>320 B</td><td>1.00</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpSimJson</td><td>.NET 8.0</td><td>.NET 8.0</td><td>14.52 &mu;s</td><td>0.288 &mu;s</td><td>0.520 &mu;s</td><td>14.61 &mu;s</td><td>1.00</td><td>0.05</td><td>0.0153</td><td>-</td><td>320 B</td><td>1.00</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpSimJson</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpSimJson</td><td>.NET 6.0</td><td>.NET 6.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpSimJson</td><td>.NET 8.0</td><td>.NET 8.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpSimJson</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpRg</td><td>.NET 6.0</td><td>.NET 6.0</td><td>26.78 &mu;s</td><td>0.688 &mu;s</td><td>2.029 &mu;s</td><td>27.71 &mu;s</td><td>1.26</td><td>0.15</td><td>0.5798</td><td>-</td><td>9744 B</td><td>1.29</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpRg</td><td>.NET 8.0</td><td>.NET 8.0</td><td>21.44 &mu;s</td><td>0.632 &mu;s</td><td>1.863 &mu;s</td><td>22.24 &mu;s</td><td>1.01</td><td>0.13</td><td>0.4578</td><td>-</td><td>7528 B</td><td>1.00</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpRg</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpRg</td><td>.NET 6.0</td><td>.NET 6.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpRg</td><td>.NET 8.0</td><td>.NET 8.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpRg</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpRgJson</td><td>.NET 6.0</td><td>.NET 6.0</td><td>35.74 &mu;s</td><td>1.018 &mu;s</td><td>3.001 &mu;s</td><td>36.60 &mu;s</td><td>1.19</td><td>0.13</td><td>1.2817</td><td>-</td><td>21680 B</td><td>1.19</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpRgJson</td><td>.NET 8.0</td><td>.NET 8.0</td><td>30.24 &mu;s</td><td>0.685 &mu;s</td><td>2.018 &mu;s</td><td>30.23 &mu;s</td><td>1.00</td><td>0.09</td><td>1.0986</td><td>-</td><td>18184 B</td><td>1.00</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpRgJson</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpRgJson</td><td>.NET 6.0</td><td>.NET 6.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpRgJson</td><td>.NET 8.0</td><td>.NET 8.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpRgJson</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpCxOut</td><td>.NET 6.0</td><td>.NET 6.0</td><td>25.68 &mu;s</td><td>0.835 &mu;s</td><td>2.462 &mu;s</td><td>26.66 &mu;s</td><td>1.03</td><td>0.25</td><td>0.1526</td><td>-</td><td>2760 B</td><td>1.17</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpCxOut</td><td>.NET 8.0</td><td>.NET 8.0</td><td>26.44 &mu;s</td><td>2.205 &mu;s</td><td>6.501 &mu;s</td><td>23.61 &mu;s</td><td>1.06</td><td>0.36</td><td>0.1221</td><td>-</td><td>2352 B</td><td>1.00</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpCxOut</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpCxOut</td><td>.NET 6.0</td><td>.NET 6.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpCxOut</td><td>.NET 8.0</td><td>.NET 8.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpCxOut</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpCxOutJson</td><td>.NET 6.0</td><td>.NET 6.0</td><td>29.74 &mu;s</td><td>1.029 &mu;s</td><td>3.034 &mu;s</td><td>30.44 &mu;s</td><td>0.73</td><td>0.09</td><td>0.3662</td><td>-</td><td>6688 B</td><td>1.03</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpCxOutJson</td><td>.NET 8.0</td><td>.NET 8.0</td><td>40.74 &mu;s</td><td>0.960 &mu;s</td><td>2.830 &mu;s</td><td>42.34 &mu;s</td><td>1.01</td><td>0.10</td><td>0.3662</td><td>-</td><td>6520 B</td><td>1.00</td>
+</tr><tr><td>NamedPipesBenchmarks</td><td>NpCxOutJson</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpCxOutJson</td><td>.NET 6.0</td><td>.NET 6.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpCxOutJson</td><td>.NET 8.0</td><td>.NET 8.0</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr><tr><td>TcpBenchmarks</td><td>TcpCxOutJson</td><td>.NET Framework 4.8</td><td>.NET Framework 4.8</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>?</td>
+</tr></tbody></table>
+</body>
+</html>

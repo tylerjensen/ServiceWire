@@ -8,6 +8,7 @@ namespace ServiceWire.NamedPipes
     {
         private readonly NamedPipeClientStream _clientStream;
         private readonly NpChannelIdentifier _channelIdentifier;
+        private readonly bool _allowWireV2 = true;
 
         /// <summary>
         /// Creates a connection to the concrete object handling method calls on the pipeName server side
@@ -20,6 +21,7 @@ namespace ServiceWire.NamedPipes
         {
             _serviceType = serviceType;
             _channelIdentifier = new NpChannelIdentifier(npEndPoint);
+            _allowWireV2 = npEndPoint.UseWireV2;
             _clientStream = new NamedPipeClientStream(npEndPoint.ServerName, npEndPoint.PipeName, PipeDirection.InOut);
             _clientStream.Connect(npEndPoint.ConnectTimeOutMs);
             _stream = _clientStream;
@@ -40,10 +42,12 @@ namespace ServiceWire.NamedPipes
 
         protected override IChannelIdentifier ChannelIdentifier => _channelIdentifier;
 
-        //named pipes stay on the v1 wire: their synchronous handles cannot overlap
-        //reads and writes, so v2 buys no pipelining, and its per-call frame cost is
-        //a measured net loss on a local transport
-        protected override bool AllowWireV2 => false;
+        protected override bool AllowWireV2 => _allowWireV2;
+
+        //synchronous pipe handles serialize concurrent ReadFile/WriteFile, so v2
+        //exchanges on this channel must not overlap; StreamingChannel serializes
+        //the whole call instead of pipelining
+        protected override bool SupportsConcurrentStreamIO => false;
 
         public override bool IsConnected { get { return (null != _clientStream) && _clientStream.IsConnected; } }
     }

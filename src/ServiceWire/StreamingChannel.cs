@@ -67,13 +67,18 @@ namespace ServiceWire
 
         /// <summary>
         /// Whether this channel uses the v2 wire when the server advertises it.
-        /// The v2 frame adds a small fixed per-call cost that buys pipelining and
-        /// decode-error resilience -- a clear win for sockets, but a net loss for
-        /// named pipes, whose synchronous handles cannot overlap reads and writes
-        /// (and whose local latency is too small to hide the overhead), so
-        /// NpChannel stays on the v1 wire. TcpChannel honors TcpEndPoint.UseWireV2.
+        /// Default true (v2 is the 7.0 default on every transport); endpoints expose
+        /// UseWireV2 to force the classic v1 wire per client.
         /// </summary>
         protected virtual bool AllowWireV2 => true;
+
+        /// <summary>
+        /// True when the transport supports one concurrent reader plus one concurrent
+        /// writer (sockets), enabling pipelined v2 calls. Transports that serialize
+        /// I/O on a synchronous handle (named pipes) return false, and v2 calls then
+        /// serialize the whole exchange instead of pipelining.
+        /// </summary>
+        protected virtual bool SupportsConcurrentStreamIO => true;
 
         /// <summary>
         /// Returns true if client is connected to the server.
@@ -212,6 +217,14 @@ namespace ServiceWire
         {
             if (_useWireV2)
             {
+                if (!SupportsConcurrentStreamIO)
+                {
+                    //the transport cannot overlap a read with a write: serialize the exchange
+                    lock (_syncRoot)
+                    {
+                        return InvokeMethodV2(ResolveMethod(metaData), null != _zkCrypto, _logger.IsDebugEnabled(), parameters);
+                    }
+                }
                 //v2 pipelines: no whole-round-trip lock; callers block only on their own response
                 return InvokeMethodV2(ResolveMethod(metaData), null != _zkCrypto, _logger.IsDebugEnabled(), parameters);
             }

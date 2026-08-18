@@ -34,6 +34,15 @@ namespace ServiceWire.Benchmarks
             _rnd = new Random();
             _tester = new NetTester();
             _ipAddress = IPAddress.Parse("127.0.0.1");
+        }
+
+        //hosts are created in GlobalSetup, not the constructor: BenchmarkDotNet also
+        //instantiates this class in its orchestrating host process for validation,
+        //and a host opened there holds the fixed ports so the measured child process
+        //cannot bind them (every TCP benchmark then fails with address-in-use)
+        [GlobalSetup]
+        public void GlobalSetup()
+        {
             _tcphost = new TcpHost(CreateTcpEndPoint(0));
             _tcphost.AddService<INetTester>(_tester);
             _tcphost.Open();
@@ -41,11 +50,7 @@ namespace ServiceWire.Benchmarks
             _tcphostJson = new TcpHost(CreateTcpEndPoint(1));
             _tcphostJson.AddService<INetTester>(_tester);
             _tcphostJson.Open();
-        }
 
-        [GlobalSetup]
-        public void GlobalSetup()
-        {
             _tcpClient = new TcpClient<INetTester>(CreateTcpEndPoint(0));
             _tcpClientJson = new TcpClient<INetTester>(CreateTcpEndPoint(1));
         }

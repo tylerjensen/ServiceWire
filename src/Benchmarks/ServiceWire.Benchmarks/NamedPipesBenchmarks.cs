@@ -29,8 +29,15 @@ namespace ServiceWire.Benchmarks
         public NamedPipesBenchmarks()
         {
             _rnd = new Random();
-
             _tester = new NetTester();
+        }
+
+        //hosts are created in GlobalSetup, not the constructor: BenchmarkDotNet also
+        //instantiates this class in its orchestrating host process for validation,
+        //and a host opened there would serve (or block) the measured child process
+        [GlobalSetup]
+        public void GlobalSetup()
+        {
             _nphost = new NpHost(PipeName);
             _nphost.AddService<INetTester>(_tester);
             _nphost.Open();
@@ -38,11 +45,7 @@ namespace ServiceWire.Benchmarks
             _nphostJson = new NpHost(PipeName + "Json", serializer: new NewtonsoftSerializer());
             _nphostJson.AddService<INetTester>(_tester);
             _nphostJson.Open();
-        }
 
-        [GlobalSetup]
-        public void GlobalSetup()
-        {
             _npClient = new NpClient<INetTester>(CreateNpEndPoint(string.Empty));
             _npClientJson = new NpClient<INetTester>(CreateNpEndPoint("Json"), new NewtonsoftSerializer());
         }
