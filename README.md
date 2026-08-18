@@ -51,7 +51,27 @@ Portions of this library (dynamic proxy) are a derivative of RemotingLite by Fra
   [RemotingLite by Frank Thomsen]: https://codeplexarchive.org/codeplex/project/RemotingLite
   [ServiceWire documentation]: https://github.com/tylerjensen/ServiceWire/wiki
 
+### Host Status
+
+`TcpHost` and `NpHost` expose their listener lifecycle through the inherited `Status` property. The `HostStatus` values are `Created`, `Opening`, `Open`, `Faulted`, and `Closed`. This reports host-listener state rather than the state of an individual client connection.
+
+```csharp
+if (host.Status == HostStatus.Faulted)
+{
+    // Create and open a replacement host, or otherwise recover the listener.
+}
+```
+
 ## History
+
+### Connection and Logging Reliability Fixes 6.0.1
+
+1. Fixed retained TCP connection resources by detaching and disposing `SocketAsyncEventArgs` after connection attempts ([#90](https://github.com/tylerjensen/ServiceWire/issues/90)).
+2. Added the `Host.Status` property and `HostStatus` lifecycle states so applications can detect listener failures ([#83](https://github.com/tylerjensen/ServiceWire/issues/83)).
+3. Prevented the named-pipe shutdown sentinel from being processed as a client request, eliminating expected close-time errors ([#80](https://github.com/tylerjensen/ServiceWire/issues/80)).
+4. Prevented named-pipe listener failures from producing an unbounded logging and CPU loop; capacity exhaustion now retries with a short backoff while other failures fault the host ([#81](https://github.com/tylerjensen/ServiceWire/issues/81)).
+5. Fixed console logging so formatted messages are written instead of `System.String[]` ([#82](https://github.com/tylerjensen/ServiceWire/issues/82)).
+6. Added targeted regression coverage for these fixes and repeated .NET 10 proxy creation ([#97](https://github.com/tylerjensen/ServiceWire/issues/97)).
 
 ### .NET 10 Compatibility and Performance Improvements 6.0.0
 

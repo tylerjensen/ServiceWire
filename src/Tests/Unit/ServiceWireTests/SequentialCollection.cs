@@ -16,4 +16,9 @@ namespace ServiceWireTests
     public class SequentialCollectionTcpZk
     {
     }
+
+    [CollectionDefinition("Issue regressions", DisableParallelization = true)]
+    public class IssueRegressionCollection
+    {
+    }
 }

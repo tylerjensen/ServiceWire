@@ -43,6 +43,7 @@ namespace ServiceWire.NamedPipes
             _pipeName = pipeName;
             _listener = new NpListener(_pipeName, log: base.Log, stats: base.Stats, streamFactory: streamFactory);
             _listener.RequestReieved += ClientConnectionMade;
+            _listener.Faulted += ListenerFaulted;
         }
 
         /// <summary>
@@ -70,6 +71,11 @@ namespace ServiceWire.NamedPipes
             base.ProcessRequest(stream);
         }
 
+        private void ListenerFaulted(Exception exception)
+        {
+            SetStatus(HostStatus.Faulted);
+        }
+
         #region IDisposable Members
 
         private bool _disposed = false;
@@ -84,6 +90,7 @@ namespace ServiceWire.NamedPipes
                     _listener.Stop();
                 }
             }
+            base.Dispose(disposing);
         }
 
         #endregion

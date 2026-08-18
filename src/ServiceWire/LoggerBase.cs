@@ -67,7 +67,10 @@ namespace ServiceWire
             var lines = list.ToArray();
             if (_options == LogOptions.LogOnlyToConsole || _options == LogOptions.LogToBoth)
             {
-                Console.Write(lines);
+                foreach (var line in lines)
+                {
+                    Console.WriteLine(line);
+                }
             }
             if (_options == LogOptions.LogOnlyToFile || _options == LogOptions.LogToBoth)
             {

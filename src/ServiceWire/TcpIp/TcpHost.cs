@@ -103,17 +103,26 @@ namespace ServiceWire.TcpIp
                     }
                     catch (Exception ex)
                     {
-                        _log.Error("Listen error: {0}", ex.ToString().Flatten());
+                        if (!_disposed)
+                        {
+                            SetStatus(HostStatus.Faulted);
+                            _log.Error("Listen error: {0}", ex.ToString().Flatten());
+                        }
                         break; //break loop on unhandled
                     }
 
                     // Wait until a connection is made before continuing.
                     _listenResetEvent.WaitOne();
+                    if (Status == HostStatus.Faulted) break;
                 }
             }
             catch (Exception e)
             {
-                _log.Fatal("Listen fatal error: {0}", e.ToString().Flatten());
+                if (!_disposed)
+                {
+                    SetStatus(HostStatus.Faulted);
+                    _log.Fatal("Listen fatal error: {0}", e.ToString().Flatten());
+                }
             }
         }
 
@@ -128,7 +137,11 @@ namespace ServiceWire.TcpIp
             {
                 if (e.SocketError != SocketError.Success)
                 {
-                    if (!_disposed) _listenResetEvent.Set();
+                    if (!_disposed)
+                    {
+                        SetStatus(HostStatus.Faulted);
+                        _listenResetEvent.Set();
+                    }
                     return;
                 }
 

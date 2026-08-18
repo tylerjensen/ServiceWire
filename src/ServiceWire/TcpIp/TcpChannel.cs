@@ -47,7 +47,9 @@ namespace ServiceWire.TcpIp
             Initialize(serviceType);
         }
 
-        private Socket CreateSocket(IPEndPoint endpoint, int connectTimeoutMs)
+        internal static Socket CreateSocket(IPEndPoint endpoint, int connectTimeoutMs,
+            Func<SocketAsyncEventArgs> connectEventArgsFactory = null,
+            Action<SocketAsyncEventArgs> connectEventArgsDisposer = null)
         {
             var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
             {
@@ -55,35 +57,57 @@ namespace ServiceWire.TcpIp
             };
 
             var connected = false;
-            var connectEventArgs = new SocketAsyncEventArgs
-            {
-                RemoteEndPoint = endpoint
-            };
-            connectEventArgs.Completed += (sender, e) => { connected = true; };
+            SocketAsyncEventArgs connectEventArgs = null;
+            EventHandler<SocketAsyncEventArgs> completedHandler = (sender, e) => { connected = true; };
 
-            if (client.ConnectAsync(connectEventArgs))
+            try
             {
-                while (!connected)
+                connectEventArgs = connectEventArgsFactory?.Invoke() ?? new SocketAsyncEventArgs();
+                connectEventArgs.RemoteEndPoint = endpoint;
+                connectEventArgs.Completed += completedHandler;
+
+                if (client.ConnectAsync(connectEventArgs))
                 {
-                    if (!SpinWait.SpinUntil(() => connected, connectTimeoutMs))
+                    while (!connected)
                     {
-                        client.Dispose();
-                        throw new TimeoutException($"Unable to connect within {connectTimeoutMs}ms");
+                        if (!SpinWait.SpinUntil(() => connected, connectTimeoutMs))
+                        {
+                            client.Dispose();
+                            throw new TimeoutException($"Unable to connect within {connectTimeoutMs}ms");
+                        }
                     }
                 }
-            }
-            if (connectEventArgs.SocketError != SocketError.Success)
-            {
-                client.Dispose();
-                throw new SocketException((int)connectEventArgs.SocketError);
-            }
-            if (!client.Connected)
-            {
-                client.Dispose();
-                throw new SocketException((int)SocketError.NotConnected);
-            }
+                if (connectEventArgs.SocketError != SocketError.Success)
+                {
+                    client.Dispose();
+                    throw new SocketException((int)connectEventArgs.SocketError);
+                }
+                if (!client.Connected)
+                {
+                    client.Dispose();
+                    throw new SocketException((int)SocketError.NotConnected);
+                }
 
-            return client;
+                return client;
+            }
+            catch
+            {
+                client.Dispose();
+                throw;
+            }
+            finally
+            {
+                if (connectEventArgs != null)
+                {
+                    connectEventArgs.Completed -= completedHandler;
+                    connectEventArgs.AcceptSocket = null;
+                    connectEventArgs.RemoteEndPoint = null;
+                    if (connectEventArgsDisposer == null)
+                        connectEventArgs.Dispose();
+                    else
+                        connectEventArgsDisposer(connectEventArgs);
+                }
+            }
         }
 
         private void Initialize(Type serviceType)

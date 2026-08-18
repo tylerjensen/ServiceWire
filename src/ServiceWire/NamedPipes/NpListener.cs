@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ namespace ServiceWire.NamedPipes
 {
     public class NpListener
     {
-        private bool _running;
+        private volatile bool _running;
         private readonly EventWaitHandle _terminateHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
         private readonly int _maxConnections = 254;
         private readonly ILog _log;
@@ -17,6 +18,7 @@ namespace ServiceWire.NamedPipes
         public string PipeName { get; set; }
 
         public event EventHandler<PipeClientConnectionEventArgs> RequestReieved;
+        internal event Action<Exception> Faulted;
 
         public NpListener(string pipeName, int maxConnections = 254, ILog log = null, IStats stats = null, INamedPipeServerStreamFactory streamFactory = null)
         {
@@ -30,6 +32,7 @@ namespace ServiceWire.NamedPipes
 
         public void Start()
         {
+            _terminateHandle.Reset();
             _running = true;
             Task.Factory.StartNew(() => ServerLoop(), TaskCreationOptions.LongRunning);
         }
@@ -46,6 +49,11 @@ namespace ServiceWire.NamedPipes
                     {
                         client.Connect(50);
                     }
+                }
+                catch (TimeoutException)
+                {
+                    // The listener task may not have reached WaitForConnection yet.
+                    // It will observe _running == false and terminate normally.
                 }
                 catch (Exception e)
                 {
@@ -66,10 +74,12 @@ namespace ServiceWire.NamedPipes
             }
             catch (Exception e)
             {
+                Faulted?.Invoke(e);
                 _log.Fatal("ServerLoop fatal error: {0}", e.ToString().Flatten());
             }
             finally
             {
+                _running = false;
                 _terminateHandle.Set();
             }
         }
@@ -97,18 +107,37 @@ namespace ServiceWire.NamedPipes
 
         public void ProcessNextClient()
         {
+            NamedPipeServerStream pipeStream = null;
             try
             {
-                var pipeStream = _streamFactory.Create(PipeName, PipeDirection.InOut, _maxConnections, PipeTransmissionMode.Byte, PipeOptions.None, 512, 512);
+                pipeStream = _streamFactory.Create(PipeName, PipeDirection.InOut, _maxConnections, PipeTransmissionMode.Byte, PipeOptions.None, 512, 512);
                 pipeStream.WaitForConnection();
+
+                // Stop() makes a local connection to release WaitForConnection. Do not
+                // dispatch that sentinel connection as a real client request.
+                if (!_running) return;
+
                 //Task.Factory.StartNew(() => ProcessClientThread(pipeStream), TaskCreationOptions.LongRunning);
-                Task.Factory.StartNew(() => ProcessClientThread(pipeStream));
+                var connectedPipeStream = pipeStream;
+                pipeStream = null; //ownership is transferred to the client task
+                Task.Factory.StartNew(() => ProcessClientThread(connectedPipeStream));
             }
-            catch (Exception e)
+            catch (IOException e) when (IsAllPipeInstancesBusy(e) && _running)
             {
-                //If there are no more avail connections (254 is in use already) then just keep looping until one is avail
-                _log.Error("ProcessNextClient error: {0}", e.ToString().Flatten());
+                // The listener can temporarily exhaust the Windows named-pipe instance
+                // limit. Back off before retrying; all other failures are fatal.
+                Thread.Sleep(50);
             }
+            finally
+            {
+                pipeStream?.Dispose();
+            }
+        }
+
+        private static bool IsAllPipeInstancesBusy(IOException exception)
+        {
+            const int errorPipeBusy = 231;
+            return (exception.HResult & 0xffff) == errorPipeBusy;
         }
     }
 

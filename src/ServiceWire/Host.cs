@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ServiceWire
@@ -12,6 +13,7 @@ namespace ServiceWire
     public abstract class Host : IDisposable
     {
         protected volatile bool _isOpen;
+        private int _status = (int)HostStatus.Created;
         protected volatile bool _continueListening = true;
         protected bool _useCompression = false; //default is false
         protected int _compressionThreshold = 131072; //128KB
@@ -26,6 +28,16 @@ namespace ServiceWire
         protected ConcurrentDictionary<int, ServiceInstance> _services = new ConcurrentDictionary<int, ServiceInstance>();
         protected readonly ParameterTransferHelper _parameterTransferHelper;
         private readonly ConcurrentDictionary<Type, PropertyInfo> _taskResultProperties = new ConcurrentDictionary<Type, PropertyInfo>();
+
+        /// <summary>
+        /// Gets the current lifecycle status of the host listener.
+        /// </summary>
+        public HostStatus Status => (HostStatus)Volatile.Read(ref _status);
+
+        protected void SetStatus(HostStatus status)
+        {
+            Interlocked.Exchange(ref _status, (int)status);
+        }
 
         public Host(ISerializer serializer, ICompressor compressor)
         {
@@ -229,8 +241,20 @@ namespace ServiceWire
         /// </summary>
         public void Open()
         {
+            SetStatus(HostStatus.Opening);
             _isOpen = true;
-            StartListener();
+            try
+            {
+                StartListener();
+                Interlocked.CompareExchange(ref _status, (int)HostStatus.Open,
+                    (int)HostStatus.Opening);
+            }
+            catch
+            {
+                _isOpen = false;
+                SetStatus(HostStatus.Faulted);
+                throw;
+            }
         }
 
         protected abstract void StartListener();
@@ -522,6 +546,7 @@ namespace ServiceWire
                 if (_log is Logger log) log.FlushLog();
                 if (_stats is Stats stat) stat.FlushLog();
                 _isOpen = false;
+                SetStatus(HostStatus.Closed);
                 Continue = false;
                 foreach (var instance in _services)
                 {
