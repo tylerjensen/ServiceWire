@@ -89,7 +89,11 @@ namespace ServiceWire
             catch { }
             try
             {
+#if NET8_0_OR_GREATER
+                var exception = (Exception)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(type);
+#else
                 var exception = (Exception)FormatterServices.GetUninitializedObject(type);
+#endif
                 var messageField = typeof(Exception).GetField("_message",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 if (null != messageField) messageField.SetValue(exception, message);

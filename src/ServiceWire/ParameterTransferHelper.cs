@@ -4,6 +4,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+#if NET8_0_OR_GREATER
+using System.Runtime.InteropServices;
+#endif
 
 namespace ServiceWire
 {
@@ -187,8 +190,16 @@ namespace ServiceWire
                             writer.Write(((Type)parameter).ToConfigName());
                             break;
                         case ParameterTypes.Guid:
+                        {
+#if NET8_0_OR_GREATER
+                            Span<byte> guidSpan = stackalloc byte[16];
+                            ((Guid)parameter).TryWriteBytes(guidSpan);
+                            writer.Write(guidSpan);
+#else
                             writer.Write(((Guid)parameter).ToByteArray());
+#endif
                             break;
+                        }
                         case ParameterTypes.DateTime:
                             writer.Write(((DateTime)parameter).ToString("o"));
                             break;
@@ -210,41 +221,65 @@ namespace ServiceWire
                             break;
                         case ParameterTypes.ArrayDouble:
                             var dbls = (double[])parameter;
+#if NET8_0_OR_GREATER
+                            if (TryWriteBlittable(writer, dbls)) break;
+#endif
                             writer.Write(dbls.Length);
                             foreach (var db in dbls) writer.Write(db);
                             break;
                         case ParameterTypes.ArrayFloat:
                             var fls = (float[])parameter;
+#if NET8_0_OR_GREATER
+                            if (TryWriteBlittable(writer, fls)) break;
+#endif
                             writer.Write(fls.Length);
                             foreach (var f in fls) writer.Write(f);
                             break;
                         case ParameterTypes.ArrayInt:
                             var ints = (int[])parameter;
+#if NET8_0_OR_GREATER
+                            if (TryWriteBlittable(writer, ints)) break;
+#endif
                             writer.Write(ints.Length);
                             foreach (var i in ints) writer.Write(i);
                             break;
                         case ParameterTypes.ArrayUInt:
                             var uints = (uint[])parameter;
+#if NET8_0_OR_GREATER
+                            if (TryWriteBlittable(writer, uints)) break;
+#endif
                             writer.Write(uints.Length);
                             foreach (var u in uints) writer.Write(u);
                             break;
                         case ParameterTypes.ArrayLong:
                             var longs = (long[])parameter;
+#if NET8_0_OR_GREATER
+                            if (TryWriteBlittable(writer, longs)) break;
+#endif
                             writer.Write(longs.Length);
                             foreach (var lg in longs) writer.Write(lg);
                             break;
                         case ParameterTypes.ArrayULong:
                             var ulongs = (ulong[])parameter;
+#if NET8_0_OR_GREATER
+                            if (TryWriteBlittable(writer, ulongs)) break;
+#endif
                             writer.Write(ulongs.Length);
                             foreach (var ul in ulongs) writer.Write(ul);
                             break;
                         case ParameterTypes.ArrayShort:
                             var shorts = (short[])parameter;
+#if NET8_0_OR_GREATER
+                            if (TryWriteBlittable(writer, shorts)) break;
+#endif
                             writer.Write(shorts.Length);
                             foreach (var s in shorts) writer.Write(s);
                             break;
                         case ParameterTypes.ArrayUShort:
                             var ushorts = (ushort[])parameter;
+#if NET8_0_OR_GREATER
+                            if (TryWriteBlittable(writer, ushorts)) break;
+#endif
                             writer.Write(ushorts.Length);
                             foreach (var us in ushorts) writer.Write(us);
                             break;
@@ -260,10 +295,21 @@ namespace ServiceWire
                                 writer.Write(t.ToConfigName());
                             break;
                         case ParameterTypes.ArrayGuid:
+                        {
                             var guids = (Guid[])parameter;
                             writer.Write(guids.Length);
+#if NET8_0_OR_GREATER
+                            Span<byte> guidBuf = stackalloc byte[16];
+                            foreach (var g in guids)
+                            {
+                                g.TryWriteBytes(guidBuf);
+                                writer.Write(guidBuf);
+                            }
+#else
                             foreach (var g in guids) writer.Write(g.ToByteArray());
+#endif
                             break;
+                        }
                         case ParameterTypes.ArrayDateTime:
                             var dts = (DateTime[])parameter;
                             writer.Write(dts.Length);
@@ -400,48 +446,72 @@ namespace ServiceWire
                             parameters[i] = dcs;
                             break;
                         case ParameterTypes.ArrayDouble:
+#if NET8_0_OR_GREATER
+                            if (TryReadBlittable(reader, out double[] dbsFast)) { parameters[i] = dbsFast; break; }
+#endif
                             var dblen = reader.ReadInt32();
                             var dbs = new double[dblen];
                             for (int x = 0; x < dblen; x++) dbs[x] = reader.ReadDouble();
                             parameters[i] = dbs;
                             break;
                         case ParameterTypes.ArrayFloat:
+#if NET8_0_OR_GREATER
+                            if (TryReadBlittable(reader, out float[] fsFast)) { parameters[i] = fsFast; break; }
+#endif
                             var flen = reader.ReadInt32();
                             var fs = new float[flen];
                             for (int x = 0; x < flen; x++) fs[x] = reader.ReadSingle();
                             parameters[i] = fs;
                             break;
                         case ParameterTypes.ArrayInt:
+#if NET8_0_OR_GREATER
+                            if (TryReadBlittable(reader, out int[] issFast)) { parameters[i] = issFast; break; }
+#endif
                             var ilen = reader.ReadInt32();
                             var iss = new int[ilen];
                             for (int x = 0; x < ilen; x++) iss[x] = reader.ReadInt32();
                             parameters[i] = iss;
                             break;
                         case ParameterTypes.ArrayUInt:
+#if NET8_0_OR_GREATER
+                            if (TryReadBlittable(reader, out uint[] uisFast)) { parameters[i] = uisFast; break; }
+#endif
                             var uilen = reader.ReadInt32();
                             var uis = new uint[uilen];
                             for (int x = 0; x < uilen; x++) uis[x] = reader.ReadUInt32();
                             parameters[i] = uis;
                             break;
                         case ParameterTypes.ArrayLong:
+#if NET8_0_OR_GREATER
+                            if (TryReadBlittable(reader, out long[] lsFast)) { parameters[i] = lsFast; break; }
+#endif
                             var llen = reader.ReadInt32();
                             var ls = new long[llen];
                             for (int x = 0; x < llen; x++) ls[x] = reader.ReadInt64();
                             parameters[i] = ls;
                             break;
                         case ParameterTypes.ArrayULong:
+#if NET8_0_OR_GREATER
+                            if (TryReadBlittable(reader, out ulong[] ulsFast)) { parameters[i] = ulsFast; break; }
+#endif
                             var ullen = reader.ReadInt32();
                             var uls = new ulong[ullen];
                             for (int x = 0; x < ullen; x++) uls[x] = reader.ReadUInt64();
                             parameters[i] = uls;
                             break;
                         case ParameterTypes.ArrayShort:
+#if NET8_0_OR_GREATER
+                            if (TryReadBlittable(reader, out short[] sssFast)) { parameters[i] = sssFast; break; }
+#endif
                             var sslen = reader.ReadInt32();
                             var sss = new short[sslen];
                             for (int x = 0; x < sslen; x++) sss[x] = reader.ReadInt16();
                             parameters[i] = sss;
                             break;
                         case ParameterTypes.ArrayUShort:
+#if NET8_0_OR_GREATER
+                            if (TryReadBlittable(reader, out ushort[] usFast)) { parameters[i] = usFast; break; }
+#endif
                             var ulen = reader.ReadInt32();
                             var us = new ushort[ulen];
                             for (int x = 0; x < ulen; x++) us[x] = reader.ReadUInt16();
@@ -497,6 +567,32 @@ namespace ServiceWire
             }
             return parameters;
         }
+
+#if NET8_0_OR_GREATER
+        //bulk copies write the same little-endian bytes the per-element BinaryWriter
+        //calls produce, so the wire format is unchanged; big-endian platforms (and
+        //older TFMs) keep the per-element loops
+        private static bool TryWriteBlittable<T>(BinaryWriter writer, T[] array) where T : unmanaged
+        {
+            if (!BitConverter.IsLittleEndian) return false;
+            writer.Write(array.Length);
+            writer.Write(MemoryMarshal.AsBytes(array.AsSpan()));
+            return true;
+        }
+
+        private static bool TryReadBlittable<T>(BinaryReader reader, out T[] array) where T : unmanaged
+        {
+            if (!BitConverter.IsLittleEndian)
+            {
+                array = null;
+                return false;
+            }
+            var len = reader.ReadInt32();
+            array = new T[len];
+            if (len > 0) reader.BaseStream.ReadExactly(MemoryMarshal.AsBytes(array.AsSpan()));
+            return true;
+        }
+#endif
 
         private byte GetParameterType(Type type)
         {

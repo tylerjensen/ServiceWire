@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+		<!-- keep the assembly identity constant across TFMs so mixed loads bind cleanly -->
+		<AssemblyVersion>7.0.0.0</AssemblyVersion>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -26,7 +28,9 @@
 		<None Include="..\icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 
-	<ItemGroup>
+	<!-- netstandard2.0 keeps the exact 6.x dependency graph so existing net48 and
+	     netstandard consumers see no new binding redirects; net8.0 uses in-box APIs -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="System.IO.Pipes" Version="4.3.0" />
 		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
 		<PackageReference Include="System.Text.Json" Version="9.0.0" />

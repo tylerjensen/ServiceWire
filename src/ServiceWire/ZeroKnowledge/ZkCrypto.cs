@@ -10,7 +10,7 @@ namespace ServiceWire.ZeroKnowledge
     {
         private readonly byte[] _key;
         private readonly byte[] _iv;
-        private readonly MD5CryptoServiceProvider _md5;
+        private readonly MD5 _md5;
         private readonly SymmetricAlgorithm _crypto;
 
         //encrypt and decrypt use independent transforms, so each direction only needs
@@ -22,10 +22,15 @@ namespace ServiceWire.ZeroKnowledge
         {
             if (key.Length != 32) throw new ArgumentException("key must be 256 bits", "key");
             if (iv.Length != 32) throw new ArgumentException("iv must be 256 bits", "iv");
-            _md5 = new MD5CryptoServiceProvider();
+            _md5 = MD5.Create();
             _key = key;
             _iv = _md5.ComputeHash(iv);
+#if NET8_0_OR_GREATER
+            //AES is Rijndael with a fixed 128-bit block: same algorithm, same ciphertext
+            _crypto = Aes.Create();
+#else
             _crypto = RijndaelManaged.Create();
+#endif
             _crypto.Mode = CipherMode.CBC;
             _crypto.BlockSize = 128;
             _crypto.KeySize = 256;

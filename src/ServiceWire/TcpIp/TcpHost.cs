@@ -67,6 +67,18 @@ namespace ServiceWire.TcpIp
             get { return _endPoint; }
         }
 
+        /// <summary>
+        /// Socket receive timeout in milliseconds applied to accepted client sockets.
+        /// Default 0 means infinite (the pre-7.0 behavior).
+        /// </summary>
+        public int ReceiveTimeoutMs { get; set; }
+
+        /// <summary>
+        /// Socket send timeout in milliseconds applied to accepted client sockets.
+        /// Default 0 means infinite (the pre-7.0 behavior).
+        /// </summary>
+        public int SendTimeoutMs { get; set; }
+
         protected override void StartListener()
         {
             _listener.Bind(_endPoint);
@@ -147,6 +159,8 @@ namespace ServiceWire.TcpIp
 
                 Socket activeSocket = e.AcceptSocket;
                 activeSocket.NoDelay = true; //responses are buffered and flushed once per message; Nagle only adds latency
+                if (ReceiveTimeoutMs > 0) activeSocket.ReceiveTimeout = ReceiveTimeoutMs;
+                if (SendTimeoutMs > 0) activeSocket.SendTimeout = SendTimeoutMs;
 
                 // Signal the listening thread to continue.
                 _listenResetEvent.Set();

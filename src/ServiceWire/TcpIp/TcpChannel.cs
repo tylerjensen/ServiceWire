@@ -30,6 +30,8 @@ namespace ServiceWire.TcpIp
             _password = null;
             _channelIdentifier = new TcpChannelIdentifier(endpoint.EndPoint);
             _client = CreateSocket(endpoint.EndPoint, endpoint.ConnectTimeOutMs);
+            if (endpoint.ReceiveTimeoutMs > 0) _client.ReceiveTimeout = endpoint.ReceiveTimeoutMs;
+            if (endpoint.SendTimeoutMs > 0) _client.SendTimeout = endpoint.SendTimeoutMs;
             Initialize(serviceType);
         }
 
