@@ -6,7 +6,7 @@ using BenchmarkDotNet.Jobs;
 namespace ServiceWire.Benchmarks
 {
     [SimpleJob(RuntimeMoniker.Net80, baseline: true)]
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net10_0)]
     [SimpleJob(RuntimeMoniker.Net48)]
     [MemoryDiagnoser]
     [HtmlExporter]
