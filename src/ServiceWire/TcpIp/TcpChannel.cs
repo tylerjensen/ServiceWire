@@ -53,12 +53,23 @@ namespace ServiceWire.TcpIp
         {
             var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
             {
-                LingerState = { Enabled = false }
+                LingerState = { Enabled = false },
+                NoDelay = true //request/response traffic is written through a BufferedStream and flushed once per message, so Nagle only adds latency
             };
 
-            var connected = false;
+            var connectedEvent = new ManualResetEventSlim(false);
             SocketAsyncEventArgs connectEventArgs = null;
-            EventHandler<SocketAsyncEventArgs> completedHandler = (sender, e) => { connected = true; };
+            EventHandler<SocketAsyncEventArgs> completedHandler = (sender, e) =>
+            {
+                try
+                {
+                    connectedEvent.Set();
+                }
+                catch (ObjectDisposedException)
+                {
+                    //a timed-out connect can complete after cleanup; nothing to signal
+                }
+            };
 
             try
             {
@@ -68,13 +79,10 @@ namespace ServiceWire.TcpIp
 
                 if (client.ConnectAsync(connectEventArgs))
                 {
-                    while (!connected)
+                    if (!connectedEvent.Wait(connectTimeoutMs))
                     {
-                        if (!SpinWait.SpinUntil(() => connected, connectTimeoutMs))
-                        {
-                            client.Dispose();
-                            throw new TimeoutException($"Unable to connect within {connectTimeoutMs}ms");
-                        }
+                        client.Dispose();
+                        throw new TimeoutException($"Unable to connect within {connectTimeoutMs}ms");
                     }
                 }
                 if (connectEventArgs.SocketError != SocketError.Success)
@@ -107,6 +115,7 @@ namespace ServiceWire.TcpIp
                     else
                         connectEventArgsDisposer(connectEventArgs);
                 }
+                connectedEvent.Dispose();
             }
         }
 

@@ -6,11 +6,17 @@ namespace ServiceWire.ZeroKnowledge
     /// <summary>
     /// Easy to use encapsulation of Rijndael encryption.
     /// </summary>
-    public class ZkCrypto
+    public class ZkCrypto : IDisposable
     {
         private readonly byte[] _key;
         private readonly byte[] _iv;
         private readonly MD5CryptoServiceProvider _md5;
+        private readonly SymmetricAlgorithm _crypto;
+
+        //encrypt and decrypt use independent transforms, so each direction only needs
+        //to be serialized against itself (writers vs the response reader thread)
+        private readonly object _encLock = new object();
+        private readonly object _decLock = new object();
 
         public ZkCrypto(byte[] key, byte[] iv)
         {
@@ -19,17 +25,18 @@ namespace ServiceWire.ZeroKnowledge
             _md5 = new MD5CryptoServiceProvider();
             _key = key;
             _iv = _md5.ComputeHash(iv);
+            _crypto = RijndaelManaged.Create();
+            _crypto.Mode = CipherMode.CBC;
+            _crypto.BlockSize = 128;
+            _crypto.KeySize = 256;
+            _crypto.Padding = PaddingMode.ISO10126;
         }
 
         public byte[] Encrypt(byte[] data)
         {
-            using (var crypto = RijndaelManaged.Create())
+            lock (_encLock)
             {
-                crypto.Mode = CipherMode.CBC;
-                crypto.BlockSize = 128;
-                crypto.KeySize = 256;
-                crypto.Padding = PaddingMode.ISO10126;
-                using (var encryptor = crypto.CreateEncryptor(_key, _iv))
+                using (var encryptor = _crypto.CreateEncryptor(_key, _iv))
                 {
                     return encryptor.TransformFinalBlock(data, 0, data.Length);
                 }
@@ -38,17 +45,19 @@ namespace ServiceWire.ZeroKnowledge
 
         public byte[] Decrypt(byte[] encrypted)
         {
-            using (var crypto = RijndaelManaged.Create())
+            lock (_decLock)
             {
-                crypto.Mode = CipherMode.CBC;
-                crypto.BlockSize = 128;
-                crypto.KeySize = 256;
-                crypto.Padding = PaddingMode.ISO10126;
-                using (var dencryptor = crypto.CreateDecryptor(_key, _iv))
+                using (var decryptor = _crypto.CreateDecryptor(_key, _iv))
                 {
-                    return dencryptor.TransformFinalBlock(encrypted, 0, encrypted.Length);
+                    return decryptor.TransformFinalBlock(encrypted, 0, encrypted.Length);
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            _crypto.Dispose();
+            _md5.Dispose();
         }
     }
 }

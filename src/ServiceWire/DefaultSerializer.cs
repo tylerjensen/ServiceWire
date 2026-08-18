@@ -28,8 +28,8 @@ namespace ServiceWire
         {
             if (null == typeConfigName) throw new ArgumentNullException(nameof(typeConfigName));
             var type = typeConfigName.ToType();
-            if (null == typeConfigName || null == bytes || bytes.Length == 0) return type.GetDefault();
-            return JsonSerializer.Deserialize(bytes, typeConfigName.ToType());
+            if (null == bytes || bytes.Length == 0) return type.GetDefault();
+            return JsonSerializer.Deserialize(bytes, type);
         }
     }
 }

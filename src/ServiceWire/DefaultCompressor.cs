@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.IO.Compression;
 
 namespace ServiceWire
@@ -7,9 +7,11 @@ namespace ServiceWire
     {
         public byte[] Compress(byte[] data)
         {
-            using (var msCompressed = new MemoryStream())
+            //gzip is self-describing, so compression level is a local choice:
+            //Fastest trades a few percent of ratio for much lower latency
+            using (var msCompressed = new MemoryStream(data.Length))
             {
-                using (GZipStream gzs = new GZipStream(msCompressed, CompressionMode.Compress))
+                using (GZipStream gzs = new GZipStream(msCompressed, CompressionLevel.Fastest))
                 {
                     gzs.Write(data, 0, data.Length);
                 }
@@ -18,7 +20,7 @@ namespace ServiceWire
         }
         public byte[] DeCompress(byte[] compressedBytes)
         {
-            using (var msObj = new MemoryStream())
+            using (var msObj = new MemoryStream(compressedBytes.Length * 2))
             {
                 using (var msCompressed = new MemoryStream(compressedBytes))
                 using (var gzs = new GZipStream(msCompressed, CompressionMode.Decompress))

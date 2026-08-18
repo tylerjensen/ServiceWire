@@ -146,6 +146,7 @@ namespace ServiceWire.TcpIp
                 }
 
                 Socket activeSocket = e.AcceptSocket;
+                activeSocket.NoDelay = true; //responses are buffered and flushed once per message; Nagle only adds latency
 
                 // Signal the listening thread to continue.
                 _listenResetEvent.Set();

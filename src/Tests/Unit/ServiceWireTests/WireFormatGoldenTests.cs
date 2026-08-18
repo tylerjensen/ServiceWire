@@ -278,6 +278,65 @@ namespace ServiceWireTests
         }
 
         [Fact]
+        public void ScalarTypeParameters_MatchGoldenBytesAndRoundTrip()
+        {
+            // A Type value's runtime type is RuntimeType; it must still be sent
+            // with the 0x12 code and the value's own config name.
+            var actual = Send(false, 0, typeof(int), typeof(ParameterTransferHelper));
+
+            var expected = Expected(w =>
+            {
+                w.Write(2);
+                w.Write((byte)0x12); w.Write("System.Int32");
+                w.Write((byte)0x12); w.Write("ServiceWire.ParameterTransferHelper, ServiceWire");
+            });
+
+            Assert.Equal(expected, actual);
+
+            var pth = new ParameterTransferHelper(new DefaultSerializer(), new DefaultCompressor());
+            using (var ms = new MemoryStream(actual))
+            using (var r = new BinaryReader(ms))
+            {
+                var restored = pth.ReceiveParameters(r);
+                Assert.Equal(typeof(int), restored[0]);
+                Assert.Equal(typeof(ParameterTransferHelper), restored[1]);
+            }
+        }
+
+        [Fact]
+        public void CompressedStringArray_UsesCompressedUnknownAndRoundTrips()
+        {
+            // Regression: a string[] over the compression threshold used to be written
+            // with the Unknown type byte but a compressed payload, which no receiver
+            // could decode. It must use CompressedUnknown (0x23, readable since v1.5.0).
+            var data = new string[] { new string('a', 800), new string('b', 800), null };
+            var actual = Send(true, 1024, (object)data);
+
+            using (var ms = new MemoryStream(actual))
+            using (var r = new BinaryReader(ms))
+            {
+                Assert.Equal(1, r.ReadInt32());
+                Assert.Equal(0x23, r.ReadByte()); // CompressedUnknown
+                Assert.Equal("System.String[]", r.ReadString());
+                var len = r.ReadInt32();
+                var payload = r.ReadBytes(len);
+                Assert.Equal(ms.Length, ms.Position);
+                var restored = (string[])new DefaultSerializer().Deserialize(
+                    new DefaultCompressor().DeCompress(payload), "System.String[]");
+                Assert.Equal(data, restored);
+            }
+
+            // and the production reader must round-trip it end to end
+            var pth = new ParameterTransferHelper(new DefaultSerializer(), new DefaultCompressor());
+            using (var ms = new MemoryStream(actual))
+            using (var r = new BinaryReader(ms))
+            {
+                var received = pth.ReceiveParameters(r);
+                Assert.Equal(data, (string[])received[0]);
+            }
+        }
+
+        [Fact]
         public void ConfigNames_MatchGoldenStrings()
         {
             // These exact strings ride the wire; they must never change for existing types.

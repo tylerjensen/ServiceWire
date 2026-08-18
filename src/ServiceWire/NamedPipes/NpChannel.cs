@@ -23,8 +23,8 @@ namespace ServiceWire.NamedPipes
             _clientStream = new NamedPipeClientStream(npEndPoint.ServerName, npEndPoint.PipeName, PipeDirection.InOut);
             _clientStream.Connect(npEndPoint.ConnectTimeOutMs);
             _stream = new BufferedStream(_clientStream);
-            _binReader = new BinaryReader(_clientStream);
-            _binWriter = new BinaryWriter(_clientStream);
+            _binReader = new BinaryReader(_stream);
+            _binWriter = new BinaryWriter(_stream);
             try
             {
                 SyncInterface(_serviceType);

@@ -113,10 +113,10 @@ namespace ServiceWire
                                 break;
                             case ParameterTypes.ArrayString:
                                 var array = (string[])parameter;
-                                var total = (from n in array select n.Length).Sum();
+                                var total = (from n in array select n?.Length ?? 0).Sum();
                                 if (total > compressionThreshold)
                                 {
-                                    typeByte = ParameterTypes.Unknown;
+                                    typeByte = ParameterTypes.CompressedUnknown;
                                     dataBytes = _compressor.Compress(_serializer.Serialize(array, type.ToConfigName()));
                                 }
                                 break;
@@ -183,7 +183,8 @@ namespace ServiceWire
                             writer.Write((ushort)parameter);
                             break;
                         case ParameterTypes.Type:
-                            writer.Write(type.ToConfigName());
+                            //the parameter value itself is the Type being transferred
+                            writer.Write(((Type)parameter).ToConfigName());
                             break;
                         case ParameterTypes.Guid:
                             writer.Write(((Guid)parameter).ToByteArray());
@@ -370,7 +371,7 @@ namespace ServiceWire
                             break;
                         case ParameterTypes.Type:
                             var typeName = reader.ReadString();
-                            parameters[i] = Type.GetType(typeName);
+                            parameters[i] = typeName.ToType();
                             break;
                         case ParameterTypes.Guid:
                             parameters[i] = new Guid(reader.ReadBytes(16));
@@ -459,7 +460,7 @@ namespace ServiceWire
                         case ParameterTypes.ArrayType:
                             var tlen = reader.ReadInt32();
                             var ts = new Type[tlen];
-                            for (int x = 0; x < tlen; x++) ts[x] = Type.GetType(reader.ReadString());
+                            for (int x = 0; x < tlen; x++) ts[x] = reader.ReadString().ToType();
                             parameters[i] = ts;
                             break;
                         case ParameterTypes.ArrayGuid:
@@ -502,6 +503,13 @@ namespace ServiceWire
             byte parameterType;
             if (_parameterTypes.TryGetValue(type, out parameterType))
                 return parameterType;
+            //a Type value's runtime type is RuntimeType (and a Type[] created by
+            //reflection can be RuntimeType[]), which never matches the exact-type
+            //map above; map them to the Type codes the wire format already defines
+            if (typeof(Type).IsAssignableFrom(type))
+                return ParameterTypes.Type;
+            if (type.IsArray && typeof(Type).IsAssignableFrom(type.GetElementType()))
+                return ParameterTypes.ArrayType;
             return ParameterTypes.Unknown;
         }
     }

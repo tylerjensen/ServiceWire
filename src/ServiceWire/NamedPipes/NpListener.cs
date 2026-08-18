@@ -110,7 +110,7 @@ namespace ServiceWire.NamedPipes
             NamedPipeServerStream pipeStream = null;
             try
             {
-                pipeStream = _streamFactory.Create(PipeName, PipeDirection.InOut, _maxConnections, PipeTransmissionMode.Byte, PipeOptions.None, 512, 512);
+                pipeStream = _streamFactory.Create(PipeName, PipeDirection.InOut, _maxConnections, PipeTransmissionMode.Byte, PipeOptions.None, 8192, 8192);
                 pipeStream.WaitForConnection();
 
                 // Stop() makes a local connection to release WaitForConnection. Do not
