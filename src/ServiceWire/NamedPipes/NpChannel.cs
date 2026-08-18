@@ -20,11 +20,17 @@ namespace ServiceWire.NamedPipes
         {
             _serviceType = serviceType;
             _channelIdentifier = new NpChannelIdentifier(npEndPoint);
-            _clientStream = new NamedPipeClientStream(npEndPoint.ServerName, npEndPoint.PipeName, PipeDirection.InOut);
+            //PipeOptions.Asynchronous: a synchronous pipe handle serializes concurrent
+            //ReadFile/WriteFile, which would deadlock the v2 reader thread against
+            //writers; an overlapped handle lets a blocked read coexist with writes
+            _clientStream = new NamedPipeClientStream(npEndPoint.ServerName, npEndPoint.PipeName,
+                PipeDirection.InOut, PipeOptions.Asynchronous);
             _clientStream.Connect(npEndPoint.ConnectTimeOutMs);
-            _stream = new BufferedStream(_clientStream);
-            _binReader = new BinaryReader(_stream);
-            _binWriter = new BinaryWriter(_stream);
+            _stream = _clientStream;
+            //independent read and write buffers: a shared BufferedStream cannot serve
+            //concurrent readers and writers (single buffer, mode switch needs a seek)
+            _binReader = new BinaryReader(new BufferedStream(_clientStream));
+            _binWriter = new BinaryWriter(new BufferedStream(_clientStream));
             try
             {
                 SyncInterface(_serviceType);

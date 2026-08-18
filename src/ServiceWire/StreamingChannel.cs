@@ -24,9 +24,27 @@ namespace ServiceWire
         private volatile bool _v2Confirmed;
         private int _nextCorrelationId;
         private ServiceSyncInfoCacheKey _syncInfoCacheKey;
-        private readonly Dictionary<string, MethodSyncInfo> _methodCache = new Dictionary<string, MethodSyncInfo>(StringComparer.Ordinal);
-        private readonly Dictionary<int, Type> _returnTypeCache = new Dictionary<int, Type>();
-        private readonly Dictionary<int, Func<object, object>> _taskFromResultCache = new Dictionary<int, Func<object, object>>();
+
+        //v2 pipelining: the write lock covers only the frame write, a dedicated
+        //reader thread demultiplexes responses by correlation id, and each caller
+        //blocks on its own pending entry instead of the whole round trip
+        private readonly object _writeLock = new object();
+        private readonly ConcurrentDictionary<int, TaskCompletionSource<V2Response>> _pending =
+            new ConcurrentDictionary<int, TaskCompletionSource<V2Response>>();
+        private Task _readerLoop;
+        private readonly object _readerStartLock = new object();
+        private volatile Exception _channelFault;
+
+        private struct V2Response
+        {
+            public byte Status;
+            public byte Flags;
+            public byte[] Payload;
+        }
+        //concurrent because v2 channels allow parallel in-flight calls
+        private readonly ConcurrentDictionary<string, MethodSyncInfo> _methodCache = new ConcurrentDictionary<string, MethodSyncInfo>(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<int, Type> _returnTypeCache = new ConcurrentDictionary<int, Type>();
+        private readonly ConcurrentDictionary<int, Func<object, object>> _taskFromResultCache = new ConcurrentDictionary<int, Func<object, object>>();
 
         // keep cached sync info to avoid redundant wire trips
         private static readonly ConcurrentDictionary<ServiceSyncInfoCacheKey, ServiceSyncInfo> SyncInfoCache = new ConcurrentDictionary<ServiceSyncInfoCacheKey, ServiceSyncInfo>();
@@ -74,6 +92,7 @@ namespace ServiceWire
                 _logger.Debug("username sent to server: {0}", username);
 
                 _binWriter.Write(aClientEphemeral); //always 32 bytes
+                _binWriter.Flush(); //reads and writes use independent buffers; flush before reading
                 if (debugEnabled) _logger.Debug("ClientEphemeral (A) sent to server: {0}", Convert.ToBase64String(aClientEphemeral));
 
                 // get response from server
@@ -101,6 +120,7 @@ namespace ServiceWire
                 // send to server and server verifies
                 _binWriter.Write((int)MessageType.ZkProof);
                 _binWriter.Write(clientSessionHash); //always 32 bytes
+                _binWriter.Flush(); //reads and writes use independent buffers; flush before reading
 
                 if (debugEnabled) _logger.Debug("ClientSessionKey Hash sent to server: {0}", Convert.ToBase64String(clientSessionHash));
 
@@ -148,6 +168,7 @@ namespace ServiceWire
                 {
                     _binWriter.Write(serviceType.ToConfigName());
                 }
+                _binWriter.Flush(); //reads and writes use independent buffers; flush before reading
                 //read sync data
                 var len = _binReader.ReadInt32();
                 //len is zero when AssemblyQualifiedName not same version or not found
@@ -176,14 +197,18 @@ namespace ServiceWire
         /// the method, including any marked as "ref" or "out"</returns>
         protected override object[] InvokeMethod(string metaData, params object[] parameters)
         {
-            //prevent call to invoke method on more than one thread at a time
+            if (_useWireV2)
+            {
+                //v2 pipelines: no whole-round-trip lock; callers block only on their own response
+                return InvokeMethodV2(ResolveMethod(metaData), null != _zkCrypto, _logger.IsDebugEnabled(), parameters);
+            }
+
+            //v1: prevent call to invoke method on more than one thread at a time
             lock (_syncRoot)
             {
                 var useCrypto = null != _zkCrypto;
                 var debugEnabled = _logger.IsDebugEnabled();
                 var methodSyncInfo = ResolveMethod(metaData);
-                if (_useWireV2)
-                    return InvokeMethodV2(methodSyncInfo, useCrypto, debugEnabled, parameters);
                 var ident = methodSyncInfo.MethodIdent;
 
                 //write the message type
@@ -294,38 +319,38 @@ namespace ServiceWire
 
             const int requestHeaderLength = 13; //correlationId + serviceKey + methodIdent + flags
             var correlationId = System.Threading.Interlocked.Increment(ref _nextCorrelationId);
+            var pendingResponse = new TaskCompletionSource<V2Response>(TaskCreationOptions.RunContinuationsAsynchronously);
             try
             {
-                _binWriter.Write((int)MessageType.MethodInvocation2);
-                _binWriter.Write(requestHeaderLength + payload.Length);
-                _binWriter.Write(correlationId);
-                _binWriter.Write(_syncInfo.ServiceKeyIndex);
-                _binWriter.Write(methodSyncInfo.MethodIdent);
-                _binWriter.Write((byte)(useCrypto ? 1 : 0));
-                _binWriter.Write(payload);
-                _binWriter.Flush();
+                var fault = _channelFault;
+                if (null != fault) throw new IOException("The channel reader has faulted.", fault);
 
-                var messageType = (MessageType)_binReader.ReadInt32();
-                if (messageType != MessageType.Response2)
-                    throw new IOException(string.Format("Expected Response2 but received message type {0}; stream is desynchronized.", messageType));
-                var frameLength = _binReader.ReadInt32();
-                var responseCorrelationId = _binReader.ReadInt32();
-                var status = _binReader.ReadByte();
-                var frameFlags = _binReader.ReadByte();
-                const int responseHeaderLength = 6; //correlationId + status + flags
-                var responsePayloadLength = frameLength - responseHeaderLength;
-                var responsePayload = responsePayloadLength > 0 ? _binReader.ReadBytes(responsePayloadLength) : new byte[0];
-                if (responseCorrelationId != correlationId)
-                    throw new IOException("Response correlation id does not match the request; stream is desynchronized.");
-                _v2Confirmed = true;
+                //register before writing so the response can never race the registration
+                _pending[correlationId] = pendingResponse;
+                EnsureReaderLoop();
 
-                if (status == 2) throw new Exception("Unknown method.");
+                lock (_writeLock)
+                {
+                    _binWriter.Write((int)MessageType.MethodInvocation2);
+                    _binWriter.Write(requestHeaderLength + payload.Length);
+                    _binWriter.Write(correlationId);
+                    _binWriter.Write(_syncInfo.ServiceKeyIndex);
+                    _binWriter.Write(methodSyncInfo.MethodIdent);
+                    _binWriter.Write((byte)(useCrypto ? 1 : 0));
+                    _binWriter.Write(payload);
+                    _binWriter.Flush();
+                }
+
+                //block this caller on its own response only
+                var response = pendingResponse.Task.GetAwaiter().GetResult();
+
+                if (response.Status == 2) throw new Exception("Unknown method.");
 
                 object[] outParams;
-                using (var ms = new MemoryStream(responsePayload))
+                using (var ms = new MemoryStream(response.Payload))
                 using (var br = new BinaryReader(ms))
                 {
-                    if (0 != (frameFlags & 1))
+                    if (0 != (response.Flags & 1))
                     {
                         var len = br.ReadInt32();
                         var encData = br.ReadBytes(len);
@@ -343,7 +368,7 @@ namespace ServiceWire
                     }
                 }
 
-                if (status == 1) throw (Exception)outParams[0];
+                if (response.Status == 1) throw (Exception)outParams[0];
 
                 return ApplyTaskConversion(methodSyncInfo, outParams);
             }
@@ -358,6 +383,71 @@ namespace ServiceWire
                 throw new InvalidOperationException(
                     "The server rejected a v2 framed request that was sent based on cached capability data. " +
                     "The stale cache entry has been evicted; create a new channel to renegotiate.", e);
+            }
+            finally
+            {
+                _pending.TryRemove(correlationId, out _);
+            }
+        }
+
+        private void EnsureReaderLoop()
+        {
+            if (null != _readerLoop) return;
+            lock (_readerStartLock)
+            {
+                if (null != _readerLoop) return;
+                _readerLoop = Task.Factory.StartNew(ReaderLoop, TaskCreationOptions.LongRunning);
+            }
+        }
+
+        /// <summary>
+        /// Dedicated response reader for v2 channels. Any failure faults every
+        /// in-flight call; a v2 channel does not survive a desynchronized stream.
+        /// </summary>
+        private void ReaderLoop()
+        {
+            try
+            {
+                while (!_disposed)
+                {
+                    var messageType = (MessageType)_binReader.ReadInt32();
+                    if (messageType != MessageType.Response2)
+                        throw new IOException(string.Format("Expected Response2 but received message type {0}; stream is desynchronized.", messageType));
+                    var frameLength = _binReader.ReadInt32();
+                    var correlationId = _binReader.ReadInt32();
+                    var status = _binReader.ReadByte();
+                    var flags = _binReader.ReadByte();
+                    const int responseHeaderLength = 6; //correlationId + status + flags
+                    var payloadLength = frameLength - responseHeaderLength;
+                    var payload = payloadLength > 0 ? _binReader.ReadBytes(payloadLength) : new byte[0];
+                    if (payloadLength > 0 && payload.Length < payloadLength)
+                        throw new EndOfStreamException("Truncated Response2 frame.");
+                    _v2Confirmed = true;
+
+                    TaskCompletionSource<V2Response> pendingResponse;
+                    if (_pending.TryRemove(correlationId, out pendingResponse))
+                    {
+                        pendingResponse.TrySetResult(new V2Response { Status = status, Flags = flags, Payload = payload });
+                    }
+                    //an unmatched correlation id means the caller already gave up; drop the frame
+                }
+            }
+            catch (Exception e)
+            {
+                _channelFault = e;
+                FaultAllPending(e);
+            }
+        }
+
+        private void FaultAllPending(Exception e)
+        {
+            foreach (var key in _pending.Keys)
+            {
+                TaskCompletionSource<V2Response> pendingResponse;
+                if (_pending.TryRemove(key, out pendingResponse))
+                {
+                    pendingResponse.TrySetException(e);
+                }
             }
         }
 
@@ -403,7 +493,7 @@ namespace ServiceWire
 
                 if (matchingParameterTypes)
                 {
-                    _methodCache.Add(metaData, method);
+                    _methodCache.TryAdd(metaData, method);
                     return method;
                 }
             }
@@ -419,7 +509,7 @@ namespace ServiceWire
 
             returnType = methodSyncInfo.MethodReturnType.ToType();
             if (returnType != null)
-                _returnTypeCache.Add(methodSyncInfo.MethodIdent, returnType);
+                _returnTypeCache.TryAdd(methodSyncInfo.MethodIdent, returnType);
             return returnType;
         }
 
@@ -430,7 +520,7 @@ namespace ServiceWire
                 return converter;
 
             converter = MethodInvokerCompiler.CompileTaskFromResult(returnType);
-            _taskFromResultCache.Add(methodIdent, converter);
+            _taskFromResultCache.TryAdd(methodIdent, converter);
             return converter;
         }
 
@@ -456,12 +546,25 @@ namespace ServiceWire
                 {
                     try
                     {
-                        _binWriter.Write((int)MessageType.TerminateConnection);
+                        //best effort: a dead connection must not prevent cleanup
+                        lock (_writeLock)
+                        {
+                            _binWriter.Write((int)MessageType.TerminateConnection);
+                            _binWriter.Flush();
+                        }
                     }
+                    catch (IOException) { }
+                    catch (ObjectDisposedException) { }
                     finally
                     {
-                        if (null != _binWriter) _binWriter.Dispose();
-                        if (null != _binReader) _binReader.Dispose();
+                        //reader and writer buffer the same underlying stream, so whichever
+                        //is disposed second flushes into an already-closed transport;
+                        //closing also unblocks the v2 reader loop, which faults any
+                        //remaining in-flight calls
+                        try { _binWriter?.Dispose(); } catch (IOException) { } catch (ObjectDisposedException) { }
+                        try { _binReader?.Dispose(); } catch (IOException) { } catch (ObjectDisposedException) { }
+                        _zkCrypto?.Dispose();
+                        FaultAllPending(new ObjectDisposedException(GetType().Name));
                     }
                 }
             }

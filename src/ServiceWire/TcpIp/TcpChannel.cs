@@ -123,9 +123,14 @@ namespace ServiceWire.TcpIp
 
         private void Initialize(Type serviceType)
         {
-            _stream = new BufferedStream(new NetworkStream(_client), 8192);
-            _binReader = new BinaryReader(_stream);
-            _binWriter = new BinaryWriter(_stream);
+            //independent read and write buffers over one NetworkStream: v2 channels
+            //read responses on a dedicated thread while callers write, and a shared
+            //BufferedStream cannot serve concurrent readers and writers (its single
+            //buffer requires a seek to switch modes). NetworkStream itself supports
+            //one concurrent reader plus one concurrent writer.
+            _stream = new NetworkStream(_client);
+            _binReader = new BinaryReader(new BufferedStream(_stream, 8192));
+            _binWriter = new BinaryWriter(new BufferedStream(_stream, 8192));
 
             try
             {

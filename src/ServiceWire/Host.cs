@@ -358,8 +358,11 @@ namespace ServiceWire
             }
             finally
             {
-                binReader.Close();
-                binWriter.Close();
+                //close the writer first so its flush happens while the transport is
+                //still open; the second close flushes into an already-closed stream
+                //on some transports, which must not surface from cleanup
+                try { binWriter.Close(); } catch (IOException) { } catch (ObjectDisposedException) { } catch (NotSupportedException) { }
+                try { binReader.Close(); } catch (IOException) { } catch (ObjectDisposedException) { } catch (NotSupportedException) { }
             }
         }
 

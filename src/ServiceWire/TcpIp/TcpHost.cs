@@ -182,11 +182,15 @@ namespace ServiceWire.TcpIp
 
         private void StartProcessingRequestsOnSocket(Socket activeSocket)
         {
-            BufferedStream stream = null;
+            NetworkStream stream = null;
             try
             {
-                stream = new BufferedStream(new NetworkStream(activeSocket), 8192);
-                base.ProcessRequest(stream);
+                stream = new NetworkStream(activeSocket);
+                //separate read and write buffers: pipelined clients can have the next
+                //request already in flight while a response is written, and one shared
+                //BufferedStream cannot switch from a non-empty read buffer to writing
+                //over a non-seekable stream
+                base.ProcessRequest(new BufferedStream(stream, 8192), new BufferedStream(stream, 8192));
             }
             catch (Exception ex)
             {

@@ -67,8 +67,11 @@ namespace ServiceWire.NamedPipes
         /// <param name="args"></param>
         private void ClientConnectionMade(object sender, PipeClientConnectionEventArgs args)
         {
-            var stream = new BufferedStream(args.PipeStream);
-            base.ProcessRequest(stream);
+            //separate read and write buffers: pipelined clients can have the next
+            //request already in flight while a response is written, and one shared
+            //BufferedStream cannot switch from a non-empty read buffer to writing
+            //over a non-seekable stream
+            base.ProcessRequest(new BufferedStream(args.PipeStream), new BufferedStream(args.PipeStream));
         }
 
         private void ListenerFaulted(Exception exception)
