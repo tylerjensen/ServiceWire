@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <!-- the published 6.0.1 package, never the local project: this process IS the old peer -->
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ServiceWire" Version="6.0.1" />
+    <ProjectReference Include="..\InteropContract\InteropContract.csproj" />
+  </ItemGroup>
+</Project>

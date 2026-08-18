@@ -64,6 +64,40 @@ if (host.Status == HostStatus.Faulted)
 
 ## History
 
+### Performance Release with Negotiated Wire Protocol v2 7.0.0
+
+A major performance release. Both mixed-version pairings (6.x client with 7.0 server, and 7.0 client with 6.x server) keep working over the classic v1 wire path; the new v2 wire activates only when both ends are 7.0.
+
+Internal optimizations (wire format unchanged, proven byte-identical by golden tests):
+
+1. Memoized type-to-config-name resolution both directions, removing three regex passes per complex parameter per call and repeated `Type.GetType` lookups in `DefaultSerializer`.
+2. Fixed the named-pipe client to actually use its `BufferedStream`, collapsing dozens of per-field pipe syscalls per call into one (and fixing a pipe stream that was never disposed).
+3. Set `Socket.NoDelay` on client and accepted sockets to eliminate Nagle and delayed-ACK latency; both sides already buffer and flush once per message.
+4. Server dispatch through compiled expression delegates instead of `MethodInfo.Invoke` (byref methods fall back to reflection); async results through compiled `Task.Result` getters; client `Task.FromResult` wrapping through compiled converters. Client-visible exception behavior is unchanged and covered by parity tests.
+5. Proxy types are created and their constructors compiled once per pooled builder; creating a proxy is now a delegate call.
+6. Larger named-pipe server buffers, connect-path event wait instead of a spin loop, `CompressionLevel.Fastest` in the default compressor, and reused ZK cipher instances (identical ciphertext).
+
+Multi-targeting: the package now ships `netstandard2.0` (unchanged 6.x dependency graph, so no new binding redirects for .NET Framework consumers) and `net8.0` (no package dependencies, plus span-based fast paths that produce identical wire bytes).
+
+Bug fixes:
+
+1. A `string[]` above the compression threshold was written with a type code no receiver could decode; it now uses `CompressedUnknown`, which every release since 1.5.0 can read.
+2. Scalar `Type` parameters crashed the default serializer; they now use the wire format's `Type` code.
+3. Thrown exceptions could not be serialized by System.Text.Json (`TargetSite`), which killed the connection whenever a service method threw with the default serializer; a converter now preserves the exception type, message, HResult, inner chain, and server stack trace.
+
+Wire protocol v2 (negotiated; never sent to a 6.x peer):
+
+1. Servers advertise capabilities through a new additive `ServiceSyncInfo.CapabilityFlags` member (tolerant serializers on 6.x clients ignore it; a strict custom `ISerializer` on a 6.x client may need updating - this is part of why this release is a major version).
+2. Framed `MethodInvocation2`/`Response2` messages with length prefixes and correlation ids: a request payload that fails to decode is answered with a correlated error response instead of desynchronizing the stream and killing the connection.
+3. `DateTime` values travel as `ToBinary()` (Kind-preserving, no string parsing).
+4. Concurrent in-flight calls on a shared client proxy: callers no longer serialize on a whole-round-trip lock; a reader thread pairs responses to callers by correlation id while the server executes each connection's requests strictly in order.
+5. `Host.EnableWireV2 = false` (before `AddService`) forces all clients onto the v1 wire when phasing a mixed fleet.
+6. In-place server downgrades with a stale cached capability produce a descriptive error and evict the cache so the next channel renegotiates.
+
+Opt-in additions (defaults preserve prior behavior): TCP receive/send timeouts on `TcpEndPoint` and `TcpHost`, and a persistent log file writer via `LoggerBase.PersistentFileWriter`.
+
+A new interop test matrix runs the published ServiceWire 6.0.1 package as a separate process against 7.0 in both directions across TCP and named pipes, with and without compression, in CI.
+
 ### Connection and Logging Reliability Fixes 6.0.1
 
 1. Fixed retained TCP connection resources by detaching and disposing `SocketAsyncEventArgs` after connection attempts ([#90](https://github.com/tylerjensen/ServiceWire/issues/90)).
