@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using ServiceWire.NamedPipes;
+using ServiceWire.TcpIp;
 using Xunit;
 
 namespace ServiceWireTests
@@ -37,25 +39,32 @@ namespace ServiceWireTests
     }
 
     /// <summary>
-    /// v2 channels pipeline: multiple threads share one proxy, each blocking only on
-    /// its own correlated response while the server executes serially per connection.
+    /// v2 TCP channels pipeline: multiple threads share one proxy, each blocking only
+    /// on its own correlated response while the server executes serially per
+    /// connection. Named-pipe channels serialize the exchange (the transport cannot
+    /// overlap reads and writes) but must still pair results correctly.
     /// </summary>
     public class PipeliningTests
     {
-        private static NpHost CreateHost(out string pipeName)
+        private static TcpHost CreateTcpHost(out int port)
         {
-            pipeName = "PipeliningTests" + Guid.NewGuid().ToString("N");
-            var host = new NpHost(pipeName);
+            port = new Random().Next(30000, 39999);
+            var host = new TcpHost(port);
             host.AddService<IConcurrencyTester>(new ConcurrencyTester());
             host.Open();
             return host;
         }
 
-        [Fact]
-        public void SharedProxy_ConcurrentCalls_AreCorrectlyPaired()
+        private static TcpClient<IConcurrencyTester> CreateTcpClient(int port)
         {
-            using (var host = CreateHost(out var pipeName))
-            using (var client = new NpClient<IConcurrencyTester>(new NpEndPoint(pipeName)))
+            return new TcpClient<IConcurrencyTester>(new TcpEndPoint(new IPEndPoint(IPAddress.Loopback, port), 5000));
+        }
+
+        [Fact]
+        public void SharedTcpProxy_ConcurrentCalls_AreCorrectlyPaired()
+        {
+            using (var host = CreateTcpHost(out var port))
+            using (var client = CreateTcpClient(port))
             {
                 var proxy = client.Proxy;
                 var tasks = Enumerable.Range(0, 24).Select(i =>
@@ -67,10 +76,30 @@ namespace ServiceWireTests
         }
 
         [Fact]
-        public void SharedProxy_ConcurrentIncrements_ExecuteSeriallyOnServer()
+        public void SharedNpProxy_ConcurrentCalls_AreCorrectlyPaired()
         {
-            using (var host = CreateHost(out var pipeName))
-            using (var client = new NpClient<IConcurrencyTester>(new NpEndPoint(pipeName)))
+            var pipeName = "PipeliningTests" + Guid.NewGuid().ToString("N");
+            using (var host = new NpHost(pipeName))
+            {
+                host.AddService<IConcurrencyTester>(new ConcurrencyTester());
+                host.Open();
+                using (var client = new NpClient<IConcurrencyTester>(new NpEndPoint(pipeName)))
+                {
+                    var proxy = client.Proxy;
+                    var tasks = Enumerable.Range(0, 24).Select(i =>
+                        Task.Run(() => new { Sent = i, Received = proxy.EchoAfter(i, 0) })).ToArray();
+                    Task.WaitAll(tasks, TimeSpan.FromSeconds(30));
+                    foreach (var t in tasks)
+                        Assert.Equal(t.Result.Sent, t.Result.Received);
+                }
+            }
+        }
+
+        [Fact]
+        public void SharedTcpProxy_ConcurrentIncrements_ExecuteSeriallyOnServer()
+        {
+            using (var host = CreateTcpHost(out var port))
+            using (var client = CreateTcpClient(port))
             {
                 var proxy = client.Proxy;
                 const int callers = 16;
@@ -89,9 +118,9 @@ namespace ServiceWireTests
         [Fact]
         public void DisposeWithPendingCall_FaultsThePendingCaller()
         {
-            using (var host = CreateHost(out var pipeName))
+            using (var host = CreateTcpHost(out var port))
             {
-                var client = new NpClient<IConcurrencyTester>(new NpEndPoint(pipeName));
+                var client = CreateTcpClient(port);
                 var proxy = client.Proxy;
 
                 var pendingCall = Task.Run(() =>
@@ -102,6 +131,5 @@ namespace ServiceWireTests
                     "pending call did not fault after client dispose");
             }
         }
-
     }
 }

@@ -85,14 +85,17 @@ Bug fixes:
 2. Scalar `Type` parameters crashed the default serializer; they now use the wire format's `Type` code.
 3. Thrown exceptions could not be serialized by System.Text.Json (`TargetSite`), which killed the connection whenever a service method threw with the default serializer; a converter now preserves the exception type, message, HResult, inner chain, and server stack trace.
 
-Wire protocol v2 (negotiated; never sent to a 6.x peer):
+Wire protocol v2 (negotiated; never sent to a 6.x peer; TCP only):
 
 1. Servers advertise capabilities through a new additive `ServiceSyncInfo.CapabilityFlags` member (tolerant serializers on 6.x clients ignore it; a strict custom `ISerializer` on a 6.x client may need updating - this is part of why this release is a major version).
 2. Framed `MethodInvocation2`/`Response2` messages with length prefixes and correlation ids: a request payload that fails to decode is answered with a correlated error response instead of desynchronizing the stream and killing the connection.
 3. `DateTime` values travel as `ToBinary()` (Kind-preserving, no string parsing).
-4. Concurrent in-flight calls on a shared client proxy: callers no longer serialize on a whole-round-trip lock; a reader thread pairs responses to callers by correlation id while the server executes each connection's requests strictly in order.
-5. `Host.EnableWireV2 = false` (before `AddService`) forces all clients onto the v1 wire when phasing a mixed fleet.
-6. In-place server downgrades with a stale cached capability produce a descriptive error and evict the cache so the next channel renegotiates.
+4. Concurrent in-flight calls on a shared TCP client proxy: callers no longer serialize on a whole-round-trip lock. Whichever caller holds the read seat pairs responses to callers by correlation id while the server executes each connection's requests strictly in order; an uncontended caller reads inline with no thread handoff.
+5. Named-pipe channels deliberately stay on the v1 wire: synchronous pipe handles cannot overlap reads and writes, so v2 buys no pipelining there, and measurement showed its per-call frame cost is a net loss on a local transport.
+6. The v2 frame costs roughly 8-10 microseconds per call, which is only measurable on loopback with strictly sequential callers; on a real network it is far below the round-trip time and pipelining dominates. Two opt-outs exist: `Host.EnableWireV2 = false` (before `AddService`) forces all clients onto the v1 wire, and `TcpEndPoint.UseWireV2 = false` does the same per client.
+7. In-place server downgrades with a stale cached capability produce a descriptive error and evict the cache so the next channel renegotiates.
+
+Measured on loopback (5,000-call batches, .NET 8, same machine, 6.0.1 vs 7.0.0): named pipes sequential small calls +50% (39.7k to 59.5k calls/s), named pipes 100-int array echo +920% (5.8k to 58.8k), named pipes DateTime echo +53%, named pipes 8-thread shared proxy +38%; TCP 8-thread shared proxy improved (run-to-run variance is high; up to 2x observed), TCP DateTime echo level, TCP sequential small calls about -20% from v2 framing (use either opt-out to recover it when a strictly sequential loopback workload matters).
 
 Opt-in additions (defaults preserve prior behavior): TCP receive/send timeouts on `TcpEndPoint` and `TcpHost`, and a persistent log file writer via `LoggerBase.PersistentFileWriter`.
 

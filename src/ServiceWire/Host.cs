@@ -636,26 +636,27 @@ namespace ServiceWire
                 status = 2; //unknown service or method, correlated to the exact call
             }
 
-            //buffer the response payload to compute the frame length
-            byte[] responsePayload = new byte[0];
+            //buffer the response payload to compute the frame length; the buffer is
+            //written directly (no ToArray copy) and left for the GC
+            byte[] responseBuffer = new byte[0];
+            int responseLength = 0;
             if (status != 2)
             {
-                using (var ms = new MemoryStream())
-                using (var bw = new BinaryWriter(ms))
-                {
-                    WriteReturnParameters(session, bw, invokedInstance, returnParameters, WireVersion.V2);
-                    bw.Flush();
-                    responsePayload = ms.ToArray();
-                }
+                var ms = new MemoryStream();
+                var bw = new BinaryWriter(ms);
+                WriteReturnParameters(session, bw, invokedInstance, returnParameters, WireVersion.V2);
+                bw.Flush();
+                responseBuffer = ms.GetBuffer();
+                responseLength = (int)ms.Length;
             }
 
             const int responseHeaderLength = 6; //correlationId + status + flags
             binWriter.Write((int)MessageType.Response2);
-            binWriter.Write(responseHeaderLength + responsePayload.Length);
+            binWriter.Write(responseHeaderLength + responseLength);
             binWriter.Write(correlationId);
             binWriter.Write(status);
             binWriter.Write((byte)(_requireZk ? 1 : 0));
-            binWriter.Write(responsePayload);
+            binWriter.Write(responseBuffer, 0, responseLength);
             binWriter.Flush();
             if (_stats.IsEnabled()) _stats.Log(cat, stat, sw.ElapsedMilliseconds);
         }

@@ -20,11 +20,7 @@ namespace ServiceWire.NamedPipes
         {
             _serviceType = serviceType;
             _channelIdentifier = new NpChannelIdentifier(npEndPoint);
-            //PipeOptions.Asynchronous: a synchronous pipe handle serializes concurrent
-            //ReadFile/WriteFile, which would deadlock the v2 reader thread against
-            //writers; an overlapped handle lets a blocked read coexist with writes
-            _clientStream = new NamedPipeClientStream(npEndPoint.ServerName, npEndPoint.PipeName,
-                PipeDirection.InOut, PipeOptions.Asynchronous);
+            _clientStream = new NamedPipeClientStream(npEndPoint.ServerName, npEndPoint.PipeName, PipeDirection.InOut);
             _clientStream.Connect(npEndPoint.ConnectTimeOutMs);
             _stream = _clientStream;
             //independent read and write buffers: a shared BufferedStream cannot serve
@@ -43,6 +39,11 @@ namespace ServiceWire.NamedPipes
         }
 
         protected override IChannelIdentifier ChannelIdentifier => _channelIdentifier;
+
+        //named pipes stay on the v1 wire: their synchronous handles cannot overlap
+        //reads and writes, so v2 buys no pipelining, and its per-call frame cost is
+        //a measured net loss on a local transport
+        protected override bool AllowWireV2 => false;
 
         public override bool IsConnected { get { return (null != _clientStream) && _clientStream.IsConnected; } }
     }

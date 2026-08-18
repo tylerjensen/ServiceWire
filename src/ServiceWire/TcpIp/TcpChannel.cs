@@ -12,6 +12,9 @@ namespace ServiceWire.TcpIp
         private readonly string _username;
         private readonly string _password;
         private readonly TcpChannelIdentifier _channelIdentifier;
+        private readonly bool _allowWireV2 = true;
+
+        protected override bool AllowWireV2 => _allowWireV2;
 
         public TcpChannel(Type serviceType, IPEndPoint endpoint, ISerializer serializer, ICompressor compressor, ILog logger = null, IStats stats = null)
             : base(serializer, compressor, logger, stats)
@@ -32,6 +35,7 @@ namespace ServiceWire.TcpIp
             _client = CreateSocket(endpoint.EndPoint, endpoint.ConnectTimeOutMs);
             if (endpoint.ReceiveTimeoutMs > 0) _client.ReceiveTimeout = endpoint.ReceiveTimeoutMs;
             if (endpoint.SendTimeoutMs > 0) _client.SendTimeout = endpoint.SendTimeoutMs;
+            _allowWireV2 = endpoint.UseWireV2;
             Initialize(serviceType);
         }
 

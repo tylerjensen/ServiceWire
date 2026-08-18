@@ -25,14 +25,17 @@ namespace ServiceWire
         private int _nextCorrelationId;
         private ServiceSyncInfoCacheKey _syncInfoCacheKey;
 
-        //v2 pipelining: the write lock covers only the frame write, a dedicated
-        //reader thread demultiplexes responses by correlation id, and each caller
-        //blocks on its own pending entry instead of the whole round trip
+        //v2 pipelining: the write lock covers only the frame write. Responses are
+        //demultiplexed by correlation id with a reader-seat (leader/follower)
+        //pattern: whichever caller holds the read seat drains frames -- completing
+        //other callers' pending entries as their responses stream past -- until its
+        //own arrives. An uncontended caller therefore reads inline exactly like v1
+        //(no thread handoff), and followers wake precisely when the seat frees
+        //because the server answers each connection's requests in request order.
         private readonly object _writeLock = new object();
+        private readonly object _readSeatLock = new object();
         private readonly ConcurrentDictionary<int, TaskCompletionSource<V2Response>> _pending =
             new ConcurrentDictionary<int, TaskCompletionSource<V2Response>>();
-        private Task _readerLoop;
-        private readonly object _readerStartLock = new object();
         private volatile Exception _channelFault;
 
         private struct V2Response
@@ -61,6 +64,16 @@ namespace ServiceWire
         }
 
         protected virtual IChannelIdentifier ChannelIdentifier { get; }
+
+        /// <summary>
+        /// Whether this channel uses the v2 wire when the server advertises it.
+        /// The v2 frame adds a small fixed per-call cost that buys pipelining and
+        /// decode-error resilience -- a clear win for sockets, but a net loss for
+        /// named pipes, whose synchronous handles cannot overlap reads and writes
+        /// (and whose local latency is too small to hide the overhead), so
+        /// NpChannel stays on the v1 wire. TcpChannel honors TcpEndPoint.UseWireV2.
+        /// </summary>
+        protected virtual bool AllowWireV2 => true;
 
         /// <summary>
         /// Returns true if client is connected to the server.
@@ -185,7 +198,7 @@ namespace ServiceWire
             }
 
             //a pre-7.0 server leaves CapabilityFlags at 0 and the channel stays on the v1 wire
-            _useWireV2 = 0 != (_syncInfo.CapabilityFlags & (int)ProtocolCapabilities.WireV2);
+            _useWireV2 = AllowWireV2 && 0 != (_syncInfo.CapabilityFlags & (int)ProtocolCapabilities.WireV2);
         }
 
         /// <summary>
@@ -288,34 +301,33 @@ namespace ServiceWire
         /// </summary>
         private object[] InvokeMethodV2(MethodSyncInfo methodSyncInfo, bool useCrypto, bool debugEnabled, object[] parameters)
         {
-            //build the payload first so the frame length is known
-            byte[] payload;
-            using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            //build the payload first so the frame length is known; the MemoryStream
+            //buffer is written directly (no ToArray copy) and left for the GC
+            var payloadMs = new MemoryStream();
+            var payloadWriter = new BinaryWriter(payloadMs);
+            if (useCrypto)
             {
-                if (useCrypto)
-                {
-                    byte[] callData;
-                    using (var innerMs = new MemoryStream())
-                    using (var innerBw = new BinaryWriter(innerMs))
-                    {
-                        _parameterTransferHelper.SendParameters(_syncInfo.UseCompression,
-                            _syncInfo.CompressionThreshold, innerBw, WireVersion.V2, parameters);
-                        callData = innerMs.ToArray();
-                    }
-                    if (debugEnabled) _logger.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(callData));
-                    var encData = _zkCrypto.Encrypt(callData);
-                    bw.Write(encData.Length);
-                    bw.Write(encData);
-                    if (debugEnabled) _logger.Debug("Encrypted data sent to server: {0}", Convert.ToBase64String(encData));
-                } else
+                byte[] callData;
+                using (var innerMs = new MemoryStream())
+                using (var innerBw = new BinaryWriter(innerMs))
                 {
                     _parameterTransferHelper.SendParameters(_syncInfo.UseCompression,
-                        _syncInfo.CompressionThreshold, bw, WireVersion.V2, parameters);
+                        _syncInfo.CompressionThreshold, innerBw, WireVersion.V2, parameters);
+                    callData = innerMs.ToArray();
                 }
-                bw.Flush();
-                payload = ms.ToArray();
+                if (debugEnabled) _logger.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(callData));
+                var encData = _zkCrypto.Encrypt(callData);
+                payloadWriter.Write(encData.Length);
+                payloadWriter.Write(encData);
+                if (debugEnabled) _logger.Debug("Encrypted data sent to server: {0}", Convert.ToBase64String(encData));
+            } else
+            {
+                _parameterTransferHelper.SendParameters(_syncInfo.UseCompression,
+                    _syncInfo.CompressionThreshold, payloadWriter, WireVersion.V2, parameters);
             }
+            payloadWriter.Flush();
+            var payloadLength = (int)payloadMs.Length;
+            var payloadBuffer = payloadMs.GetBuffer();
 
             const int requestHeaderLength = 13; //correlationId + serviceKey + methodIdent + flags
             var correlationId = System.Threading.Interlocked.Increment(ref _nextCorrelationId);
@@ -327,22 +339,20 @@ namespace ServiceWire
 
                 //register before writing so the response can never race the registration
                 _pending[correlationId] = pendingResponse;
-                EnsureReaderLoop();
 
                 lock (_writeLock)
                 {
                     _binWriter.Write((int)MessageType.MethodInvocation2);
-                    _binWriter.Write(requestHeaderLength + payload.Length);
+                    _binWriter.Write(requestHeaderLength + payloadLength);
                     _binWriter.Write(correlationId);
                     _binWriter.Write(_syncInfo.ServiceKeyIndex);
                     _binWriter.Write(methodSyncInfo.MethodIdent);
                     _binWriter.Write((byte)(useCrypto ? 1 : 0));
-                    _binWriter.Write(payload);
+                    _binWriter.Write(payloadBuffer, 0, payloadLength);
                     _binWriter.Flush();
                 }
 
-                //block this caller on its own response only
-                var response = pendingResponse.Task.GetAwaiter().GetResult();
+                var response = AwaitResponse(pendingResponse);
 
                 if (response.Status == 2) throw new Exception("Unknown method.");
 
@@ -390,53 +400,62 @@ namespace ServiceWire
             }
         }
 
-        private void EnsureReaderLoop()
-        {
-            if (null != _readerLoop) return;
-            lock (_readerStartLock)
-            {
-                if (null != _readerLoop) return;
-                _readerLoop = Task.Factory.StartNew(ReaderLoop, TaskCreationOptions.LongRunning);
-            }
-        }
-
         /// <summary>
-        /// Dedicated response reader for v2 channels. Any failure faults every
-        /// in-flight call; a v2 channel does not survive a desynchronized stream.
+        /// Blocks until this caller's response arrives. The caller that acquires the
+        /// read seat drains response frames -- completing other pending callers as
+        /// their responses stream past -- until its own completes; other callers
+        /// block on the seat and wake exactly when it is released.
         /// </summary>
-        private void ReaderLoop()
+        private V2Response AwaitResponse(TaskCompletionSource<V2Response> pendingResponse)
         {
-            try
+            var task = pendingResponse.Task;
+            while (!task.IsCompleted)
             {
-                while (!_disposed)
+                lock (_readSeatLock)
                 {
-                    var messageType = (MessageType)_binReader.ReadInt32();
-                    if (messageType != MessageType.Response2)
-                        throw new IOException(string.Format("Expected Response2 but received message type {0}; stream is desynchronized.", messageType));
-                    var frameLength = _binReader.ReadInt32();
-                    var correlationId = _binReader.ReadInt32();
-                    var status = _binReader.ReadByte();
-                    var flags = _binReader.ReadByte();
-                    const int responseHeaderLength = 6; //correlationId + status + flags
-                    var payloadLength = frameLength - responseHeaderLength;
-                    var payload = payloadLength > 0 ? _binReader.ReadBytes(payloadLength) : new byte[0];
-                    if (payloadLength > 0 && payload.Length < payloadLength)
-                        throw new EndOfStreamException("Truncated Response2 frame.");
-                    _v2Confirmed = true;
-
-                    TaskCompletionSource<V2Response> pendingResponse;
-                    if (_pending.TryRemove(correlationId, out pendingResponse))
+                    //the previous seat holder may have completed us while we waited
+                    while (!task.IsCompleted)
                     {
-                        pendingResponse.TrySetResult(new V2Response { Status = status, Flags = flags, Payload = payload });
+                        try
+                        {
+                            ReadOneResponseFrame();
+                        }
+                        catch (Exception e)
+                        {
+                            //a v2 channel cannot survive a desynchronized or dead
+                            //stream: fault every in-flight call, ours included
+                            _channelFault = e;
+                            FaultAllPending(e);
+                            break;
+                        }
                     }
-                    //an unmatched correlation id means the caller already gave up; drop the frame
                 }
             }
-            catch (Exception e)
+            return task.GetAwaiter().GetResult();
+        }
+
+        private void ReadOneResponseFrame()
+        {
+            var messageType = (MessageType)_binReader.ReadInt32();
+            if (messageType != MessageType.Response2)
+                throw new IOException(string.Format("Expected Response2 but received message type {0}; stream is desynchronized.", messageType));
+            var frameLength = _binReader.ReadInt32();
+            var correlationId = _binReader.ReadInt32();
+            var status = _binReader.ReadByte();
+            var flags = _binReader.ReadByte();
+            const int responseHeaderLength = 6; //correlationId + status + flags
+            var payloadLength = frameLength - responseHeaderLength;
+            var payload = payloadLength > 0 ? _binReader.ReadBytes(payloadLength) : new byte[0];
+            if (payloadLength > 0 && payload.Length < payloadLength)
+                throw new EndOfStreamException("Truncated Response2 frame.");
+            _v2Confirmed = true;
+
+            TaskCompletionSource<V2Response> pendingResponse;
+            if (_pending.TryRemove(correlationId, out pendingResponse))
             {
-                _channelFault = e;
-                FaultAllPending(e);
+                pendingResponse.TrySetResult(new V2Response { Status = status, Flags = flags, Payload = payload });
             }
+            //an unmatched correlation id means the caller already gave up; drop the frame
         }
 
         private void FaultAllPending(Exception e)
