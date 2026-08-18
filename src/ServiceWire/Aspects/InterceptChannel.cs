@@ -40,6 +40,7 @@ namespace ServiceWire.Aspects
                 InterfaceType = _serviceType,
                 InterfaceMethods = new ConcurrentDictionary<int, MethodInfo>(),
                 MethodParametersByRef = new ConcurrentDictionary<int, bool[]>(),
+                CompiledMethods = new ConcurrentDictionary<int, Func<object, object[], object>>(),
                 SingletonInstance = _interceptPoint.Target
             };
 
@@ -55,6 +56,8 @@ namespace ServiceWire.Aspects
                     for (int i = 0; i < isByRef.Length; i++)
                         isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
                     _serviceInstance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
+                    var compiled = MethodInvokerCompiler.TryCompile(mi);
+                    if (null != compiled) _serviceInstance.CompiledMethods.TryAdd(currentMethodIdent, compiled);
                     currentMethodIdent++;
                 }
             }
@@ -71,6 +74,8 @@ namespace ServiceWire.Aspects
                     for (int i = 0; i < isByRef.Length; i++)
                         isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
                     _serviceInstance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
+                    var compiled = MethodInvokerCompiler.TryCompile(mi);
+                    if (null != compiled) _serviceInstance.CompiledMethods.TryAdd(currentMethodIdent, compiled);
                     currentMethodIdent++;
                 }
             }
@@ -127,7 +132,11 @@ namespace ServiceWire.Aspects
                             _interceptPoint.Cut.PreInvoke(_interceptPoint.Id, methodSyncInfo.MethodName, parameters);
                         }
 
-                        object returnValue = method.Invoke(_serviceInstance.SingletonInstance, parameters);
+                        Func<object, object[], object> invoker;
+                        object returnValue = (null != _serviceInstance.CompiledMethods
+                                && _serviceInstance.CompiledMethods.TryGetValue(ident, out invoker))
+                            ? invoker(_serviceInstance.SingletonInstance, parameters)
+                            : method.Invoke(_serviceInstance.SingletonInstance, parameters);
                         //the result to the client is the return value (null if void) and the input parameters
                         returnParameters = new object[1 + parameters.Length];
                         returnParameters[0] = returnValue;

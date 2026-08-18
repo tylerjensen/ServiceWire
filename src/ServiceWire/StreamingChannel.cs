@@ -21,7 +21,7 @@ namespace ServiceWire
         private ZkCrypto _zkCrypto;
         private readonly Dictionary<string, MethodSyncInfo> _methodCache = new Dictionary<string, MethodSyncInfo>(StringComparer.Ordinal);
         private readonly Dictionary<int, Type> _returnTypeCache = new Dictionary<int, Type>();
-        private readonly Dictionary<int, MethodInfo> _taskFromResultCache = new Dictionary<int, MethodInfo>();
+        private readonly Dictionary<int, Func<object, object>> _taskFromResultCache = new Dictionary<int, Func<object, object>>();
 
         // keep cached sync info to avoid redundant wire trips
         private static readonly ConcurrentDictionary<ServiceSyncInfoCacheKey, ServiceSyncInfo> SyncInfoCache = new ConcurrentDictionary<ServiceSyncInfoCacheKey, ServiceSyncInfo>();
@@ -246,8 +246,8 @@ namespace ServiceWire
                 {
                     if (returnType.IsGenericType)
                     {
-                        var methodInfo = GetTaskFromResultMethod(methodSyncInfo.MethodIdent, returnType);
-                        outParams[0] = methodInfo.Invoke(null, new[] { outParams[0] });
+                        var taskFromResult = GetTaskFromResultConverter(methodSyncInfo.MethodIdent, returnType);
+                        outParams[0] = taskFromResult(outParams[0]);
                     } else
                     {
                         outParams[0] = Task.CompletedTask;
@@ -303,16 +303,15 @@ namespace ServiceWire
             return returnType;
         }
 
-        private MethodInfo GetTaskFromResultMethod(int methodIdent, Type returnType)
+        private Func<object, object> GetTaskFromResultConverter(int methodIdent, Type returnType)
         {
-            MethodInfo methodInfo;
-            if (_taskFromResultCache.TryGetValue(methodIdent, out methodInfo))
-                return methodInfo;
+            Func<object, object> converter;
+            if (_taskFromResultCache.TryGetValue(methodIdent, out converter))
+                return converter;
 
-            methodInfo = typeof(Task).GetMethod(nameof(Task.FromResult))
-                .MakeGenericMethod(new[] { returnType.GenericTypeArguments[0] });
-            _taskFromResultCache.Add(methodIdent, methodInfo);
-            return methodInfo;
+            converter = MethodInvokerCompiler.CompileTaskFromResult(returnType);
+            _taskFromResultCache.Add(methodIdent, converter);
+            return converter;
         }
 
         private static bool IsTaskType(Type type)

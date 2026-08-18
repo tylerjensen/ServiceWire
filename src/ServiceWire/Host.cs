@@ -27,7 +27,7 @@ namespace ServiceWire
         protected ConcurrentDictionary<string, int> _serviceKeys = new ConcurrentDictionary<string, int>();
         protected ConcurrentDictionary<int, ServiceInstance> _services = new ConcurrentDictionary<int, ServiceInstance>();
         protected readonly ParameterTransferHelper _parameterTransferHelper;
-        private readonly ConcurrentDictionary<Type, PropertyInfo> _taskResultProperties = new ConcurrentDictionary<Type, PropertyInfo>();
+        private readonly ConcurrentDictionary<Type, Func<Task, object>> _taskResultGetters = new ConcurrentDictionary<Type, Func<Task, object>>();
 
         /// <summary>
         /// Gets the current lifecycle status of the host listener.
@@ -172,6 +172,7 @@ namespace ServiceWire
                 InterfaceType = serviceType,
                 InterfaceMethods = new ConcurrentDictionary<int, MethodInfo>(),
                 MethodParametersByRef = new ConcurrentDictionary<int, bool[]>(),
+                CompiledMethods = new ConcurrentDictionary<int, Func<object, object[], object>>(),
                 SingletonInstance = service
             };
 
@@ -187,6 +188,8 @@ namespace ServiceWire
                     for (int i = 0; i < isByRef.Length; i++)
                         isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
                     instance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
+                    var compiled = MethodInvokerCompiler.TryCompile(mi);
+                    if (null != compiled) instance.CompiledMethods.TryAdd(currentMethodIdent, compiled);
                     currentMethodIdent++;
                 }
             }
@@ -203,6 +206,8 @@ namespace ServiceWire
                     for (int i = 0; i < isByRef.Length; i++)
                         isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
                     instance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
+                    var compiled = MethodInvokerCompiler.TryCompile(mi);
+                    if (null != compiled) instance.CompiledMethods.TryAdd(currentMethodIdent, compiled);
                     currentMethodIdent++;
                 }
             }
@@ -455,18 +460,22 @@ namespace ServiceWire
                     var returnMessageType = MessageType.ReturnValues;
                     try
                     {
-                        object returnValue = method.Invoke(invokedInstance.SingletonInstance, parameters);
+                        Func<object, object[], object> invoker;
+                        object returnValue = (null != invokedInstance.CompiledMethods
+                                && invokedInstance.CompiledMethods.TryGetValue(methodHashCode, out invoker))
+                            ? invoker(invokedInstance.SingletonInstance, parameters)
+                            : method.Invoke(invokedInstance.SingletonInstance, parameters);
                         if (returnValue is Task task)
                         {
                             task.GetAwaiter().GetResult();
                             var taskType = task.GetType();
-                            PropertyInfo prop;
-                            if (!_taskResultProperties.TryGetValue(taskType, out prop))
+                            Func<Task, object> resultGetter;
+                            if (!_taskResultGetters.TryGetValue(taskType, out resultGetter))
                             {
-                                prop = taskType.GetProperty("Result");
-                                if (prop != null) _taskResultProperties.TryAdd(taskType, prop);
+                                resultGetter = MethodInvokerCompiler.TryCompileTaskResultGetter(taskType);
+                                _taskResultGetters.TryAdd(taskType, resultGetter);
                             }
-                            returnValue = prop?.GetValue(task);
+                            returnValue = resultGetter?.Invoke(task);
                         }
                         //the result to the client is the return value (null if void) and the input parameters
                         returnParameters = new object[1 + parameters.Length];
