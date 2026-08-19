@@ -111,7 +111,7 @@ namespace ServiceWireTests
         [Fact]
         public void HostWithWireV2Disabled_ServesV1Clients()
         {
-            var port = new Random().Next(30500, 39000);
+            var port = TestPorts.GetFreePort();
             using (var host = new TcpHost(port))
             {
                 host.EnableWireV2 = false;
@@ -132,7 +132,7 @@ namespace ServiceWireTests
         [Fact]
         public void V2RoundTrip_PreservesDateTimeKind()
         {
-            var port = new Random().Next(39001, 47000);
+            var port = TestPorts.GetFreePort();
             using (var host = new TcpHost(port))
             {
                 host.AddService<IV2Tester>(new V2Tester());
@@ -156,7 +156,7 @@ namespace ServiceWireTests
         [Fact]
         public void CorruptV2Frame_GetsErrorResponseAndConnectionSurvives()
         {
-            var port = new Random().Next(47001, 55000);
+            var port = TestPorts.GetFreePort();
             using (var host = new TcpHost(port))
             {
                 host.AddService<IV2Tester>(new V2Tester());
@@ -226,7 +226,7 @@ namespace ServiceWireTests
         [Fact]
         public void UnknownMethod_V2_ReturnsStatus2WithCorrelationId()
         {
-            var port = new Random().Next(55001, 60000);
+            var port = TestPorts.GetFreePort();
             using (var host = new TcpHost(port))
             {
                 host.AddService<IV2Tester>(new V2Tester());

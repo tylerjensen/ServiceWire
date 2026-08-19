@@ -22,9 +22,6 @@ namespace ServiceWire.Benchmarks
         private TcpClient<INetTester> _tcpClient;
         private TcpClient<INetTester> _tcpClientJson;
 
-        private IPAddress _ipAddress;
-        private IPEndPoint _endPoint;
-        private IPEndPoint _endPointJson;
 
         //fixed ports fail intermittently with address-in-use: each benchmark child
         //process rebinds the same port, and connections closed by the previous
@@ -42,7 +39,6 @@ namespace ServiceWire.Benchmarks
         {
             _rnd = new Random();
             _tester = new NetTester();
-            _ipAddress = IPAddress.Parse("127.0.0.1");
         }
 
         //hosts are created in GlobalSetup, not the constructor: BenchmarkDotNet also
@@ -52,19 +48,19 @@ namespace ServiceWire.Benchmarks
         [GlobalSetup]
         public void GlobalSetup()
         {
-            _endPoint = GetFreeEndPoint();
-            _endPointJson = GetFreeEndPoint();
+            var endPoint = GetFreeEndPoint();
+            var endPointJson = GetFreeEndPoint();
 
-            _tcphost = new TcpHost(_endPoint);
+            _tcphost = new TcpHost(endPoint);
             _tcphost.AddService<INetTester>(_tester);
             _tcphost.Open();
 
-            _tcphostJson = new TcpHost(_endPointJson);
+            _tcphostJson = new TcpHost(endPointJson);
             _tcphostJson.AddService<INetTester>(_tester);
             _tcphostJson.Open();
 
-            _tcpClient = new TcpClient<INetTester>(_endPoint);
-            _tcpClientJson = new TcpClient<INetTester>(_endPointJson);
+            _tcpClient = new TcpClient<INetTester>(endPoint);
+            _tcpClientJson = new TcpClient<INetTester>(endPointJson);
         }
 
         [GlobalCleanup]

@@ -357,8 +357,35 @@ namespace ServiceWire
                 //close the writer first so its flush happens while the transport is
                 //still open; the second close flushes into an already-closed stream
                 //on some transports, which must not surface from cleanup
-                try { binWriter.Close(); } catch (IOException) { } catch (ObjectDisposedException) { } catch (NotSupportedException) { }
-                try { binReader.Close(); } catch (IOException) { } catch (ObjectDisposedException) { } catch (NotSupportedException) { }
+                CloseQuietly(binWriter);
+                CloseQuietly(binReader);
+            }
+        }
+
+        /// <summary>
+        /// Closes a reader or writer during connection teardown. The transport is
+        /// commonly already gone by this point - the peer disconnected, or the first
+        /// close took the shared stream with it - and a failure to flush bytes nobody
+        /// will read is not something the caller can act on, so these three transport
+        /// exceptions are swallowed. Anything else still propagates.
+        /// </summary>
+        private static void CloseQuietly(IDisposable readerOrWriter)
+        {
+            try
+            {
+                readerOrWriter.Dispose();
+            }
+            catch (IOException)
+            {
+                //the underlying transport is already broken
+            }
+            catch (ObjectDisposedException)
+            {
+                //the shared stream was closed by the other half of the pair
+            }
+            catch (NotSupportedException)
+            {
+                //a closed stream reports itself as non-writable rather than throwing IO
             }
         }
 

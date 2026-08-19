@@ -75,18 +75,37 @@ namespace ServiceWire
                 : null;
         }
 
+        /// <summary>
+        /// Rebuilds the exception, preferring the most faithful construction the remote
+        /// type supports. Each step is a best effort over an arbitrary user-defined type
+        /// whose constructors and internals we do not control, so a failure is not an
+        /// error: it just means the next, less faithful strategy is used. The final
+        /// fallback always succeeds, so this method never throws.
+        /// </summary>
         private static Exception Construct(Type type, string message, Exception inner)
         {
+            //1. the conventional (message, innerException) constructor
             try
             {
                 return (Exception)Activator.CreateInstance(type, message, inner);
             }
-            catch { }
+            catch (Exception)
+            {
+                //the type does not offer that constructor, or it rejected these arguments
+            }
+
+            //2. the (message) constructor, when there is no inner exception to carry
             try
             {
                 if (null == inner) return (Exception)Activator.CreateInstance(type, message);
             }
-            catch { }
+            catch (Exception)
+            {
+                //likewise: fall through to constructing the type without a constructor
+            }
+
+            //3. bypass constructors entirely and set the message field directly, which
+            //   preserves the caller's ability to catch the original exception type
             try
             {
 #if NET8_0_OR_GREATER
@@ -99,7 +118,13 @@ namespace ServiceWire
                 if (null != messageField) messageField.SetValue(exception, message);
                 return exception;
             }
-            catch { }
+            catch (Exception)
+            {
+                //uninitialized construction is refused for some types, and the private
+                //field layout is not contractual; the plain Exception below always works
+            }
+
+            //4. the type could not be rebuilt: the caller still gets the message and chain
             return new Exception(message, inner);
         }
 
@@ -111,7 +136,12 @@ namespace ServiceWire
                 var setter = prop?.GetSetMethod(true);
                 setter?.Invoke(exception, new object[] { hresult });
             }
-            catch { }
+            catch (Exception)
+            {
+                //HResult is a diagnostic detail, not part of the contract. Its setter is
+                //non-public and may be absent or refused on a future runtime; losing it
+                //must not cost the caller the exception itself.
+            }
         }
 
         private static void TrySetRemoteStackTrace(Exception exception, string stackTrace)
@@ -122,7 +152,11 @@ namespace ServiceWire
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 field?.SetValue(exception, stackTrace + Environment.NewLine);
             }
-            catch { }
+            catch (Exception)
+            {
+                //the server stack trace is a diagnostic nicety carried through a private
+                //runtime field; if the field is gone the exception is still correct
+            }
         }
     }
 }

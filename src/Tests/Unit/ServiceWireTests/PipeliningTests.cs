@@ -48,7 +48,7 @@ namespace ServiceWireTests
     {
         private static TcpHost CreateTcpHost(out int port)
         {
-            port = new Random().Next(30000, 39999);
+            port = TestPorts.GetFreePort();
             var host = new TcpHost(port);
             host.AddService<IConcurrencyTester>(new ConcurrencyTester());
             host.Open();

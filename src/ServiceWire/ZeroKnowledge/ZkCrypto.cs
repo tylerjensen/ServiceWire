@@ -59,10 +59,24 @@ namespace ServiceWire.ZeroKnowledge
             }
         }
 
+        private bool _disposed;
+
         public void Dispose()
         {
-            _crypto.Dispose();
-            _md5.Dispose();
+            //MS recommended dispose pattern - prevents GC from disposing again
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            _disposed = true; //prevent a second call from disposing twice
+            if (disposing)
+            {
+                _crypto.Dispose();
+                _md5.Dispose();
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Threading.Tasks;
 using ServiceWire.TcpIp;
@@ -12,7 +12,7 @@ namespace ServiceWireTests
         private INetTester _tester;
         private TcpHost _tcphost;
         private IPAddress _ipAddress;
-        private const int Port = 8099;
+        private readonly int Port = TestPorts.GetFreePort();
         private TcpClient<INetTester> _clientProxy;
 
         private IPEndPoint CreateEndPoint()

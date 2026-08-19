@@ -12,7 +12,7 @@ namespace Old601Peer
     /// Hosts print READY and wait for a line on stdin to exit.
     /// Clients run the battery and print PASS or FAIL: reason (exit code 0/1).
     /// </summary>
-    internal class Program
+    internal static class Program
     {
         private static int Main(string[] args)
         {

@@ -569,6 +569,29 @@ namespace ServiceWire
 
         #region IDisposable Members
 
+        /// <summary>
+        /// Disposes one half of the reader/writer pair during teardown. Both wrap the
+        /// same transport, so the second dispose flushes into a stream the first one
+        /// already closed. There is no caller action for that, so the two transport
+        /// exceptions it can raise are swallowed; anything else still propagates.
+        /// </summary>
+        private static void DisposeQuietly(IDisposable readerOrWriter)
+        {
+            if (null == readerOrWriter) return;
+            try
+            {
+                readerOrWriter.Dispose();
+            }
+            catch (IOException)
+            {
+                //the underlying transport is already broken
+            }
+            catch (ObjectDisposedException)
+            {
+                //the other half of the pair already closed the shared stream
+            }
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (!_disposed)
@@ -585,16 +608,22 @@ namespace ServiceWire
                             _binWriter.Flush();
                         }
                     }
-                    catch (IOException) { }
-                    catch (ObjectDisposedException) { }
+                    catch (IOException)
+                    {
+                        //the connection is already gone, so the goodbye cannot be sent
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        //the transport was disposed underneath us; nothing left to notify
+                    }
                     finally
                     {
                         //reader and writer buffer the same underlying stream, so whichever
-                        //is disposed second flushes into an already-closed transport;
-                        //closing also unblocks the v2 reader loop, which faults any
-                        //remaining in-flight calls
-                        try { _binWriter?.Dispose(); } catch (IOException) { } catch (ObjectDisposedException) { }
-                        try { _binReader?.Dispose(); } catch (IOException) { } catch (ObjectDisposedException) { }
+                        //is disposed second flushes into an already-closed transport.
+                        //Closing also unblocks the v2 reader loop, which faults any
+                        //remaining in-flight calls.
+                        DisposeQuietly(_binWriter);
+                        DisposeQuietly(_binReader);
                         _zkCrypto?.Dispose();
                         FaultAllPending(new ObjectDisposedException(GetType().Name));
                     }

@@ -72,7 +72,26 @@ namespace InteropTests
             }
         }
 
-        private static int NextPort() => new Random().Next(20000, 29000);
+        /// <summary>
+        /// Asks the OS for a free port rather than guessing one. Parts of the Windows
+        /// ephemeral range are reserved by Hyper-V, WinNAT and WSL, and binding one of
+        /// those fails with WSAEACCES; the reserved ranges differ per machine, so a
+        /// guessed range that is clean locally can be partly reserved on a CI runner.
+        /// </summary>
+        private static int NextPort()
+        {
+            //fully qualified: ServiceWire.TcpIp is in scope and also defines Tcp* types
+            var probe = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
+            probe.Start();
+            try
+            {
+                return ((IPEndPoint)probe.LocalEndpoint).Port;
+            }
+            finally
+            {
+                probe.Stop();
+            }
+        }
 
         // ---- old 6.0.1 server, new 7.0 client ----
 

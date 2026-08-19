@@ -85,7 +85,10 @@ namespace ServiceWire.InteropContract
                         proxy.Boom("interop boom");
                         return "Boom did not throw";
                     }
-                    catch (InvalidOperationException) { }
+                    catch (InvalidOperationException)
+                    {
+                        //expected: Boom throws this across the wire, which is what the test asserts
+                    }
                 }
 
                 return null;
