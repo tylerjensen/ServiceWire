@@ -32,7 +32,7 @@ dotnet add package ServiceWire
 
 The package targets `netstandard2.0` and `net8.0`, so it runs on .NET Framework 4.6.1+, .NET Core, and every modern .NET. The `net8.0` assembly has no package dependencies.
 
-> 7.0 currently ships as `7.0.0-preview.1`. Add `--prerelease` to the command above to pick it up, or stay on 6.0.1 until the final release — [both interoperate](migrating-to-v7.md).
+> Upgrading from 6.x? You can move hosts and clients independently — [every mixed pairing interoperates](migrating-to-v7.md).
 
 ---
 
