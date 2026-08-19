@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
 namespace ServiceWire
@@ -8,7 +9,18 @@ namespace ServiceWire
         private const string _netFwCoreLib = "mscorlib";
         private const string _netCoreCoreLib = "System.Private.CoreLib";
 
+        //config names are pure functions of the type and vice versa, and the population is
+        //bounded by the contract types in play, so both directions are memoized for the life
+        //of the process to keep regex and Type.GetType costs off the per-call wire path
+        private static readonly ConcurrentDictionary<Type, string> _configNameCache = new ConcurrentDictionary<Type, string>();
+        private static readonly ConcurrentDictionary<string, Type> _typeCache = new ConcurrentDictionary<string, Type>();
+
         public static string ToConfigName(this Type t)
+        {
+            return _configNameCache.GetOrAdd(t, BuildConfigName);
+        }
+
+        private static string BuildConfigName(Type t)
         {
             // Do not qualify types from mscorlib/System.Private.CoreLib otherwise calling between process running with different frameworks won't work
             // i.e. "System.String, mscorlib" (.NET FW) != "System.String, System.Private.CoreLib" (.NET CORE)
@@ -28,9 +40,13 @@ namespace ServiceWire
 
         public static Type ToType(this string configName)
         {
+            //only successful lookups are cached: a null result may succeed later once
+            //the assembly holding the type has been loaded
+            if (_typeCache.TryGetValue(configName, out var cached)) return cached;
             try
             {
                 var result = Type.GetType(configName);
+                if (null != result) _typeCache.TryAdd(configName, result);
                 return result;
             }
             catch (Exception e)

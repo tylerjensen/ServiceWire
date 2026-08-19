@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 
 namespace ServiceWire.TcpIp
 {
@@ -9,7 +9,7 @@ namespace ServiceWire.TcpIp
         public IPEndPoint EndPoint { get; set; }
         public int ConnectTimeOutMs { get; set; }
 
-        public TcpZkEndPoint(string username, string password, IPEndPoint endPoint, int connectTimeOutMs = 2500)
+        public TcpZkEndPoint(string username, string password, IPEndPoint endPoint, int connectTimeOutMs = TcpChannel.DefaultConnectTimeOutMs)
         {
             this.Username = username;
             this.Password = password;

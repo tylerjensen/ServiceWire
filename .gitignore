@@ -172,3 +172,5 @@ src/pack/lib/net461
 .vs/
 .vscode/
 /src/Benchmarks/ServiceWire.Benchmarks/BenchmarkDotNet.Artifacts
+
+BenchmarkDotNet.Artifacts/

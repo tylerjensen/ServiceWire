@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="400" viewBox="0 0 980 400" role="img" aria-label="Three ServiceWire deployment shapes: a desktop app talking to a Windows service over a named pipe, a web front end calling a compute host over TCP, and a field client authenticating with zero-knowledge over an untrusted link.">
+  <defs>
+    <marker id="arw" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arwl" markerWidth="9" markerHeight="7" refX="1" refY="3.5" orient="auto">
+      <path d="M9,0 L0,3.5 L9,7 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="400" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="44" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#0f172a">Three shapes this library fits</text>
+  <text x="40" y="70" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#475569">In all three the contract and the implementation are the same code. Only the host and client types change.</text>
+
+  <rect x="40" y="96" width="280" height="244" rx="10" fill="#f8fafc" stroke="#0891b2"/>
+  <text x="56" y="126" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#155e75">Desktop app and a service</text>
+  <rect x="56" y="142" width="112" height="48" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="112" y="164" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">Desktop UI</text>
+  <text x="112" y="180" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#64748b">signed-in user</text>
+  <line x1="170" y1="166" x2="190" y2="166" stroke="#64748b" stroke-width="1.4" marker-start="url(#arwl)" marker-end="url(#arw)"/>
+  <rect x="192" y="142" width="112" height="48" rx="6" fill="#ecfeff" stroke="#0891b2"/>
+  <text x="248" y="164" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">Windows service</text>
+  <text x="248" y="180" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#64748b">elevated</text>
+  <text x="180" y="208" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#0e7490">named pipe</text>
+  <text x="56" y="232" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">No port to open, no firewall rule, and</text>
+  <text x="56" y="250" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">the pipe ACL decides who may connect.</text>
+  <text x="56" y="268" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">Lowest per-call cost of the three.</text>
+  <rect x="56" y="284" width="248" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="68" y="305" font-family="Consolas, Menlo, monospace" font-size="10" fill="#0f172a">new NpHost("contoso-agent")</text>
+
+  <rect x="350" y="96" width="280" height="244" rx="10" fill="#f8fafc" stroke="#d97706"/>
+  <text x="366" y="126" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#92400e">Web front end and a worker</text>
+  <rect x="366" y="142" width="112" height="48" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="422" y="164" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">ASP.NET Core</text>
+  <text x="422" y="180" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#64748b">many threads</text>
+  <line x1="480" y1="166" x2="500" y2="166" stroke="#64748b" stroke-width="1.4" marker-start="url(#arwl)" marker-end="url(#arw)"/>
+  <rect x="502" y="142" width="112" height="48" rx="6" fill="#fffbeb" stroke="#d97706"/>
+  <text x="558" y="164" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">Compute host</text>
+  <text x="558" y="180" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#64748b">own machine</text>
+  <text x="490" y="208" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#b45309">TCP</text>
+  <text x="366" y="232" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">Keeps heavy work out of the web</text>
+  <text x="366" y="250" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">process. Request threads share one</text>
+  <text x="366" y="268" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">proxy and pipeline their calls.</text>
+  <rect x="366" y="284" width="248" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="378" y="305" font-family="Consolas, Menlo, monospace" font-size="10" fill="#0f172a">new TcpHost(new IPEndPoint(ip, 8098))</text>
+
+  <rect x="660" y="96" width="280" height="244" rx="10" fill="#f8fafc" stroke="#7c3aed"/>
+  <text x="676" y="126" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#5b21b6">Across an untrusted link</text>
+  <rect x="676" y="142" width="112" height="48" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="732" y="164" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">Field client</text>
+  <text x="732" y="180" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#64748b">has a password</text>
+  <line x1="790" y1="166" x2="810" y2="166" stroke="#64748b" stroke-width="1.4" marker-start="url(#arwl)" marker-end="url(#arw)"/>
+  <rect x="812" y="142" width="112" height="48" rx="6" fill="#f5f3ff" stroke="#7c3aed"/>
+  <text x="868" y="164" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">ServiceWire host</text>
+  <text x="868" y="180" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#64748b">IZkRepository</text>
+  <text x="800" y="208" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#6d28d9">TCP, authenticated and encrypted</text>
+  <text x="676" y="232" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">The client proves it knows the password</text>
+  <text x="676" y="250" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">without ever sending it, and every call</text>
+  <text x="676" y="268" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">after that is encrypted.</text>
+  <rect x="676" y="284" width="248" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="688" y="305" font-family="Consolas, Menlo, monospace" font-size="10" fill="#0f172a">new TcpZkEndPoint(user, pass, ep)</text>
+
+  <text x="40" y="372" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">One singleton can be added to several hosts at once, so the same service can answer a local pipe and a remote socket at the same time.</text>
+</svg>

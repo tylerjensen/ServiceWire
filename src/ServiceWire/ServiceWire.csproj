@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+		<!-- keep the assembly identity constant across TFMs so mixed loads bind cleanly -->
+		<AssemblyVersion>7.0.0.0</AssemblyVersion>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -12,11 +14,11 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageProjectUrl>https://github.com/tylerjensen/ServiceWire</PackageProjectUrl>
 		<PackageLicenseFile>License.txt</PackageLicenseFile>
-		<Copyright>Tyler Jensen 2013-2021</Copyright>
-		<Version>6.0.1</Version>
+		<Copyright>Tyler Jensen 2013-2026</Copyright>
+		<Version>7.0.0</Version>
 		<Description>ServiceWire is a very fast and light weight service host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP. And with the release of 2.0.0, ServiceWire now supports optional use of Zero Knowledge authentication with a fast variation of Secure Remote Password Protocol and strong Rijndael encryption of data across the wire via TCP without the need for public keys going across the wire.</Description>
 		<PackageTags>WCF Services Host Client NamedPipes TCP Messaging RPC Interception Zero Knowledge Secure Remote Password Protocol Serialization</PackageTags>
-		<PackageReleaseNotes>Fixes TCP connection resource retention, named-pipe shutdown errors and listener exception spin, and console logger formatting. Adds observable HostStatus lifecycle state and targeted regression coverage for the .NET 10 proxy fix.</PackageReleaseNotes>
+		<PackageReleaseNotes>Major performance release. Compiled dispatch replaces per-call reflection; type-name resolution is memoized; named-pipe client I/O is buffered; Nagle is disabled. Adds a net8.0 target alongside netstandard2.0. Introduces negotiated wire protocol v2 (framing, correlation ids, concurrent in-flight calls per channel, binary DateTime) that activates only when both ends are 7.0 - mixed 6.x pairings keep working over the v1 wire. Fixes compressed string[] corruption, scalar Type parameters, and thrown-exception serialization with the default serializer. See README for details and compatibility notes.</PackageReleaseNotes>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
 
@@ -26,7 +28,9 @@
 		<None Include="..\icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 
-	<ItemGroup>
+	<!-- netstandard2.0 keeps the exact 6.x dependency graph so existing net48 and
+	     netstandard consumers see no new binding redirects; net8.0 uses in-box APIs -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="System.IO.Pipes" Version="4.3.0" />
 		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
 		<PackageReference Include="System.Text.Json" Version="9.0.0" />

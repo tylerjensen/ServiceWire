@@ -1,59 +1,80 @@
-[![.NET](https://github.com/tylerjensen/ServiceWire/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/tylerjensen/ServiceWire/actions/workflows/build-and-test.yml) 
+[![.NET](https://github.com/tylerjensen/ServiceWire/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/tylerjensen/ServiceWire/actions/workflows/build-and-test.yml)
+[![NuGet](https://img.shields.io/nuget/v/ServiceWire.svg)](https://www.nuget.org/packages/ServiceWire/)
 
 ServiceWire
 ===========
 
-### A Lightweight Services Library for .NET.
+### A lightweight, very fast RPC library for .NET
 
-ServiceWire is a very fast and light weight services host and dynamic client library that simplifies the development and use of high performance remote procedure call (RPC) communication between .NET processes over Named Pipes or TCP/IP.
+ServiceWire lets one .NET process call an interface implemented in another .NET process, over **named pipes** or **TCP/IP**, as if it were local. You write a plain C# interface and implement it once. There is no IDL, no code generator, no attributes and no build step — the client proxy is emitted at runtime from the interface you already have.
 
-Find "how to use" examples in the tests code. [ServiceWire documentation][] is available on the wiki.
+![How a call travels from the client proxy to your singleton](https://raw.githubusercontent.com/tylerjensen/ServiceWire/master/docs/images/architecture.svg)
 
-### Important
+## 📖 [Read the User Guide →](docs/user-guide.md)
 
-ServiceWire's dynamically generated proxy will NOT run as x86 on an x64 system. This ususally occurs when you use Visual Studio to create a console application with the default "prefer x86" in project properties selected. Just be sure to choose AnyCPU or the specific target (x86 or x64) so that you do not run 32bit in WOW on an x64 machine.
+Full documentation with worked samples: [getting started](docs/getting-started.md) · [contracts](docs/contracts.md) · [transports](docs/transports.md) · [serialization](docs/serialization.md) · [security](docs/security.md) · [logging](docs/observability.md) · [interception](docs/interception.md) · [wire protocol](docs/wire-protocol.md) · [performance](docs/performance.md) · [migrating to 7.0](docs/migrating-to-v7.md) · [troubleshooting](docs/troubleshooting.md)
 
-### Get It on Nuget
+<sub>Reading this on NuGet? The guide is at <https://github.com/tylerjensen/ServiceWire/blob/master/docs/user-guide.md></sub>
 
-Get the [NuGet package here][].
+---
 
-### Using the library is easy. 
+### Install
 
-1.  Code your interface
+```shell
+dotnet add package ServiceWire
+```
 
-2.  Code your implementation
+Targets `netstandard2.0` and `net8.0`. [NuGet package](http://www.nuget.org/packages/ServiceWire/).
 
-3.  Host the implementation
+### Use it
 
-4.  Use dynamic proxy of your interface on the client side
+```csharp
+// 1. A contract both processes reference
+public interface IMath
+{
+    int Add(int a, int b);
+}
 
-### This unique library supports:
+// 2. An implementation, hosted as a singleton
+public class MathService : IMath
+{
+    public int Add(int a, int b) => a + b;
+}
 
--   TCP and NamedPipes protocols
+// 3. A host
+using var host = new TcpHost(8098);
+host.AddService<IMath>(new MathService());
+host.Open();
 
--   ByRef (out and ref) parameters (except for non-primitive value types)
+// 4. A client
+using var client = new TcpClient<IMath>(new TcpEndPoint(new IPEndPoint(IPAddress.Loopback, 8098)));
+int sum = client.Proxy.Add(2, 3);   // 5
+```
 
--   Dynamic client proxy generation from service interface
+Swap `TcpHost`/`TcpClient` for `NpHost`/`NpClient` and the same code runs over a named pipe.
 
--   Very fast serialization of most native types and arrays of those types
+Step-by-step, including the project layout and how to run it: **[Getting started](docs/getting-started.md)**.
 
--   Multiple service interface hosting on the same endpoint
+### ⚠️ Build for AnyCPU or x64
 
--   Aspect oriented interception with pre-, post- and exception handling cross cutting
+ServiceWire's dynamically generated proxy will **not** run as x86 on an x64 system. This usually bites when Visual Studio's console template leaves *Prefer 32-bit* enabled. Choose AnyCPU or the specific target so you do not run 32-bit under WOW64 on an x64 machine.
 
--   Hosting of single service implementation singleton on multiple endpoints and protocols
+### What it supports
 
--   Protocol, serialization and execution strategy extension
+- TCP and named pipe transports, with the same contract on both
+- Dynamic client proxy generation from a service interface — no codegen step
+- `out` and `ref` parameters (except non-primitive value types)
+- Very fast direct encoding of common types and arrays of them
+- Multiple service interfaces on one endpoint, and one implementation on multiple endpoints
+- Pluggable serialization ([`ISerializer`](docs/serialization.md)) and compression ([`ICompressor`](docs/serialization.md#custom-compression))
+- Pluggable logging and timing ([`ILog`, `IStats`](docs/observability.md))
+- Optional zero-knowledge authentication with an encrypted session over TCP ([details and caveats](docs/security.md))
+- Aspect-oriented [interception](docs/interception.md) with pre-, post- and exception handling
+- Concurrent in-flight calls on a shared TCP proxy (7.0)
 
-Portions of this library (dynamic proxy) are a derivative of RemotingLite by Frank Thomsen.  
+### Host status
 
-  [NuGet package here]: http://www.nuget.org/packages/ServiceWire/
-  [RemotingLite by Frank Thomsen]: https://codeplexarchive.org/codeplex/project/RemotingLite
-  [ServiceWire documentation]: https://github.com/tylerjensen/ServiceWire/wiki
-
-### Host Status
-
-`TcpHost` and `NpHost` expose their listener lifecycle through the inherited `Status` property. The `HostStatus` values are `Created`, `Opening`, `Open`, `Faulted`, and `Closed`. This reports host-listener state rather than the state of an individual client connection.
+`TcpHost` and `NpHost` expose their listener lifecycle through the inherited `Status` property: `Created`, `Opening`, `Open`, `Faulted`, `Closed`. This reports listener state, not the state of an individual client connection.
 
 ```csharp
 if (host.Status == HostStatus.Faulted)
@@ -62,7 +83,59 @@ if (host.Status == HostStatus.Faulted)
 }
 ```
 
-## History
+See [Logging and diagnostics](docs/observability.md#is-the-host-still-listening) for a supervisor pattern.
+
+---
+
+Portions of this library (the dynamic proxy) are derived from [RemotingLite by Frank Thomsen][]. Licensed under the terms in [License.txt](src/License.txt).
+
+The older [project wiki][] is kept for historical reference; the [user guide](docs/user-guide.md) supersedes it.
+
+  [RemotingLite by Frank Thomsen]: https://codeplexarchive.org/codeplex/project/RemotingLite
+  [project wiki]: https://github.com/tylerjensen/ServiceWire/wiki
+
+---
+
+# History
+
+### Performance Release with Negotiated Wire Protocol v2 — 7.0.0
+
+A major performance release. Steady-state calls are **43–70% faster** than 6.0.1 on named pipes and **13–47% faster** on TCP; TCP connection setup is roughly **14× faster** on .NET 8 and 10. Full tables: [Performance](docs/performance.md).
+
+Both mixed-version pairings — 6.x client with 7.0 server, and 7.0 client with 6.x server — keep working over the classic v1 wire path. The new v2 wire activates only when both ends are 7.0, so a fleet can be upgraded in any order. See [Migrating to 7.0](docs/migrating-to-v7.md).
+
+**Internal optimizations** (v1 wire format unchanged, proven byte-identical by golden tests):
+
+1. Memoized type-to-config-name resolution in both directions, removing three regex passes per complex parameter per call and repeated `Type.GetType` lookups in `DefaultSerializer`.
+2. Fixed the named-pipe client to actually use its `BufferedStream`, collapsing dozens of per-field pipe syscalls per call into one (and fixing a pipe stream that was never disposed).
+3. Set `Socket.NoDelay` on client and accepted sockets to eliminate Nagle and delayed-ACK latency; both sides already buffer and flush once per message.
+4. Server dispatch through compiled expression delegates instead of `MethodInfo.Invoke` (byref methods fall back to reflection); async results through compiled `Task.Result` getters; client `Task.FromResult` wrapping through compiled converters. Client-visible exception behavior is unchanged and covered by parity tests.
+5. Proxy types are created and their constructors compiled once per pooled builder; creating a proxy is now a delegate call.
+6. Larger named-pipe server buffers, connect-path event wait instead of a spin loop, `CompressionLevel.Fastest` in the default compressor, and reused ZK cipher instances (identical ciphertext).
+
+**Multi-targeting:** the package now ships `netstandard2.0` (unchanged 6.x dependency graph, so no new binding redirects for .NET Framework consumers) and `net8.0` (no package dependencies, plus span-based fast paths that produce identical wire bytes).
+
+**Bug fixes:**
+
+1. A `string[]` above the compression threshold was written with a type code no receiver could decode; it now uses `CompressedUnknown`, which every release since 1.5.0 can read.
+2. Scalar `Type` parameters crashed the default serializer; they now use the wire format's `Type` code.
+3. Thrown exceptions could not be serialized by System.Text.Json (`TargetSite`), which killed the connection whenever a service method threw with the default serializer; a converter now preserves the exception type, message, HResult, inner chain, and server stack trace.
+4. The TCP client connected with `Socket.ConnectAsync` and waited on its completion callback, which .NET dispatches as a thread-pool work item. An application whose pool was saturated could therefore see `TimeoutException` from `new TcpClient<T>(...)` against a server that was listening the whole time, more often the fewer cores the machine had. The connect now completes on the calling thread, so `ConnectTimeOutMs` measures the network alone. Named pipes were never affected.
+5. `TcpClient<T>(IPEndPoint)` now routes through `TcpEndPoint`, so its connect timeout comes from one place instead of a hard-coded literal; pass a `TcpEndPoint` to choose your own.
+
+**Wire protocol v2** — the default on both transports, negotiated, never sent to a 6.x peer. Frame layouts and rationale: [Wire protocol](docs/wire-protocol.md).
+
+1. Servers advertise capabilities through a new additive `ServiceSyncInfo.CapabilityFlags` member (tolerant serializers on 6.x clients ignore it; a strict custom `ISerializer` on a 6.x client may need updating — this is part of why this release is a major version).
+2. Framed `MethodInvocation2`/`Response2` messages with length prefixes and correlation ids: a request payload that fails to decode is answered with a correlated error response instead of desynchronizing the stream and killing the connection.
+3. `DateTime` values travel as `ToBinary()` (Kind-preserving, no string parsing).
+4. Concurrent in-flight calls on a shared TCP client proxy: callers no longer serialize on a whole-round-trip lock. Whichever caller holds the read seat pairs responses to callers by correlation id while the server executes each connection's requests strictly in order; an uncontended caller reads inline with no thread handoff.
+5. Named-pipe channels speak v2 with the exchange serialized per channel (no pipelining): synchronous pipe handles cannot overlap a read with a write. Pipes still gain v2's decode-error resilience and binary DateTime transfer on top of the large Tier 1 buffering wins.
+6. The v2 frame costs a few microseconds per call, measurable only on loopback with strictly sequential callers. Three opt-outs force the classic v1 wire: `Host.EnableWireV2 = false` (before `AddService`) for all clients of a host, and `TcpEndPoint.UseWireV2 = false` / `NpEndPoint.UseWireV2 = false` per client.
+7. In-place server downgrades with a stale cached capability produce a descriptive error and evict the cache so the next channel renegotiates.
+
+**Opt-in additions** (defaults preserve prior behavior): TCP receive/send timeouts on `TcpEndPoint` and `TcpHost`, and a persistent log file writer via `LoggerBase.PersistentFileWriter`.
+
+A new interop test matrix runs the published ServiceWire 6.0.1 package as a separate process against 7.0 in both directions across TCP and named pipes, with and without compression, in CI.
 
 ### Connection and Logging Reliability Fixes 6.0.1
 
@@ -155,7 +228,7 @@ if (host.Status == HostStatus.Faulted)
 3. .NET Standard 2.0 and 2.1 builds remain. 
 4. Resolved parallel Zk test issues.
 
-Note: Use of async/await and Task<T> not recommended. Use of Task return type not supported. While the syntax of Task return type is supported, apparently it is not marked as Serializable. In fact async/await is not really supported. Under the covers the task type is stripped away over the wire and the method is executed on a worker thread on the server synchronously. If you think about it, you will understand that it's two separate processes, so the Task Parallel Library is not going to be able to manage the thread context across the processes. RPC is inherently synchronous but the handling of each request on the host is done on thread pools.
+Note: Use of async/await and Task<T> not recommended. Use of Task return type not supported. While the syntax of Task return type is supported, apparently it is not marked as Serializable. In fact async/await is not really supported. Under the covers the task type is stripped away over the wire and the method is executed on a worker thread on the server synchronously. If you think about it, you will understand that it's two separate processes, so the Task Parallel Library is not going to be able to manage the thread context across the processes. RPC is inherently synchronous but the handling of each request on the host is done on thread pools. See [Async and Task returns](docs/contracts.md#async-and-task-returns) for what this means in practice.
 
 ### .NET Standard 2.0 and 2.1 in version 5.3.2
 
@@ -205,61 +278,3 @@ Note: Use of async/await and Task<T> not recommended. Use of Task return type no
 5. For the .NET 4.0 and 3.5 versions, changed to "Client Profile" for the target framework.
 
 6. Removed dependency on System.Numerics in order to support .NET 3.5 and introduced ZkBigInt class taken from Scott Garland's BigInteger class. See license text for full attribution.
-
-### Updated Benchmarks (12/5/2024) with latest contribution
-
-NOTE: In this and previous runs of the benchmarks, .NET 8 is consistently 21% faster than .NET 6 when the benchmark differences are averaged.
-
-```
-BenchmarkDotNet v0.14.0, Windows 11 (10.0.22631.4460/23H2/2023Update/SunValley3)
-AMD Ryzen Threadripper PRO 5975WX 32-Cores, 1 CPU, 64 logical and 32 physical cores
-.NET SDK 9.0.100
-  [Host]   : .NET 8.0.11 (8.0.1124.51707), X64 RyuJIT AVX2
-  .NET 6.0 : .NET 6.0.36 (6.0.3624.51421), X64 RyuJIT AVX2
-  .NET 8.0 : .NET 8.0.11 (8.0.1124.51707), X64 RyuJIT AVX2
-
-
-| Type                 | Method       | Job                | Runtime            | Mean         | Error      | StdDev     | Ratio | RatioSD | Gen0   | Gen1   | Allocated | Alloc Ratio |
-|--------------------- |------------- |------------------- |------------------- |-------------:|-----------:|-----------:|------:|--------:|-------:|-------:|----------:|------------:|
-| ConnectionBenchmarks | TcpConn      | .NET 6.0           | .NET 6.0           | 15,400.91 us | 204.477 us | 191.267 us |  0.99 |    0.01 |      - |      - |   62874 B |        1.00 |
-| ConnectionBenchmarks | TcpConn      | .NET 8.0           | .NET 8.0           | 15,505.96 us |  76.118 us |  71.201 us |  1.00 |    0.01 |      - |      - |   62893 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| NamedPipesBenchmarks | NpSim        | .NET 6.0           | .NET 6.0           |     21.64 us |   0.132 us |   0.110 us |  1.37 |    0.04 | 0.0305 |      - |     568 B |        0.89 |
-| NamedPipesBenchmarks | NpSim        | .NET 8.0           | .NET 8.0           |     15.86 us |   0.311 us |   0.415 us |  1.00 |    0.04 | 0.0305 |      - |     640 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| TcpBenchmarks        | TcpSim       | .NET 6.0           | .NET 6.0           |     27.60 us |   0.215 us |   0.201 us |  1.11 |    0.02 | 0.0305 |      - |     568 B |        0.89 |
-| TcpBenchmarks        | TcpSim       | .NET 8.0           | .NET 8.0           |     24.94 us |   0.484 us |   0.497 us |  1.00 |    0.03 | 0.0305 |      - |     640 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| ConnectionBenchmarks | NpConn       | .NET 6.0           | .NET 6.0           |    235.46 us |   3.600 us |   3.192 us |  1.16 |    0.03 | 4.3945 | 0.4883 |   68798 B |        1.02 |
-| ConnectionBenchmarks | NpConn       | .NET 8.0           | .NET 8.0           |    203.27 us |   3.865 us |   3.969 us |  1.00 |    0.03 | 4.3945 | 0.4883 |   67196 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| NamedPipesBenchmarks | NpSimJson    | .NET 6.0           | .NET 6.0           |     21.44 us |   0.150 us |   0.125 us |  1.35 |    0.02 | 0.0305 |      - |     568 B |        0.89 |
-| NamedPipesBenchmarks | NpSimJson    | .NET 8.0           | .NET 8.0           |     15.94 us |   0.306 us |   0.286 us |  1.00 |    0.02 | 0.0305 |      - |     640 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| TcpBenchmarks        | TcpSimJson   | .NET 6.0           | .NET 6.0           |     27.80 us |   0.550 us |   0.564 us |  1.14 |    0.03 | 0.0305 |      - |     568 B |        0.89 |
-| TcpBenchmarks        | TcpSimJson   | .NET 8.0           | .NET 8.0           |     24.44 us |   0.299 us |   0.280 us |  1.00 |    0.02 | 0.0305 |      - |     640 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| NamedPipesBenchmarks | NpRg         | .NET 6.0           | .NET 6.0           |     61.25 us |   0.710 us |   0.554 us |  1.38 |    0.03 | 0.8545 |      - |   15416 B |        1.05 |
-| NamedPipesBenchmarks | NpRg         | .NET 8.0           | .NET 8.0           |     44.48 us |   0.800 us |   1.122 us |  1.00 |    0.03 | 0.9766 |      - |   14737 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| TcpBenchmarks        | TcpRg        | .NET 6.0           | .NET 6.0           |     72.16 us |   1.325 us |   1.174 us |  1.37 |    0.03 | 0.8545 |      - |   15416 B |        1.05 |
-| TcpBenchmarks        | TcpRg        | .NET 8.0           | .NET 8.0           |     52.70 us |   0.834 us |   0.739 us |  1.00 |    0.02 | 0.7324 |      - |   14737 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| NamedPipesBenchmarks | NpRgJson     | .NET 6.0           | .NET 6.0           |     68.63 us |   0.631 us |   0.590 us |  1.39 |    0.04 | 1.7090 |      - |   27193 B |        1.09 |
-| NamedPipesBenchmarks | NpRgJson     | .NET 8.0           | .NET 8.0           |     49.40 us |   0.979 us |   1.239 us |  1.00 |    0.03 | 1.4648 |      - |   24881 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| TcpBenchmarks        | TcpRgJson    | .NET 6.0           | .NET 6.0           |     73.17 us |   1.181 us |   0.986 us |  1.38 |    0.03 | 0.8545 |      - |   15416 B |        1.05 |
-| TcpBenchmarks        | TcpRgJson    | .NET 8.0           | .NET 8.0           |     53.03 us |   0.824 us |   0.771 us |  1.00 |    0.02 | 0.7324 |      - |   14737 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| NamedPipesBenchmarks | NpCxOut      | .NET 6.0           | .NET 6.0           |     54.18 us |   0.444 us |   0.416 us |  1.25 |    0.02 | 0.3662 |      - |    6928 B |        0.86 |
-| NamedPipesBenchmarks | NpCxOut      | .NET 8.0           | .NET 8.0           |     43.36 us |   0.608 us |   0.569 us |  1.00 |    0.02 | 0.3662 |      - |    8064 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| TcpBenchmarks        | TcpCxOut     | .NET 6.0           | .NET 6.0           |     64.20 us |   1.172 us |   1.565 us |  1.36 |    0.04 | 0.3662 |      - |    6929 B |        0.86 |
-| TcpBenchmarks        | TcpCxOut     | .NET 8.0           | .NET 8.0           |     47.21 us |   0.782 us |   0.732 us |  1.00 |    0.02 | 0.3662 |      - |    8064 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| NamedPipesBenchmarks | NpCxOutJson  | .NET 6.0           | .NET 6.0           |     58.34 us |   0.904 us |   0.801 us |  1.34 |    0.02 | 0.6104 |      - |   10856 B |        0.91 |
-| NamedPipesBenchmarks | NpCxOutJson  | .NET 8.0           | .NET 8.0           |     43.61 us |   0.655 us |   0.581 us |  1.00 |    0.02 | 0.7324 |      - |   11888 B |        1.00 |
-|                      |              |                    |                    |              |            |            |       |         |        |        |           |             |
-| TcpBenchmarks        | TcpCxOutJson | .NET 6.0           | .NET 6.0           |     63.73 us |   1.143 us |   1.069 us |  1.34 |    0.03 | 0.3662 |      - |    6929 B |        0.86 |
-| TcpBenchmarks        | TcpCxOutJson | .NET 8.0           | .NET 8.0           |     47.49 us |   0.641 us |   0.600 us |  1.00 |    0.02 | 0.3662 |      - |    8064 B |        1.00 |
-```

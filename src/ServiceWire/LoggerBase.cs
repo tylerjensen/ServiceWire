@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +7,7 @@ namespace ServiceWire
 {
     public abstract class LoggerBase
     {
-        protected object _syncRoot = new object();
+        protected readonly object _syncRoot = new object();
         protected string _logDirectory = null;
         protected string _logFilePrefix = null;
         protected string _logFileExtension = null;
@@ -33,9 +33,27 @@ namespace ServiceWire
             }
         }
 
+        /// <summary>
+        /// When true, the log file is kept open between writes instead of being
+        /// opened and closed on every flush. Opt-in because a held file handle is
+        /// observable by external log shippers and rotation tools. Default false
+        /// preserves the pre-7.0 behavior.
+        /// </summary>
+        public bool PersistentFileWriter { get; set; }
+
         public virtual void FlushLog()
         {
             WriteBuffer(int.MaxValue);
+            //release the held handle so a flushed log can be rotated or the process can exit cleanly
+            lock (_syncRoot)
+            {
+                if (null != _heldWriter)
+                {
+                    _heldWriter.Dispose();
+                    _heldWriter = null;
+                    _heldWriterFileName = null;
+                }
+            }
         }
 
         protected const string TimeStampPattern = "yyyy-MM-ddTHH:mm:ss.fff";
@@ -78,6 +96,9 @@ namespace ServiceWire
             }
         }
 
+        private StreamWriter _heldWriter;
+        private string _heldWriterFileName;
+
         private void WriteToFile(string[] lines)
         {
             lock (_syncRoot)
@@ -85,7 +106,27 @@ namespace ServiceWire
                 try
                 {
                     var fileName = GetFileName();
-                    File.AppendAllLines(fileName, lines);
+                    if (PersistentFileWriter)
+                    {
+                        if (null == _heldWriter || _heldWriterFileName != fileName)
+                        {
+                            _heldWriter?.Dispose();
+                            _heldWriter = new StreamWriter(new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read));
+                            _heldWriterFileName = fileName;
+                        }
+                        foreach (var line in lines) _heldWriter.WriteLine(line);
+                        _heldWriter.Flush();
+                    }
+                    else
+                    {
+                        if (null != _heldWriter)
+                        {
+                            _heldWriter.Dispose();
+                            _heldWriter = null;
+                            _heldWriterFileName = null;
+                        }
+                        File.AppendAllLines(fileName, lines);
+                    }
                 }
                 catch
                 {

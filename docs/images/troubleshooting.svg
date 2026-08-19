@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="480" viewBox="0 0 980 480" role="img" aria-label="A table of five common ServiceWire symptoms with their likely cause and the fix, covering contract mismatches, AddService ordering, 32-bit builds, exception serialization and socket timeouts.">
+  <rect x="0" y="0" width="980" height="480" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="44" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#0f172a">When something goes wrong</text>
+  <text x="40" y="70" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#475569">Most ServiceWire problems are one of five things. Start here before turning on debug logging.</text>
+
+  <rect x="40" y="96" width="300" height="32" rx="6" fill="#0f172a"/>
+  <text x="56" y="117" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="0.6" fill="#ffffff">SYMPTOM</text>
+  <rect x="348" y="96" width="284" height="32" rx="6" fill="#0f172a"/>
+  <text x="364" y="117" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="0.6" fill="#ffffff">LIKELY CAUSE</text>
+  <rect x="648" y="96" width="292" height="32" rx="6" fill="#0f172a"/>
+  <text x="664" y="117" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="0.6" fill="#ffffff">WHAT TO DO</text>
+
+  <rect x="40" y="132" width="900" height="60" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="40" y="132" width="5" height="60" rx="2" fill="#dc2626"/>
+  <text x="56" y="156" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">TypeAccessException when the client</text>
+  <text x="56" y="175" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">creates the proxy</text>
+  <text x="364" y="156" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">The contract assembly differs</text>
+  <text x="364" y="175" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">between the two sides</text>
+  <text x="664" y="156" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">Rebuild both against the same</text>
+  <text x="664" y="175" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">contracts project, then redeploy</text>
+
+  <rect x="40" y="196" width="900" height="60" rx="6" fill="#ffffff" stroke="#e2e8f0"/>
+  <rect x="40" y="196" width="5" height="60" rx="2" fill="#d97706"/>
+  <text x="56" y="220" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">The first call fails and the host</text>
+  <text x="56" y="239" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">logs nothing at all</text>
+  <text x="364" y="220" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">AddService was never called, or</text>
+  <text x="364" y="239" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">was called after Open()</text>
+  <text x="664" y="220" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">Add every service before Open();</text>
+  <text x="664" y="239" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">adding one later throws</text>
+
+  <rect x="40" y="260" width="900" height="60" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="40" y="260" width="5" height="60" rx="2" fill="#2563eb"/>
+  <text x="56" y="284" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">Runs on your machine, fails on</text>
+  <text x="56" y="303" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">another 64-bit box</text>
+  <text x="364" y="284" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">The project is built with</text>
+  <text x="364" y="303" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Prefer 32-bit enabled</text>
+  <text x="664" y="284" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">Target AnyCPU or x64 &#8212; the emitted</text>
+  <text x="664" y="303" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">proxy will not run as x86 on x64</text>
+
+  <rect x="40" y="324" width="900" height="60" rx="6" fill="#ffffff" stroke="#e2e8f0"/>
+  <rect x="40" y="324" width="5" height="60" rx="2" fill="#7c3aed"/>
+  <text x="56" y="348" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">The connection drops whenever a</text>
+  <text x="56" y="367" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">service method throws</text>
+  <text x="364" y="348" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">A custom ISerializer cannot</text>
+  <text x="364" y="367" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">serialize the exception object</text>
+  <text x="664" y="348" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">Handle exceptions in your serializer,</text>
+  <text x="664" y="367" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">or fall back to the default one</text>
+
+  <rect x="40" y="388" width="900" height="60" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="40" y="388" width="5" height="60" rx="2" fill="#0d9488"/>
+  <text x="56" y="412" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">A client blocks forever against a</text>
+  <text x="56" y="431" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">host that went away</text>
+  <text x="364" y="412" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Socket timeouts default to infinite</text>
+  <text x="364" y="431" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">so upgrades change nothing</text>
+  <text x="664" y="412" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">Set ReceiveTimeoutMs and</text>
+  <text x="664" y="431" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">SendTimeoutMs on the endpoint</text>
+
+  <text x="40" y="470" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Still stuck? Inject a Logger at LogLevel.Debug on both sides &#8212; the handshake, the method map and every dispatch are traced.</text>
+</svg>

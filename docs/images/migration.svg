@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="430" viewBox="0 0 980 430" role="img" aria-label="Compatibility matrix of ServiceWire 6.x and 7.0 clients against 6.x and 7.0 servers: every mixed pairing works over the v1 wire, and only 7.0 on both ends uses the v2 wire.">
+  <rect x="0" y="0" width="980" height="430" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="44" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#0f172a">Upgrading a fleet, in any order</text>
+  <text x="40" y="70" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#475569">Every mixed pairing keeps working. The new wire only switches on when both ends are 7.0.</text>
+
+  <rect x="380" y="110" width="250" height="40" rx="8" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="505" y="136" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#334155">Server on 6.x</text>
+  <rect x="650" y="110" width="250" height="40" rx="8" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="775" y="136" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#334155">Server on 7.0</text>
+
+  <rect x="100" y="160" width="260" height="100" rx="8" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="230" y="216" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#334155">Client on 6.x</text>
+  <rect x="100" y="272" width="260" height="100" rx="8" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="230" y="328" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#334155">Client on 7.0</text>
+
+  <rect x="380" y="160" width="250" height="100" rx="8" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="505" y="200" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#334155">v1 wire</text>
+  <text x="505" y="224" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">exactly what you run today</text>
+
+  <rect x="650" y="160" width="250" height="100" rx="8" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="775" y="196" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#334155">v1 wire</text>
+  <text x="775" y="220" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">the server advertises v2,</text>
+  <text x="775" y="237" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">the old client ignores the flag</text>
+
+  <rect x="380" y="272" width="250" height="100" rx="8" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="505" y="308" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#334155">v1 wire</text>
+  <text x="505" y="332" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">no capability advertised,</text>
+  <text x="505" y="349" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">so the new client stays on v1</text>
+
+  <rect x="650" y="272" width="250" height="100" rx="8" fill="#ecfdf5" stroke="#0d9488" stroke-width="2"/>
+  <text x="775" y="308" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#115e59">v2 wire</text>
+  <text x="775" y="332" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">framed and correlated, with</text>
+  <text x="775" y="349" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">concurrent calls on TCP</text>
+
+  <text x="40" y="400" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">One 7.0 host serves both kinds of client on the same endpoint at the same time, choosing per connection. Nothing has to move in lockstep.</text>
+  <text x="40" y="418" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">If you need the old behaviour anyway: Host.EnableWireV2 = false before AddService, or UseWireV2 = false on a client endpoint.</text>
+</svg>

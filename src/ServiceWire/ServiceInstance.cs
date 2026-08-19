@@ -12,5 +12,11 @@ namespace ServiceWire
         public ConcurrentDictionary<int, MethodInfo> InterfaceMethods { get; set; }
         public ConcurrentDictionary<int, bool[]> MethodParametersByRef { get; set; }
         public ServiceSyncInfo ServiceSyncInfo { get; set; }
+
+        /// <summary>
+        /// Invokers compiled lazily on each method's first invocation. Methods with
+        /// byref parameters cache null and fall back to MethodInfo.Invoke.
+        /// </summary>
+        internal ConcurrentDictionary<int, Func<object, object[], object>> CompiledMethods { get; set; }
     }
 }

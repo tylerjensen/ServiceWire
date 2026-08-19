@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>ServiceWire.InteropContract</AssemblyName>
+    <RootNamespace>ServiceWire.InteropContract</RootNamespace>
+    <!-- both peers compile against this exact assembly so wire type config names match -->
+  </PropertyGroup>
+</Project>

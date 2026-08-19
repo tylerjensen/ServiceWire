@@ -1,19 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net6.0;net48</TargetFrameworks>
+		<TargetFrameworks>net10.0;net8.0;net48</TargetFrameworks>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
-		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+		<!-- force 64-bit for the net48 child process; a 32-bit child fails to load
+		     the benchmark assembly with BadImageFormatException -->
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<Prefer32Bit>false</Prefer32Bit>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+		<PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="protobuf-net" Version="3.2.45" />
 		<PackageReference Include="System.Private.Uri" Version="4.3.2" />

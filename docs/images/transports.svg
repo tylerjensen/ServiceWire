@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="450" viewBox="0 0 980 450" role="img" aria-label="Choosing a ServiceWire transport: named pipes for two processes on one machine, TCP for processes on different machines.">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="450" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="44" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#0f172a">Picking a transport</text>
+  <text x="40" y="70" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#475569">The contract and the service implementation are identical either way. Only the host and client types change.</text>
+
+  <rect x="40" y="180" width="250" height="130" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="165" y="222" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">Are both processes</text>
+  <text x="165" y="244" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">on the same machine?</text>
+  <text x="165" y="274" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">You can also host both at once:</text>
+  <text x="165" y="291" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">one singleton, two hosts.</text>
+
+  <polyline points="290,230 310,230 310,171 326,171" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+  <text x="316" y="150" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#0e7490">yes</text>
+  <polyline points="290,260 310,260 310,337 326,337" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+  <text x="316" y="380" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#b45309">no</text>
+
+  <rect x="330" y="96" width="610" height="150" rx="10" fill="#ecfeff" stroke="#0891b2"/>
+  <text x="350" y="124" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#155e75">Named pipes</text>
+  <text x="350" y="150" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#0e7490">Host</text>
+  <text x="440" y="150" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#0f172a">new NpHost("my-pipe")</text>
+  <text x="350" y="172" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#0e7490">Client</text>
+  <text x="440" y="172" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#0f172a">new NpClient&lt;T&gt;(new NpEndPoint("my-pipe"))</text>
+  <text x="350" y="194" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#0e7490">Security</text>
+  <text x="440" y="194" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">OS pipe ACLs, via INamedPipeServerStreamFactory</text>
+  <text x="350" y="216" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#0e7490">Calls</text>
+  <text x="440" y="216" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">serialized per channel &#8212; a pipe cannot overlap read and write</text>
+  <text x="350" y="238" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#0e7490">Cost</text>
+  <text x="440" y="238" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">~15 &#181;s per small call on 7.0 (.NET 10, loopback)</text>
+
+  <rect x="330" y="262" width="610" height="150" rx="10" fill="#fffbeb" stroke="#d97706"/>
+  <text x="350" y="290" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#92400e">TCP/IP</text>
+  <text x="350" y="316" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#b45309">Host</text>
+  <text x="440" y="316" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#0f172a">new TcpHost(8098)</text>
+  <text x="350" y="338" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#b45309">Client</text>
+  <text x="440" y="338" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#0f172a">new TcpClient&lt;T&gt;(new TcpEndPoint(ipEndPoint))</text>
+  <text x="350" y="360" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#b45309">Security</text>
+  <text x="440" y="360" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">optional zero-knowledge login + encrypted session</text>
+  <text x="350" y="382" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#b45309">Calls</text>
+  <text x="440" y="382" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">pipelined &#8212; many threads share one proxy with calls in flight</text>
+  <text x="350" y="404" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#b45309">Cost</text>
+  <text x="440" y="404" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">~41 &#181;s per small call on 7.0 (.NET 10, loopback) + network</text>
+</svg>

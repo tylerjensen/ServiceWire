@@ -40,6 +40,7 @@ namespace ServiceWire.Aspects
                 InterfaceType = _serviceType,
                 InterfaceMethods = new ConcurrentDictionary<int, MethodInfo>(),
                 MethodParametersByRef = new ConcurrentDictionary<int, bool[]>(),
+                CompiledMethods = new ConcurrentDictionary<int, Func<object, object[], object>>(),
                 SingletonInstance = _interceptPoint.Target
             };
 
@@ -97,7 +98,8 @@ namespace ServiceWire.Aspects
                 ServiceKeyIndex = 0,
                 CompressionThreshold = 131072,
                 UseCompression = false,
-                MethodInfos = syncSyncInfos.ToArray()
+                MethodInfos = syncSyncInfos.ToArray(),
+                CapabilityFlags = (int)ProtocolCapabilities.WireV2
             };
             _serviceInstance.ServiceSyncInfo = serviceSyncInfo;
         }
@@ -127,7 +129,13 @@ namespace ServiceWire.Aspects
                             _interceptPoint.Cut.PreInvoke(_interceptPoint.Id, methodSyncInfo.MethodName, parameters);
                         }
 
-                        object returnValue = method.Invoke(_serviceInstance.SingletonInstance, parameters);
+                        //compiled lazily on first invocation; see Host.ExecuteMethod
+                        Func<object, object[], object> invoker = null;
+                        if (null != _serviceInstance.CompiledMethods)
+                            invoker = _serviceInstance.CompiledMethods.GetOrAdd(ident, _ => MethodInvokerCompiler.TryCompile(method));
+                        object returnValue = (null != invoker)
+                            ? invoker(_serviceInstance.SingletonInstance, parameters)
+                            : method.Invoke(_serviceInstance.SingletonInstance, parameters);
                         //the result to the client is the return value (null if void) and the input parameters
                         returnParameters = new object[1 + parameters.Length];
                         returnParameters[0] = returnValue;

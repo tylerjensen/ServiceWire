@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ServiceWire.NamedPipes;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
@@ -7,9 +7,12 @@ using System.Net;
 
 namespace ServiceWire.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net80, baseline: true)]
-    [SimpleJob(RuntimeMoniker.Net60)]
-    [SimpleJob(RuntimeMoniker.Net48)]
+    //explicit, modest invocation counts: every operation opens a real TCP
+    //connection whose close lingers in TIME_WAIT for minutes, so an unbounded run
+    //exhausts the Windows ephemeral port pool and fails with address-in-use
+    [SimpleJob(RuntimeMoniker.Net80, baseline: true, warmupCount: 2, iterationCount: 15, invocationCount: 16)]
+    [SimpleJob(RuntimeMoniker.Net10_0, warmupCount: 2, iterationCount: 15, invocationCount: 16)]
+    [SimpleJob(RuntimeMoniker.Net48, warmupCount: 2, iterationCount: 15, invocationCount: 16)]
     [MemoryDiagnoser]
     [HtmlExporter]
     public class ConnectionBenchmarks
@@ -17,14 +20,23 @@ namespace ServiceWire.Benchmarks
         private INetTester _tester;
         private Random _rnd;
 
-        private readonly string PipeName = "ServiceWireBenchmarkHost";
+        //distinct pipe name: sharing it with the steady-state benchmark classes
+        //lets a stray host instance in another process serve these clients
+        private readonly string PipeName = "ServiceWireBenchmarkConn";
 
-        private IPAddress _ipAddress;
-        private const int Port = 8084;
 
-        private IPEndPoint CreateTcpEndPoint(int portOffset)
+        //a genuinely free port per operation: this benchmark opens and closes a host
+        //every iteration, and connections closed by the previous iteration's server
+        //linger in TIME_WAIT for minutes, which blocks rebinding their port on
+        //Windows. The OS-assigned probe port never collides; its ~10 microsecond
+        //cost is part of every measured connection setup equally.
+        private static IPEndPoint GetFreeEndPoint()
         {
-            return new IPEndPoint(_ipAddress, Port + portOffset);
+            var probe = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
+            probe.Start();
+            var endPoint = (IPEndPoint)probe.LocalEndpoint;
+            probe.Stop();
+            return endPoint;
         }
 
         private NpEndPoint CreateNpEndPoint(string offset)
@@ -36,17 +48,17 @@ namespace ServiceWire.Benchmarks
         {
             _rnd = new Random();
             _tester = new NetTester();
-            _ipAddress = IPAddress.Parse("127.0.0.1");
         }
 
         [Benchmark]
         public void TcpConn()
         {
-            using (var tcpHost = new TcpHost(CreateTcpEndPoint(0)))
+            var endPoint = GetFreeEndPoint();
+            using (var tcpHost = new TcpHost(endPoint))
             {
                 tcpHost.AddService<INetTester>(_tester);
                 tcpHost.Open();
-                using (var tcpClient = new TcpClient<INetTester>(CreateTcpEndPoint(0)))
+                using (var tcpClient = new TcpClient<INetTester>(endPoint))
                 {
                     var a = _rnd.Next(0, 100);
                     var b = _rnd.Next(0, 100);

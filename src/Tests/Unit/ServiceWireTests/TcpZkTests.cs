@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Threading.Tasks;
 using ServiceWire.TcpIp;
@@ -31,7 +31,7 @@ namespace ServiceWireTests
 
         private TcpHost _tcphost;
         private IPAddress _ipAddress;
-        private const int Port = 8098;
+        private readonly int Port = TestPorts.GetFreePort();
         private TcpClient<INetTester> _clientProxy;
 
         private IPEndPoint CreateEndPoint()
@@ -41,7 +41,7 @@ namespace ServiceWireTests
 
         private TcpZkEndPoint CreateZkClientEndPoint()
         {
-            return new TcpZkEndPoint(username, password, new IPEndPoint(_ipAddress, Port), connectTimeOutMs: 5000); //expand timeout for CI/CD pipeline
+            return new TcpZkEndPoint(username, password, new IPEndPoint(_ipAddress, Port), connectTimeOutMs: TestPorts.ConnectTimeoutMs); //see TestPorts.ConnectTimeoutMs
         }
 
         public TcpZkTests()

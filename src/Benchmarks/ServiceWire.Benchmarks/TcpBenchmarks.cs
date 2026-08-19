@@ -7,7 +7,7 @@ using System.Net;
 namespace ServiceWire.Benchmarks
 {
     [SimpleJob(RuntimeMoniker.Net80, baseline: true)]
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net10_0)]
     [SimpleJob(RuntimeMoniker.Net48)]
     [MemoryDiagnoser]
     [HtmlExporter]
@@ -22,32 +22,45 @@ namespace ServiceWire.Benchmarks
         private TcpClient<INetTester> _tcpClient;
         private TcpClient<INetTester> _tcpClientJson;
 
-        private IPAddress _ipAddress;
-        private const int Port = 8084;
-        private IPEndPoint CreateTcpEndPoint(int portOffset)
+
+        //fixed ports fail intermittently with address-in-use: each benchmark child
+        //process rebinds the same port, and connections closed by the previous
+        //child's server linger in TIME_WAIT, which blocks the next bind on Windows
+        private static IPEndPoint GetFreeEndPoint()
         {
-            return new IPEndPoint(_ipAddress, Port + portOffset);
+            var probe = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
+            probe.Start();
+            var endPoint = (IPEndPoint)probe.LocalEndpoint;
+            probe.Stop();
+            return endPoint;
         }
 
         public TcpBenchmarks()
         {
             _rnd = new Random();
             _tester = new NetTester();
-            _ipAddress = IPAddress.Parse("127.0.0.1");
-            _tcphost = new TcpHost(CreateTcpEndPoint(0));
-            _tcphost.AddService<INetTester>(_tester);
-            _tcphost.Open();
-
-            _tcphostJson = new TcpHost(CreateTcpEndPoint(1));
-            _tcphostJson.AddService<INetTester>(_tester);
-            _tcphostJson.Open();
         }
 
+        //hosts are created in GlobalSetup, not the constructor: BenchmarkDotNet also
+        //instantiates this class in its orchestrating host process for validation,
+        //and a host opened there holds the fixed ports so the measured child process
+        //cannot bind them (every TCP benchmark then fails with address-in-use)
         [GlobalSetup]
         public void GlobalSetup()
         {
-            _tcpClient = new TcpClient<INetTester>(CreateTcpEndPoint(0));
-            _tcpClientJson = new TcpClient<INetTester>(CreateTcpEndPoint(1));
+            var endPoint = GetFreeEndPoint();
+            var endPointJson = GetFreeEndPoint();
+
+            _tcphost = new TcpHost(endPoint);
+            _tcphost.AddService<INetTester>(_tester);
+            _tcphost.Open();
+
+            _tcphostJson = new TcpHost(endPointJson);
+            _tcphostJson.AddService<INetTester>(_tester);
+            _tcphostJson.Open();
+
+            _tcpClient = new TcpClient<INetTester>(endPoint);
+            _tcpClientJson = new TcpClient<INetTester>(endPointJson);
         }
 
         [GlobalCleanup]

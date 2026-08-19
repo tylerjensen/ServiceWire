@@ -20,27 +20,99 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 10.0.x
+        # 8.0.x runs the ServiceWire 6.0.1 interop peer; 10.0.x runs the build and tests
+        dotnet-version: |
+          8.0.x
+          10.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
+      id: build
       run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+
+    # One step per test project and target framework. A single solution-wide
+    # "dotnet test" runs the multi-targeted unit tests through the VSTest
+    # cross-targeting dispatcher, which reports a failing inner build as
+    # "MSB4181: the MSBuild task returned false but did not log an error" and
+    # hides which framework failed and why. Running each framework explicitly
+    # surfaces the real error. Blame collection names the test that was running
+    # if the host dies, and the hang timeout turns a deadlock into a report
+    # instead of a job timeout.
+    # Each step runs whenever the build succeeded, so one failing framework does
+    # not mask the results of the others.
+    - name: Test unit (net10.0)
+      if: steps.build.outcome == 'success'
+      run: >
+        dotnet test Tests/Unit/ServiceWireTests/ServiceWireTests.csproj
+        --no-build -f net10.0 --verbosity normal
+        --blame --blame-hang --blame-hang-timeout 5m
+        --logger "trx;LogFileName=unit-net10.trx" --results-directory TestResults
+
+    - name: Test interop matrix (net10.0)
+      if: steps.build.outcome == 'success'
+      run: >
+        dotnet test Tests/Interop/InteropTests/InteropTests.csproj
+        --no-build --verbosity normal
+        --blame --blame-hang --blame-hang-timeout 5m
+        --logger "trx;LogFileName=interop-net10.trx" --results-directory TestResults
+
+    - name: Upload test results
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-linux
+        path: src/TestResults
+        if-no-files-found: ignore
 
   build_windows:
-  
+
     runs-on: windows-latest
-    
+
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 10.0.x
+        # 8.0.x runs the ServiceWire 6.0.1 interop peer; 10.0.x runs the build and tests
+        dotnet-version: |
+          8.0.x
+          10.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
+      id: build
       run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+
+    # See the comment in build_linux. Windows also runs the net48 target of the
+    # unit tests, which is the pairing the cross-targeting dispatcher obscures.
+    - name: Test unit (net10.0)
+      if: steps.build.outcome == 'success'
+      run: >
+        dotnet test Tests/Unit/ServiceWireTests/ServiceWireTests.csproj
+        --no-build -f net10.0 --verbosity normal
+        --blame --blame-hang --blame-hang-timeout 5m
+        --logger "trx;LogFileName=unit-net10.trx" --results-directory TestResults
+
+    - name: Test unit (net48)
+      if: steps.build.outcome == 'success'
+      run: >
+        dotnet test Tests/Unit/ServiceWireTests/ServiceWireTests.csproj
+        --no-build -f net48 --verbosity normal
+        --blame --blame-hang --blame-hang-timeout 5m
+        --logger "trx;LogFileName=unit-net48.trx" --results-directory TestResults
+
+    - name: Test interop matrix (net10.0)
+      if: steps.build.outcome == 'success'
+      run: >
+        dotnet test Tests/Interop/InteropTests/InteropTests.csproj
+        --no-build --verbosity normal
+        --blame --blame-hang --blame-hang-timeout 5m
+        --logger "trx;LogFileName=interop-net10.trx" --results-directory TestResults
+
+    - name: Upload test results
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-windows
+        path: src/TestResults
+        if-no-files-found: ignore

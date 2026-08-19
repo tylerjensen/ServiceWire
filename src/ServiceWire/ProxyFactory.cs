@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
@@ -44,16 +45,9 @@ namespace ServiceWire
 
         private static TInterface CreateProxy<TInterface>(ProxyBuilder proxyBuilder, object channelCtorValue, ISerializer serializer, ICompressor compressor, ILog logger, IStats stats) where TInterface : class
         {
-            //create the type and construct an instance
-            Type[] ctorArgTypes = new Type[] { typeof(Type), proxyBuilder.CtorType, typeof(ISerializer), typeof(ICompressor), typeof(ILog), typeof(IStats) };
-            Type t = proxyBuilder.TypeBuilder.CreateTypeInfo();
-            var constructorInfo = t.GetConstructor(ctorArgTypes);
-            if (constructorInfo != null)
-            {
-                TInterface instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface), channelCtorValue, serializer, compressor, logger, stats });
-                return instance;
-            }
-            return null;
+            //the proxy type and its constructor delegate were compiled once when the builder was created
+            if (null == proxyBuilder.CtorInvoker) return null;
+            return (TInterface)proxyBuilder.CtorInvoker(typeof(TInterface), channelCtorValue, serializer, compressor, logger, stats);
         }
 
         private static ProxyBuilder CreateProxyBuilder(string proxyName, Type interfaceType, Type channelType, Type ctorArgType)
@@ -116,6 +110,28 @@ namespace ServiceWire
                 typeBuilder.DefineMethodOverride(methodBuilder, methodInfo);
             }
 
+            //create the concrete type once and compile its constructor into a delegate
+            //so pooled builders skip CreateTypeInfo/GetConstructor/Invoke on every proxy
+            Type proxyType = typeBuilder.CreateTypeInfo().AsType();
+            var constructorInfo = proxyType.GetConstructor(ctorArgTypes);
+            Func<Type, object, ISerializer, ICompressor, ILog, IStats, object> ctorInvoker = null;
+            if (null != constructorInfo)
+            {
+                var serviceTypeParam = Expression.Parameter(typeof(Type), "serviceType");
+                var ctorArgParam = Expression.Parameter(typeof(object), "ctorArg");
+                var serializerParam = Expression.Parameter(typeof(ISerializer), "serializer");
+                var compressorParam = Expression.Parameter(typeof(ICompressor), "compressor");
+                var loggerParam = Expression.Parameter(typeof(ILog), "logger");
+                var statsParam = Expression.Parameter(typeof(IStats), "stats");
+                var newExpr = Expression.New(constructorInfo,
+                    serviceTypeParam,
+                    Expression.Convert(ctorArgParam, ctorArgType),
+                    serializerParam, compressorParam, loggerParam, statsParam);
+                ctorInvoker = Expression.Lambda<Func<Type, object, ISerializer, ICompressor, ILog, IStats, object>>(
+                    Expression.Convert(newExpr, typeof(object)),
+                    serviceTypeParam, ctorArgParam, serializerParam, compressorParam, loggerParam, statsParam).Compile();
+            }
+
             //create proxy builder
             var result = new ProxyBuilder
             {
@@ -124,7 +140,9 @@ namespace ServiceWire
                 CtorType = ctorArgType,
                 AssemblyBuilder = assemblyBuilder,
                 ModuleBuilder = moduleBuilder,
-                TypeBuilder = typeBuilder
+                TypeBuilder = typeBuilder,
+                ProxyType = proxyType,
+                CtorInvoker = ctorInvoker
             };
             return result;
         }

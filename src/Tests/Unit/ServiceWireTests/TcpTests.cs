@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Threading.Tasks;
 using ServiceWire.TcpIp;
@@ -12,12 +12,19 @@ namespace ServiceWireTests
         private INetTester _tester;
         private TcpHost _tcphost;
         private IPAddress _ipAddress;
-        private const int Port = 8099;
+        private readonly int Port = TestPorts.GetFreePort();
         private TcpClient<INetTester> _clientProxy;
 
         private IPEndPoint CreateEndPoint()
         {
             return new IPEndPoint(_ipAddress, Port);
+        }
+
+        //TcpClient<T>(IPEndPoint) hard-codes the 2500 ms default; the TcpEndPoint
+        //overload lets the suite widen it - see TestPorts.ConnectTimeoutMs
+        private TcpEndPoint CreateClientEndPoint()
+        {
+            return new TcpEndPoint(CreateEndPoint(), TestPorts.ConnectTimeoutMs);
         }
 
         public TcpTests()
@@ -30,7 +37,7 @@ namespace ServiceWireTests
             _tcphost.AddService<INetTester>(_tester);
             _tcphost.Open();
             Task.Delay(100);
-            _clientProxy = new TcpClient<INetTester>(CreateEndPoint());
+            _clientProxy = new TcpClient<INetTester>(CreateClientEndPoint());
         }
 
         [Fact]
@@ -73,7 +80,7 @@ namespace ServiceWireTests
                 var a = rnd.Next(0, 100);
                 var b = rnd.Next(0, 100);
 
-                using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
+                using (var clientProxy = new TcpClient<INetTester>(CreateClientEndPoint()))
                 {
                     var result = clientProxy.Proxy.Min(a, b);
                     if (Math.Min(a, b) != result)
@@ -114,7 +121,7 @@ namespace ServiceWireTests
                 const int count = 50;
                 const int start = 0;
 
-                using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
+                using (var clientProxy = new TcpClient<INetTester>(CreateClientEndPoint()))
                 {
                     var result = clientProxy.Proxy.Range(start, count);
                     for (var i = start; i < count; i++)

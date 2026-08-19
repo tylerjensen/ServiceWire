@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="510" viewBox="0 0 980 510" role="img" aria-label="Wire protocol negotiation and frame layouts: the v1 request has message type, service key, method id and a parameter block; v2 adds a frame length, correlation id and flags, and its response carries a status byte.">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="510" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="44" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#0f172a">The wire, negotiated per connection</text>
+  <text x="40" y="70" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#475569">A 7.0 client only speaks v2 after the server advertises it, so a 6.x peer never sees a frame it cannot read.</text>
+
+  <rect x="40" y="96" width="280" height="58" rx="9" fill="#eff6ff" stroke="#2563eb"/>
+  <text x="180" y="120" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1e3a8a">Client sends SyncInterface</text>
+  <text x="180" y="139" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#1d4ed8">asks for the method map</text>
+  <line x1="322" y1="125" x2="346" y2="125" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="350" y="96" width="280" height="58" rx="9" fill="#ecfdf5" stroke="#0d9488"/>
+  <text x="490" y="120" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#115e59">Server replies ServiceSyncInfo</text>
+  <text x="490" y="139" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#0f766e">carrying CapabilityFlags</text>
+  <line x1="632" y1="125" x2="656" y2="125" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="660" y="96" width="280" height="58" rx="9" fill="#fffbeb" stroke="#d97706"/>
+  <text x="800" y="120" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#92400e">WireV2 advertised? use v2</text>
+  <text x="800" y="139" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#b45309">flag absent or 0, stay on v1</text>
+
+  <text x="40" y="196" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#0f172a">v1 request &#183; understood by every ServiceWire release</text>
+  <rect x="60" y="208" width="150" height="46" rx="4" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="135" y="228" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#0f172a">message type</text>
+  <text x="135" y="244" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#64748b">int32 = 1</text>
+  <rect x="210" y="208" width="150" height="46" rx="4" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="285" y="228" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#0f172a">service key</text>
+  <text x="285" y="244" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#64748b">int32</text>
+  <rect x="360" y="208" width="150" height="46" rx="4" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="435" y="228" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#0f172a">method id</text>
+  <text x="435" y="244" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#64748b">int32</text>
+  <rect x="510" y="208" width="410" height="46" rx="4" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="715" y="228" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#0f172a">parameter block</text>
+  <text x="715" y="244" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#64748b">one type code + value per parameter, to end of message</text>
+
+  <text x="40" y="290" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#0f172a">v2 request &#183; length-prefixed and correlated</text>
+  <rect x="60" y="302" width="120" height="46" rx="4" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="120" y="322" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">message type</text>
+  <text x="120" y="338" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#64748b">int32 = 6</text>
+  <rect x="180" y="302" width="110" height="46" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="235" y="322" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#92400e">frame length</text>
+  <text x="235" y="338" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#b45309">int32</text>
+  <rect x="290" y="302" width="120" height="46" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="350" y="322" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#92400e">correlation id</text>
+  <text x="350" y="338" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#b45309">int32</text>
+  <rect x="410" y="302" width="110" height="46" rx="4" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="465" y="322" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">service key</text>
+  <text x="465" y="338" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#64748b">int32</text>
+  <rect x="520" y="302" width="110" height="46" rx="4" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="575" y="322" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">method id</text>
+  <text x="575" y="338" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#64748b">int32</text>
+  <rect x="630" y="302" width="70" height="46" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="665" y="322" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#92400e">flags</text>
+  <text x="665" y="338" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#b45309">byte</text>
+  <rect x="700" y="302" width="220" height="46" rx="4" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="810" y="322" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">payload</text>
+  <text x="810" y="338" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#64748b">parameter block, v2 encodings</text>
+
+  <text x="40" y="384" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#0f172a">v2 response &#183; carries the correlation id back, plus an outcome</text>
+  <rect x="60" y="396" width="130" height="46" rx="4" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="125" y="416" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">message type</text>
+  <text x="125" y="432" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#64748b">int32 = 7</text>
+  <rect x="190" y="396" width="120" height="46" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="250" y="416" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#92400e">frame length</text>
+  <text x="250" y="432" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#b45309">int32</text>
+  <rect x="310" y="396" width="130" height="46" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="375" y="416" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#92400e">correlation id</text>
+  <text x="375" y="432" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#b45309">matches the request</text>
+  <rect x="440" y="396" width="90" height="46" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="485" y="416" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#92400e">status</text>
+  <text x="485" y="432" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#b45309">byte</text>
+  <rect x="530" y="396" width="80" height="46" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="570" y="416" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#92400e">flags</text>
+  <text x="570" y="432" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#b45309">byte</text>
+  <rect x="610" y="396" width="310" height="46" rx="4" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="765" y="416" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f172a">payload</text>
+  <text x="765" y="432" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="10" fill="#64748b">return value and out/ref values, or the exception</text>
+
+  <text x="40" y="470" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Amber fields are new in v2. The length prefix lets a bad request be answered with an error rather than</text>
+  <text x="40" y="488" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">desynchronizing the stream; the correlation id lets several calls be in flight on one TCP channel at once.</text>
+</svg>
