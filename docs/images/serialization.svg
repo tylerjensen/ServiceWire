@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="400" viewBox="0 0 980 400" role="img" aria-label="The ServiceWire parameter pipeline: an argument is encoded natively or by the serializer, optionally compressed, written to the wire, and decoded by the receiver.">
+  <defs>
+    <marker id="arw" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="400" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="44" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#0f172a">How a parameter becomes bytes</text>
+  <text x="40" y="70" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#475569">Common types never touch a serializer. Compression is opt-in and only applies to payloads past the threshold.</text>
+
+  <rect x="42" y="98" width="160" height="96" rx="9" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="122" y="128" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#0f172a">Argument</text>
+  <text x="122" y="152" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#475569">the value you passed</text>
+  <text x="122" y="169" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#475569">to the proxy method</text>
+  <line x1="204" y1="146" x2="224" y2="146" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="226" y="98" width="160" height="96" rx="9" fill="#eff6ff" stroke="#2563eb"/>
+  <text x="306" y="128" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1e3a8a">Encode</text>
+  <text x="306" y="152" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#1d4ed8">a native type code, or</text>
+  <text x="306" y="169" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#1d4ed8">ISerializer for the rest</text>
+  <line x1="388" y1="146" x2="408" y2="146" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="410" y="98" width="160" height="96" rx="9" fill="#fffbeb" stroke="#d97706"/>
+  <text x="490" y="128" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#92400e">Compress</text>
+  <text x="490" y="152" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#b45309">optional, and only past</text>
+  <text x="490" y="169" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#b45309">CompressionThreshold</text>
+  <line x1="572" y1="146" x2="592" y2="146" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="594" y="98" width="160" height="96" rx="9" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="674" y="128" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#0f172a">Wire</text>
+  <text x="674" y="152" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#475569">type code, length,</text>
+  <text x="674" y="169" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#475569">then the bytes</text>
+  <line x1="756" y1="146" x2="776" y2="146" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="778" y="98" width="160" height="96" rx="9" fill="#ecfdf5" stroke="#0d9488"/>
+  <text x="858" y="128" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#115e59">Decode</text>
+  <text x="858" y="152" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f766e">the receiver runs</text>
+  <text x="858" y="169" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#0f766e">the same steps back</text>
+
+  <rect x="40" y="234" width="440" height="130" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="60" y="262" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">The default serializer</text>
+  <text x="60" y="286" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">System.Text.Json. No [Serializable] attribute needed,</text>
+  <text x="60" y="304" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">no BinaryFormatter, safe inside ASP.NET.</text>
+  <text x="60" y="328" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Thrown exceptions survive the trip: type, message,</text>
+  <text x="60" y="346" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">HResult, inner chain and server stack trace.</text>
+
+  <rect x="500" y="234" width="440" height="130" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="520" y="262" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">Bring your own</text>
+  <text x="520" y="286" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Implement ISerializer and pass it to both sides:</text>
+  <rect x="520" y="296" width="400" height="52" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="534" y="316" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">new TcpHost(port, serializer: new ProtoSerializer())</text>
+  <text x="534" y="336" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">new TcpClient&lt;T&gt;(ep, new ProtoSerializer())</text>
+</svg>

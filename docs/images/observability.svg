@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="430" viewBox="0 0 980 430" role="img" aria-label="Host status lifecycle from Created through Opening, Open and Closed with a Faulted branch, plus where ILog and IStats plug into hosts and clients.">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arwr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="430" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="44" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#0f172a">Knowing what your host is doing</text>
+  <text x="40" y="70" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#475569">Poll Host.Status to watch the listener, and inject ILog and IStats to see individual calls.</text>
+
+  <rect x="95" y="100" width="160" height="52" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="175" y="132" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#334155">Created</text>
+  <line x1="257" y1="126" x2="303" y2="126" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="305" y="100" width="160" height="52" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+  <text x="385" y="132" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#1e3a8a">Opening</text>
+  <line x1="467" y1="126" x2="513" y2="126" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="515" y="100" width="160" height="52" rx="8" fill="#ecfdf5" stroke="#0d9488"/>
+  <text x="595" y="132" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#115e59">Open</text>
+  <line x1="677" y1="126" x2="723" y2="126" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="725" y="100" width="160" height="52" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="805" y="132" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#334155">Closed</text>
+
+  <line x1="380" y1="154" x2="448" y2="196" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arwr)"/>
+  <line x1="590" y1="154" x2="532" y2="196" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arwr)"/>
+  <rect x="410" y="198" width="160" height="52" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+  <text x="490" y="230" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#991b1b">Faulted</text>
+
+  <text x="600" y="220" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">The listener stopped accepting.</text>
+  <text x="600" y="238" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Build a replacement host to recover.</text>
+
+  <text x="40" y="278" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Open() advances Created &#8594; Opening &#8594; Open. Close() or Dispose() lands on Closed. Status reports the listener, not one client connection.</text>
+
+  <rect x="40" y="296" width="440" height="116" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="60" y="322" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">ILog &#183; what happened</text>
+  <rect x="60" y="332" width="400" height="42" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="72" y="348" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">var log = new Logger(logLevel: LogLevel.Debug);</text>
+  <text x="72" y="366" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">new TcpHost(port, log: log);</text>
+  <text x="60" y="396" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Rolls daily or by size, to file, console or both.</text>
+
+  <rect x="500" y="296" width="440" height="116" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="520" y="322" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">IStats &#183; how long it took</text>
+  <rect x="520" y="332" width="400" height="42" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="532" y="348" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">new TcpHost(port, stats: new Stats());</text>
+  <text x="532" y="366" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">new TcpClient&lt;T&gt;(ep, stats: new Stats());</text>
+  <text x="520" y="396" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Off by default &#8212; no stopwatch runs until you inject one.</text>
+</svg>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="420" viewBox="0 0 980 420" role="img" aria-label="Three projects share one contract assembly: a contracts library referenced by both a host project and a client project, which talk over TCP.">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arwl" markerWidth="10" markerHeight="8" refX="1" refY="4" orient="auto">
+      <path d="M10,0 L0,4 L10,8 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="420" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="44" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#0f172a">Three projects, one shared contract</text>
+  <text x="40" y="70" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#475569">Both sides reference the same interface assembly. There is no IDL, no code generation step and no build-time proxy.</text>
+
+  <rect x="340" y="96" width="300" height="88" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="490" y="121" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#1e3a8a">MyApp.Contracts</text>
+  <text x="490" y="145" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#1e40af">public interface IMath</text>
+  <text x="490" y="165" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#1e40af">{ int Add(int a, int b); }</text>
+
+  <polyline points="490,184 490,206 190,206 190,226" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+  <polyline points="490,184 490,206 790,206 790,226" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+  <text x="300" y="200" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b">project reference</text>
+  <text x="680" y="200" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b">project reference</text>
+
+  <rect x="40" y="228" width="300" height="150" rx="10" fill="#ecfdf5" stroke="#0d9488"/>
+  <text x="190" y="252" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#115e59">MyApp.Host</text>
+  <text x="190" y="271" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#0f766e">implements IMath, opens the listener</text>
+  <rect x="56" y="282" width="268" height="80" rx="6" fill="#ffffff" stroke="#99f6e4"/>
+  <text x="68" y="303" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">var host = new TcpHost(8098);</text>
+  <text x="68" y="323" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">host.AddService&lt;IMath&gt;(new MathService());</text>
+  <text x="68" y="343" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">host.Open();</text>
+
+  <rect x="640" y="228" width="300" height="150" rx="10" fill="#fffbeb" stroke="#d97706"/>
+  <text x="790" y="252" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#92400e">MyApp.Client</text>
+  <text x="790" y="271" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#b45309">consumes IMath through the proxy</text>
+  <rect x="656" y="282" width="268" height="80" rx="6" fill="#ffffff" stroke="#fde68a"/>
+  <text x="668" y="303" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">using var client =</text>
+  <text x="668" y="323" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">    new TcpClient&lt;IMath&gt;(endPoint);</text>
+  <text x="668" y="343" font-family="Consolas, Menlo, monospace" font-size="10.5" fill="#0f172a">int sum = client.Proxy.Add(2, 3);</text>
+
+  <text x="490" y="296" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#0f172a">127.0.0.1:8098</text>
+  <line x1="346" y1="312" x2="634" y2="312" stroke="#64748b" stroke-width="1.5" stroke-dasharray="6 4" marker-start="url(#arwl)" marker-end="url(#arw)"/>
+  <text x="490" y="336" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">one endpoint can host</text>
+  <text x="490" y="352" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">many service interfaces</text>
+</svg>

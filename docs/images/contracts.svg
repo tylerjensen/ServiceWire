@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="440" viewBox="0 0 980 440" role="img" aria-label="What crosses the wire on one ServiceWire call: the request carries a method identifier and input parameters, the response carries the return value and any out or ref parameters.">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="440" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="44" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#0f172a">What crosses the wire on one call</text>
+  <text x="40" y="70" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#475569">Your contract shapes the payload. Inputs go out, the return value and every out/ref parameter come back.</text>
+
+  <rect x="40" y="92" width="900" height="46" rx="8" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="60" y="121" font-family="Consolas, Menlo, monospace" font-size="13" fill="#0f172a">TestResponse Get(Guid id, string label, double weight, out long quantity);</text>
+
+  <rect x="40" y="162" width="400" height="152" rx="10" fill="#eff6ff" stroke="#2563eb"/>
+  <text x="58" y="187" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="1" fill="#1e3a8a">REQUEST PARAMETER BLOCK</text>
+  <text x="58" y="212" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#1e40af">method identifier   int</text>
+  <text x="58" y="234" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#0f172a">id                  Guid</text>
+  <text x="58" y="256" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#0f172a">label               string</text>
+  <text x="58" y="278" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#0f172a">weight              double</text>
+  <text x="58" y="300" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#94a3b8">quantity            (out: slot only)</text>
+
+  <line x1="446" y1="212" x2="534" y2="212" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+  <text x="490" y="204" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#475569">invoke</text>
+  <line x1="534" y1="280" x2="446" y2="280" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw)"/>
+  <text x="490" y="272" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#475569">return</text>
+
+  <rect x="540" y="162" width="400" height="152" rx="10" fill="#ecfdf5" stroke="#0d9488"/>
+  <text x="558" y="187" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="1" fill="#115e59">RESPONSE PARAMETER BLOCK</text>
+  <text x="558" y="212" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#0f766e">return value        TestResponse</text>
+  <text x="558" y="234" font-family="Consolas, Menlo, monospace" font-size="11.5" fill="#0f172a">quantity            long (set by server)</text>
+  <text x="558" y="266" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Input-only parameters are not echoed back.</text>
+  <text x="558" y="286" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">A thrown exception replaces the whole block</text>
+  <text x="558" y="303" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">and is rethrown on the caller&#8217;s thread.</text>
+
+  <rect x="40" y="336" width="440" height="82" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="58" y="360" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#0f172a">Written directly to the wire &#183; fastest</text>
+  <text x="58" y="380" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">bool byte sbyte char short ushort int uint long ulong</text>
+  <text x="58" y="398" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">float double decimal string Guid DateTime Type + arrays</text>
+
+  <rect x="500" y="336" width="440" height="82" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="518" y="360" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#0f172a">Handed to ISerializer &#183; everything else</text>
+  <text x="518" y="380" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">your classes, structs, List&lt;T&gt;, dictionaries, nested graphs</text>
+  <text x="518" y="398" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">System.Text.Json by default, or inject your own</text>
+</svg>

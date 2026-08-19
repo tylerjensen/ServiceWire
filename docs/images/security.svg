@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="470" viewBox="0 0 980 470" role="img" aria-label="Zero-knowledge handshake sequence: the client and server exchange ephemerals and hashes, derive the same session key without sending the password, then encrypt every parameter block.">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="470" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="44" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#0f172a">Zero-knowledge login, then an encrypted session</text>
+  <text x="40" y="70" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#475569">Available on TCP. Swap TcpEndPoint for TcpZkEndPoint on the client and give the host an IZkRepository.</text>
+
+  <rect x="110" y="92" width="180" height="40" rx="8" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="200" y="117" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1e3a8a">TcpClient&lt;T&gt;</text>
+  <rect x="670" y="92" width="180" height="40" rx="8" fill="#d1fae5" stroke="#0d9488"/>
+  <text x="760" y="117" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#115e59">TcpHost</text>
+
+  <line x1="200" y1="132" x2="200" y2="430" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 5"/>
+  <line x1="760" y1="132" x2="760" y2="430" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 5"/>
+
+  <text x="480" y="172" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">ZkInitiate &#8212; username + client ephemeral A (32 bytes)</text>
+  <line x1="200" y1="180" x2="758" y2="180" stroke="#334155" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <text x="480" y="210" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">salt (32 bytes) + server ephemeral B (32 bytes)</text>
+  <line x1="760" y1="218" x2="202" y2="218" stroke="#334155" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="252" y="236" width="456" height="52" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="480" y="259" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">Each side derives the same session key on its own.</text>
+  <text x="480" y="277" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#b91c1c">The password never crosses the wire.</text>
+
+  <text x="480" y="302" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">ZkProof &#8212; hash of the client session key</text>
+  <line x1="200" y1="310" x2="758" y2="310" stroke="#334155" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <text x="480" y="338" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f172a">server session hash &#8212; the client verifies the server too</text>
+  <line x1="760" y1="346" x2="202" y2="346" stroke="#334155" stroke-width="1.5" marker-end="url(#arw)"/>
+
+  <rect x="200" y="368" width="560" height="50" rx="8" fill="#ecfdf5" stroke="#0d9488"/>
+  <text x="480" y="390" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#115e59">Session established</text>
+  <text x="480" y="409" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0f766e">every parameter block from here on is encrypted &#183; AES-256, CBC</text>
+
+  <text x="40" y="447" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#475569">Your IZkRepository stores only a salt and a derived key per user. Any mismatch throws InvalidCredentialException and the connection closes.</text>
+</svg>
