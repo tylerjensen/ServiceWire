@@ -71,7 +71,46 @@ namespace ServiceWireTests
 
         private static TcpClient<IConcurrencyTester> CreateTcpClient(int port)
         {
-            return new TcpClient<IConcurrencyTester>(new TcpEndPoint(new IPEndPoint(IPAddress.Loopback, port), 5000));
+            return new TcpClient<IConcurrencyTester>(new TcpEndPoint(new IPEndPoint(IPAddress.Loopback, port), TestPorts.ConnectTimeoutMs));
+        }
+
+        /// <summary>
+        /// Runs <paramref name="count"/> callers concurrently on dedicated threads and
+        /// returns their results in order.
+        /// <para>
+        /// Dedicated threads rather than Task.Run: every caller blocks for a whole round
+        /// trip, and this suite runs xUnit collections in parallel. Blocking dozens of
+        /// thread-pool threads starves the pool for the rest of the run, which delays the
+        /// socket completion callbacks other tests' clients wait on and makes them time
+        /// out against hosts that are listening perfectly well.
+        /// </para>
+        /// </summary>
+        private static T[] RunConcurrently<T>(int count, Func<int, T> caller)
+        {
+            var results = new T[count];
+            var failures = new Exception[count];
+            var threads = new Thread[count];
+            for (var i = 0; i < count; i++)
+            {
+                var index = i;
+                threads[i] = new Thread(() =>
+                {
+                    //capture rather than throw: an escaping exception on a raw thread
+                    //takes the whole test host down
+                    try { results[index] = caller(index); }
+                    catch (Exception e) { failures[index] = e; }
+                })
+                { IsBackground = true };
+                threads[i].Start();
+            }
+
+            foreach (var thread in threads)
+                Assert.True(thread.Join(TimeSpan.FromSeconds(30)), "a concurrent caller did not finish");
+
+            foreach (var failure in failures)
+                if (null != failure) throw failure;
+
+            return results;
         }
 
         [Fact]

@@ -22,6 +22,22 @@ namespace ServiceWireTests
     /// </summary>
     internal static class TestPorts
     {
+        /// <summary>
+        /// Connect timeout for test clients, deliberately far above the 2500 ms default.
+        /// <para>
+        /// A ServiceWire client connects through Socket.ConnectAsync and blocks until the
+        /// SocketAsyncEventArgs.Completed callback signals it. That callback is dispatched
+        /// on a thread-pool thread, so its latency tracks thread-pool health rather than
+        /// the network: with the pool saturated, a loopback connect that completes in
+        /// under a millisecond is not observed for hundreds of milliseconds. This suite
+        /// runs xUnit collections in parallel and several tests block pool threads on
+        /// purpose, so on a two-core CI runner the delay can exceed the default and the
+        /// client reports a spurious TimeoutException against a host that was listening
+        /// the whole time.
+        /// </para>
+        /// </summary>
+        public const int ConnectTimeoutMs = 15000;
+
         public static int GetFreePort()
         {
             var probe = new TcpListener(IPAddress.Loopback, 0);

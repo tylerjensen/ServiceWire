@@ -20,6 +20,13 @@ namespace ServiceWireTests
             return new IPEndPoint(_ipAddress, Port);
         }
 
+        //TcpClient<T>(IPEndPoint) hard-codes the 2500 ms default; the TcpEndPoint
+        //overload lets the suite widen it - see TestPorts.ConnectTimeoutMs
+        private TcpEndPoint CreateClientEndPoint()
+        {
+            return new TcpEndPoint(CreateEndPoint(), TestPorts.ConnectTimeoutMs);
+        }
+
         public TcpTests()
         {
             _tester = new NetTester();
@@ -30,7 +37,7 @@ namespace ServiceWireTests
             _tcphost.AddService<INetTester>(_tester);
             _tcphost.Open();
             Task.Delay(100);
-            _clientProxy = new TcpClient<INetTester>(CreateEndPoint());
+            _clientProxy = new TcpClient<INetTester>(CreateClientEndPoint());
         }
 
         [Fact]
@@ -73,7 +80,7 @@ namespace ServiceWireTests
                 var a = rnd.Next(0, 100);
                 var b = rnd.Next(0, 100);
 
-                using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
+                using (var clientProxy = new TcpClient<INetTester>(CreateClientEndPoint()))
                 {
                     var result = clientProxy.Proxy.Min(a, b);
                     if (Math.Min(a, b) != result)
@@ -114,7 +121,7 @@ namespace ServiceWireTests
                 const int count = 50;
                 const int start = 0;
 
-                using (var clientProxy = new TcpClient<INetTester>(CreateEndPoint()))
+                using (var clientProxy = new TcpClient<INetTester>(CreateClientEndPoint()))
                 {
                     var result = clientProxy.Proxy.Range(start, count);
                     for (var i = start; i < count; i++)

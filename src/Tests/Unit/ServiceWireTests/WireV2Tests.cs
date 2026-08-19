@@ -119,7 +119,7 @@ namespace ServiceWireTests
                 host.Open();
 
                 StreamingChannel.ClearCachedSyncInfo();
-                using (var client = new TcpClient<IV2Tester>(new TcpEndPoint(new IPEndPoint(IPAddress.Loopback, port))))
+                using (var client = new TcpClient<IV2Tester>(new TcpEndPoint(new IPEndPoint(IPAddress.Loopback, port), TestPorts.ConnectTimeoutMs)))
                 {
                     Assert.Equal(42, client.Proxy.Ping());
                     var echoed = client.Proxy.Echo(FixedUtc);
@@ -139,7 +139,7 @@ namespace ServiceWireTests
                 host.Open();
 
                 StreamingChannel.ClearCachedSyncInfo();
-                using (var client = new TcpClient<IV2Tester>(new TcpEndPoint(new IPEndPoint(IPAddress.Loopback, port))))
+                using (var client = new TcpClient<IV2Tester>(new TcpEndPoint(new IPEndPoint(IPAddress.Loopback, port), TestPorts.ConnectTimeoutMs)))
                 {
                     var echoed = client.Proxy.Echo(FixedUtc);
                     Assert.Equal(FixedUtc, echoed);
