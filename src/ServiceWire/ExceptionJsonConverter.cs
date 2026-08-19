@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.ExceptionServices;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -106,6 +108,30 @@ namespace ServiceWire
 
             //3. bypass constructors entirely and set the message field directly, which
             //   preserves the caller's ability to catch the original exception type
+            var uninitialized = ConstructUninitialized(type, message);
+            if (null != uninitialized) return uninitialized;
+
+            //4. the type could not be rebuilt: the caller still gets the message and chain
+            return new Exception(message, inner);
+        }
+
+        /// <summary>
+        /// Creates the exception without running a constructor and writes its message
+        /// field. Returns null when that is not possible.
+        /// </summary>
+        /// <remarks>
+        /// Exception.Message has no setter and no supported way to be assigned after
+        /// construction, so reaching the backing field is the only way to preserve a
+        /// remote exception's type AND its message when the type has no conventional
+        /// constructor. The member name is a fixed BCL implementation detail, never
+        /// anything derived from the payload, and a miss simply drops to the plain
+        /// Exception fallback in Construct, so a runtime that renames or removes the
+        /// field degrades rather than breaks.
+        /// </remarks>
+        [SuppressMessage("Minor Code Smell", "S3011:Reflection should not be used to increase accessibility of classes, methods, or fields",
+            Justification = "Exception.Message is settable no other way; the field name is a fixed BCL detail and failure falls back safely.")]
+        private static Exception ConstructUninitialized(Type type, string message)
+        {
             try
             {
 #if NET8_0_OR_GREATER
@@ -121,41 +147,51 @@ namespace ServiceWire
             catch (Exception)
             {
                 //uninitialized construction is refused for some types, and the private
-                //field layout is not contractual; the plain Exception below always works
+                //field layout is not contractual; the caller falls back to a plain Exception
+                return null;
             }
-
-            //4. the type could not be rebuilt: the caller still gets the message and chain
-            return new Exception(message, inner);
         }
 
         private static void TrySetHResult(Exception exception, int hresult)
         {
             try
             {
-                var prop = typeof(Exception).GetProperty("HResult");
-                var setter = prop?.GetSetMethod(true);
+#if NET8_0_OR_GREATER
+                //public setter on modern .NET: no accessibility bypass needed
+                exception.HResult = hresult;
+#else
+                //netstandard2.0 exposes only a protected setter
+                var setter = typeof(Exception).GetProperty("HResult")?.GetSetMethod(true);
                 setter?.Invoke(exception, new object[] { hresult });
+#endif
             }
             catch (Exception)
             {
-                //HResult is a diagnostic detail, not part of the contract. Its setter is
-                //non-public and may be absent or refused on a future runtime; losing it
+                //HResult is a diagnostic detail, not part of the contract. Losing it
                 //must not cost the caller the exception itself.
             }
         }
 
+        [SuppressMessage("Minor Code Smell", "S3011:Reflection should not be used to increase accessibility of classes, methods, or fields",
+            Justification = "Only on netstandard2.0, which predates ExceptionDispatchInfo.SetRemoteStackTrace; the field name is a fixed BCL detail and failure is contained.")]
         private static void TrySetRemoteStackTrace(Exception exception, string stackTrace)
         {
             try
             {
+#if NET8_0_OR_GREATER
+                //supported API since .NET 5; throws if the exception was already thrown,
+                //which the catch below absorbs
+                ExceptionDispatchInfo.SetRemoteStackTrace(exception, stackTrace);
+#else
                 var field = typeof(Exception).GetField("_remoteStackTraceString",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 field?.SetValue(exception, stackTrace + Environment.NewLine);
+#endif
             }
             catch (Exception)
             {
-                //the server stack trace is a diagnostic nicety carried through a private
-                //runtime field; if the field is gone the exception is still correct
+                //the server stack trace is a diagnostic nicety; if it cannot be attached
+                //the exception itself is still correct
             }
         }
     }

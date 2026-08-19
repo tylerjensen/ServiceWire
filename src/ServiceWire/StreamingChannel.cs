@@ -279,7 +279,7 @@ namespace ServiceWire
                 // Read the result of the invocation.
                 MessageType messageType = (MessageType)_binReader.ReadInt32();
                 if (messageType == MessageType.UnknownMethod)
-                    throw new Exception("Unknown method.");
+                    throw new InvalidOperationException("Unknown method.");
 
                 object[] outParams;
                 if (useCrypto)
@@ -309,38 +309,81 @@ namespace ServiceWire
         }
 
         /// <summary>
-        /// Sends a framed MethodInvocation2 request and reads its Response2 frame.
-        /// Only called after the server advertised ProtocolCapabilities.WireV2.
+        /// Serializes the call into the frame payload. Built before the frame header is
+        /// written because the header carries the length.
         /// </summary>
-        private object[] InvokeMethodV2(MethodSyncInfo methodSyncInfo, bool useCrypto, bool debugEnabled, object[] parameters)
+        private byte[] BuildV2Payload(bool useCrypto, bool debugEnabled, object[] parameters, out int payloadLength)
         {
-            //build the payload first so the frame length is known; the MemoryStream
-            //buffer is written directly (no ToArray copy) and left for the GC
+            //the MemoryStream buffer is written directly (no ToArray copy) and left for the GC
             var payloadMs = new MemoryStream();
             var payloadWriter = new BinaryWriter(payloadMs);
             if (useCrypto)
             {
-                byte[] callData;
-                using (var innerMs = new MemoryStream())
-                using (var innerBw = new BinaryWriter(innerMs))
-                {
-                    _parameterTransferHelper.SendParameters(_syncInfo.UseCompression,
-                        _syncInfo.CompressionThreshold, innerBw, WireVersion.V2, parameters);
-                    callData = innerMs.ToArray();
-                }
-                if (debugEnabled) _logger.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(callData));
-                var encData = _zkCrypto.Encrypt(callData);
-                payloadWriter.Write(encData.Length);
-                payloadWriter.Write(encData);
-                if (debugEnabled) _logger.Debug("Encrypted data sent to server: {0}", Convert.ToBase64String(encData));
+                WriteEncryptedParameters(payloadWriter, debugEnabled, parameters);
             } else
             {
                 _parameterTransferHelper.SendParameters(_syncInfo.UseCompression,
                     _syncInfo.CompressionThreshold, payloadWriter, WireVersion.V2, parameters);
             }
             payloadWriter.Flush();
-            var payloadLength = (int)payloadMs.Length;
-            var payloadBuffer = payloadMs.GetBuffer();
+            payloadLength = (int)payloadMs.Length;
+            return payloadMs.GetBuffer();
+        }
+
+        private void WriteEncryptedParameters(BinaryWriter payloadWriter, bool debugEnabled, object[] parameters)
+        {
+            byte[] callData;
+            using (var innerMs = new MemoryStream())
+            using (var innerBw = new BinaryWriter(innerMs))
+            {
+                _parameterTransferHelper.SendParameters(_syncInfo.UseCompression,
+                    _syncInfo.CompressionThreshold, innerBw, WireVersion.V2, parameters);
+                callData = innerMs.ToArray();
+            }
+            if (debugEnabled) _logger.Debug("Unencrypted data sent to server: {0}", Convert.ToBase64String(callData));
+            var encData = _zkCrypto.Encrypt(callData);
+            payloadWriter.Write(encData.Length);
+            payloadWriter.Write(encData);
+            if (debugEnabled) _logger.Debug("Encrypted data sent to server: {0}", Convert.ToBase64String(encData));
+        }
+
+        /// <summary>
+        /// Reads the return values out of a Response2 payload, decrypting first when the
+        /// frame flags say the connection is authenticated.
+        /// </summary>
+        private object[] DecodeV2Response(V2Response response, bool debugEnabled)
+        {
+            using (var ms = new MemoryStream(response.Payload))
+            using (var br = new BinaryReader(ms))
+            {
+                if (0 == (response.Flags & 1))
+                    return _parameterTransferHelper.ReceiveParameters(br, WireVersion.V2);
+                return DecryptParameters(br, debugEnabled);
+            }
+        }
+
+        private object[] DecryptParameters(BinaryReader br, bool debugEnabled)
+        {
+            var len = br.ReadInt32();
+            var encData = br.ReadBytes(len);
+            if (debugEnabled) _logger.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
+            var data = _zkCrypto.Decrypt(encData);
+            if (debugEnabled) _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
+            using (var decMs = new MemoryStream(data))
+            using (var decBr = new BinaryReader(decMs))
+            {
+                return _parameterTransferHelper.ReceiveParameters(decBr, WireVersion.V2);
+            }
+        }
+
+        /// <summary>
+        /// Sends a framed MethodInvocation2 request and reads its Response2 frame.
+        /// Only called after the server advertised ProtocolCapabilities.WireV2.
+        /// </summary>
+        private object[] InvokeMethodV2(MethodSyncInfo methodSyncInfo, bool useCrypto, bool debugEnabled, object[] parameters)
+        {
+            int payloadLength;
+            var payloadBuffer = BuildV2Payload(useCrypto, debugEnabled, parameters, out payloadLength);
 
             const int requestHeaderLength = 13; //correlationId + serviceKey + methodIdent + flags
             var correlationId = System.Threading.Interlocked.Increment(ref _nextCorrelationId);
@@ -367,29 +410,9 @@ namespace ServiceWire
 
                 var response = AwaitResponse(pendingResponse);
 
-                if (response.Status == 2) throw new Exception("Unknown method.");
+                if (response.Status == 2) throw new InvalidOperationException("Unknown method.");
 
-                object[] outParams;
-                using (var ms = new MemoryStream(response.Payload))
-                using (var br = new BinaryReader(ms))
-                {
-                    if (0 != (response.Flags & 1))
-                    {
-                        var len = br.ReadInt32();
-                        var encData = br.ReadBytes(len);
-                        if (debugEnabled) _logger.Debug("Encrypted data received from server: {0}", Convert.ToBase64String(encData));
-                        var data = _zkCrypto.Decrypt(encData);
-                        if (debugEnabled) _logger.Debug("Decrypted data received from server: {0}", Convert.ToBase64String(data));
-                        using (var decMs = new MemoryStream(data))
-                        using (var decBr = new BinaryReader(decMs))
-                        {
-                            outParams = _parameterTransferHelper.ReceiveParameters(decBr, WireVersion.V2);
-                        }
-                    } else
-                    {
-                        outParams = _parameterTransferHelper.ReceiveParameters(br, WireVersion.V2);
-                    }
-                }
+                var outParams = DecodeV2Response(response, debugEnabled);
 
                 if (response.Status == 1) throw (Exception)outParams[0];
 

@@ -23,8 +23,15 @@ namespace ServiceWireTests
         //per connection, which this counter verifies (no lost updates)
         private int _count;
 
+        /// <summary>
+        /// Signalled as soon as a delayed call starts executing on the host, so a test
+        /// can know a call is genuinely in flight instead of guessing with a sleep.
+        /// </summary>
+        public readonly ManualResetEventSlim CallStarted = new ManualResetEventSlim(false);
+
         public int EchoAfter(int value, int delayMs)
         {
+            CallStarted.Set();
             if (delayMs > 0) Thread.Sleep(delayMs);
             return value;
         }
@@ -48,9 +55,16 @@ namespace ServiceWireTests
     {
         private static TcpHost CreateTcpHost(out int port)
         {
+            ConcurrencyTester ignored;
+            return CreateTcpHost(out port, out ignored);
+        }
+
+        private static TcpHost CreateTcpHost(out int port, out ConcurrencyTester service)
+        {
             port = TestPorts.GetFreePort();
+            service = new ConcurrencyTester();
             var host = new TcpHost(port);
-            host.AddService<IConcurrencyTester>(new ConcurrencyTester());
+            host.AddService<IConcurrencyTester>(service);
             host.Open();
             return host;
         }
@@ -118,14 +132,18 @@ namespace ServiceWireTests
         [Fact]
         public void DisposeWithPendingCall_FaultsThePendingCaller()
         {
-            using (var host = CreateTcpHost(out var port))
+            using (var host = CreateTcpHost(out var port, out var service))
             {
                 var client = CreateTcpClient(port);
                 var proxy = client.Proxy;
 
                 var pendingCall = Task.Run(() =>
                     Assert.ThrowsAny<Exception>(() => proxy.EchoAfter(1, 2000)));
-                Thread.Sleep(300); //let the call get in flight
+
+                //wait for the host to actually start executing the call rather than
+                //sleeping and hoping: disposing before it is in flight tests nothing
+                Assert.True(service.CallStarted.Wait(TimeSpan.FromSeconds(10)),
+                    "the call never reached the host");
                 client.Dispose();
                 Assert.True(pendingCall.Wait(TimeSpan.FromSeconds(10)),
                     "pending call did not fault after client dispose");

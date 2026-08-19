@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ServiceWire.NamedPipes;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
@@ -24,7 +24,6 @@ namespace ServiceWire.Benchmarks
         //lets a stray host instance in another process serve these clients
         private readonly string PipeName = "ServiceWireBenchmarkConn";
 
-        private IPAddress _ipAddress;
 
         //a genuinely free port per operation: this benchmark opens and closes a host
         //every iteration, and connections closed by the previous iteration's server
@@ -49,7 +48,6 @@ namespace ServiceWire.Benchmarks
         {
             _rnd = new Random();
             _tester = new NetTester();
-            _ipAddress = IPAddress.Parse("127.0.0.1");
         }
 
         [Benchmark]

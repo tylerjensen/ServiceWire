@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +7,7 @@ namespace ServiceWire
 {
     public abstract class LoggerBase
     {
-        protected object _syncRoot = new object();
+        protected readonly object _syncRoot = new object();
         protected string _logDirectory = null;
         protected string _logFilePrefix = null;
         protected string _logFileExtension = null;

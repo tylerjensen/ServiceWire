@@ -8,7 +8,7 @@ namespace ServiceWire.NamedPipes
     {
         private readonly NamedPipeClientStream _clientStream;
         private readonly NpChannelIdentifier _channelIdentifier;
-        private readonly bool _allowWireV2 = true;
+        private readonly bool _allowWireV2;
 
         /// <summary>
         /// Creates a connection to the concrete object handling method calls on the pipeName server side

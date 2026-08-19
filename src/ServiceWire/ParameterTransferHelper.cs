@@ -489,7 +489,12 @@ namespace ServiceWire
 
         private static DateTime ReadDateTimeText(BinaryReader reader)
         {
-            return DateTime.Parse(reader.ReadString(), null, DateTimeStyles.RoundtripKind);
+            //InvariantCulture rather than the ambient culture: the writer always emits
+            //the culture-independent "o" round-trip format, so the reader should not
+            //depend on whatever culture the calling thread happens to carry. Passing
+            //null parsed correctly in practice - RoundtripKind takes an ISO-8601 path
+            //that ignores the culture's calendar - but relying on that was implicit.
+            return DateTime.Parse(reader.ReadString(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
         }
 
         private static bool[] ReadBoolArray(BinaryReader reader)

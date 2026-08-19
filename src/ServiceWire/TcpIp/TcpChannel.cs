@@ -83,13 +83,12 @@ namespace ServiceWire.TcpIp
                 connectEventArgs.RemoteEndPoint = endpoint;
                 connectEventArgs.Completed += completedHandler;
 
-                if (client.ConnectAsync(connectEventArgs))
+                //ConnectAsync returning false means it completed synchronously, so
+                //there is nothing to wait for
+                if (client.ConnectAsync(connectEventArgs) && !connectedEvent.Wait(connectTimeoutMs))
                 {
-                    if (!connectedEvent.Wait(connectTimeoutMs))
-                    {
-                        client.Dispose();
-                        throw new TimeoutException($"Unable to connect within {connectTimeoutMs}ms");
-                    }
+                    client.Dispose();
+                    throw new TimeoutException($"Unable to connect within {connectTimeoutMs}ms");
                 }
                 if (connectEventArgs.SocketError != SocketError.Success)
                 {

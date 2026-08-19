@@ -46,56 +46,76 @@ namespace ServiceWire.InteropContract
         {
             try
             {
-                if (proxy.Add(2, 40) != 42) return "Add failed";
-                if (proxy.Concat("inter", "op") != "interop") return "Concat failed";
-
-                var utc = new DateTime(2024, 12, 5, 10, 30, 15, 123, DateTimeKind.Utc);
-                var echoedDate = proxy.EchoDate(utc);
-                if (echoedDate != utc || echoedDate.Kind != DateTimeKind.Utc) return "EchoDate failed: " + echoedDate.ToString("o");
-
-                var guid = new Guid("a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d");
-                if (proxy.EchoGuid(guid) != guid) return "EchoGuid failed";
-
-                var ints = Enumerable.Range(0, 1000).ToArray();
-                var echoedInts = proxy.EchoInts(ints);
-                if (!echoedInts.SequenceEqual(ints)) return "EchoInts failed";
-
-                var strings = new[] { "one", "two", "three" };
-                var echoedStrings = proxy.EchoStrings(strings);
-                if (!echoedStrings.SequenceEqual(strings)) return "EchoStrings failed";
-
-                if (largeStringArrays)
-                {
-                    //one-way only: a large string[] over the compression threshold
-                    //exercises the CompressedUnknown sender path. A 6.0.1 peer can
-                    //RECEIVE that frame but cannot SEND one correctly (the bug fixed
-                    //in 7.0), so the old peer must never echo a large array back.
-                    var large = Enumerable.Range(0, 50).Select(i => new string((char)('a' + (i % 26)), 200)).ToArray();
-                    if (proxy.CountStrings(large) != large.Length) return "CountStrings failed";
-                }
-
-                var dto = new InteropDto { Id = 7, Name = "seven", When = utc };
-                var echoedDto = proxy.EchoDto(dto);
-                if (echoedDto.Id != dto.Id || echoedDto.Name != dto.Name || echoedDto.When != dto.When) return "EchoDto failed";
-
-                if (includeThrowTest)
-                {
-                    try
-                    {
-                        proxy.Boom("interop boom");
-                        return "Boom did not throw";
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        //expected: Boom throws this across the wire, which is what the test asserts
-                    }
-                }
-
-                return null;
+                return CheckScalars(proxy)
+                    ?? CheckArrays(proxy, largeStringArrays)
+                    ?? CheckDto(proxy)
+                    ?? CheckThrow(proxy, includeThrowTest);
             }
             catch (Exception ex)
             {
                 return "Battery exception: " + ex.GetType().FullName + ": " + ex.Message;
+            }
+        }
+
+        internal static readonly DateTime Utc = new DateTime(2024, 12, 5, 10, 30, 15, 123, DateTimeKind.Utc);
+
+        private static string CheckScalars(IInteropSvc proxy)
+        {
+            if (proxy.Add(2, 40) != 42) return "Add failed";
+            if (proxy.Concat("inter", "op") != "interop") return "Concat failed";
+
+            var echoedDate = proxy.EchoDate(Utc);
+            if (echoedDate != Utc || echoedDate.Kind != DateTimeKind.Utc)
+                return "EchoDate failed: " + echoedDate.ToString("o");
+
+            var guid = new Guid("a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d");
+            if (proxy.EchoGuid(guid) != guid) return "EchoGuid failed";
+
+            return null;
+        }
+
+        private static string CheckArrays(IInteropSvc proxy, bool largeStringArrays)
+        {
+            var ints = Enumerable.Range(0, 1000).ToArray();
+            if (!proxy.EchoInts(ints).SequenceEqual(ints)) return "EchoInts failed";
+
+            var strings = new[] { "one", "two", "three" };
+            if (!proxy.EchoStrings(strings).SequenceEqual(strings)) return "EchoStrings failed";
+
+            if (largeStringArrays)
+            {
+                //one-way only: a large string[] over the compression threshold
+                //exercises the CompressedUnknown sender path. A 6.0.1 peer can
+                //RECEIVE that frame but cannot SEND one correctly (the bug fixed
+                //in 7.0), so the old peer must never echo a large array back.
+                var large = Enumerable.Range(0, 50).Select(i => new string((char)('a' + (i % 26)), 200)).ToArray();
+                if (proxy.CountStrings(large) != large.Length) return "CountStrings failed";
+            }
+
+            return null;
+        }
+
+        private static string CheckDto(IInteropSvc proxy)
+        {
+            var dto = new InteropDto { Id = 7, Name = "seven", When = Utc };
+            var echoedDto = proxy.EchoDto(dto);
+            if (echoedDto.Id != dto.Id || echoedDto.Name != dto.Name || echoedDto.When != dto.When)
+                return "EchoDto failed";
+            return null;
+        }
+
+        private static string CheckThrow(IInteropSvc proxy, bool includeThrowTest)
+        {
+            if (!includeThrowTest) return null;
+            try
+            {
+                proxy.Boom("interop boom");
+                return "Boom did not throw";
+            }
+            catch (InvalidOperationException)
+            {
+                //expected: Boom throws this across the wire, which is what the test asserts
+                return null;
             }
         }
     }

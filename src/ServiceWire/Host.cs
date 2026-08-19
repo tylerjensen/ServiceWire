@@ -183,39 +183,51 @@ namespace ServiceWire
                 SingletonInstance = service
             };
 
+            //identifiers are assigned in this order and the client resolves methods by
+            //name and parameter types against the map, so the declaring interface comes
+            //first and its base interfaces follow
             var currentMethodIdent = 0;
             if (serviceType.IsInterface)
-            {
-                var methodInfos = serviceType.GetMethods();
-                foreach (var mi in methodInfos)
-                {
-                    instance.InterfaceMethods.TryAdd(currentMethodIdent, mi);
-                    var parameterInfos = mi.GetParameters();
-                    var isByRef = new bool[parameterInfos.Length];
-                    for (int i = 0; i < isByRef.Length; i++)
-                        isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
-                    instance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
-                    currentMethodIdent++;
-                }
-            }
+                currentMethodIdent = MapMethods(instance, serviceType, currentMethodIdent);
 
-            var interfaces = serviceType.GetInterfaces();
-            foreach (var interfaceType in interfaces)
-            {
-                var methodInfos = interfaceType.GetMethods();
-                foreach (var mi in methodInfos)
-                {
-                    instance.InterfaceMethods.TryAdd(currentMethodIdent, mi);
-                    var parameterInfos = mi.GetParameters();
-                    var isByRef = new bool[parameterInfos.Length];
-                    for (int i = 0; i < isByRef.Length; i++)
-                        isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
-                    instance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
-                    currentMethodIdent++;
-                }
-            }
+            foreach (var interfaceType in serviceType.GetInterfaces())
+                currentMethodIdent = MapMethods(instance, interfaceType, currentMethodIdent);
 
-            //Create a list of sync infos from the dictionary
+            instance.ServiceSyncInfo = new ServiceSyncInfo
+            {
+                ServiceKeyIndex = keyIndex,
+                CompressionThreshold = _compressionThreshold,
+                UseCompression = _useCompression,
+                MethodInfos = BuildMethodSyncInfos(instance),
+                CapabilityFlags = EnableWireV2 ? (int)ProtocolCapabilities.WireV2 : (int)ProtocolCapabilities.None
+            };
+            return instance;
+        }
+
+        /// <summary>
+        /// Registers every method on <paramref name="interfaceType"/>, continuing from
+        /// <paramref name="currentMethodIdent"/> and returning the next free identifier.
+        /// </summary>
+        private static int MapMethods(ServiceInstance instance, Type interfaceType, int currentMethodIdent)
+        {
+            foreach (var mi in interfaceType.GetMethods())
+            {
+                instance.InterfaceMethods.TryAdd(currentMethodIdent, mi);
+                var parameterInfos = mi.GetParameters();
+                var isByRef = new bool[parameterInfos.Length];
+                for (int i = 0; i < isByRef.Length; i++)
+                    isByRef[i] = parameterInfos[i].ParameterType.IsByRef;
+                instance.MethodParametersByRef.TryAdd(currentMethodIdent, isByRef);
+                currentMethodIdent++;
+            }
+            return currentMethodIdent;
+        }
+
+        /// <summary>
+        /// Projects the method map into the form sent to clients.
+        /// </summary>
+        private static MethodSyncInfo[] BuildMethodSyncInfos(ServiceInstance instance)
+        {
             var syncSyncInfos = new List<MethodSyncInfo>();
             foreach (var kvp in instance.InterfaceMethods)
             {
@@ -231,17 +243,7 @@ namespace ServiceWire
                     ParameterTypes = parameterTypes
                 });
             }
-
-            var serviceSyncInfo = new ServiceSyncInfo
-            {
-                ServiceKeyIndex = keyIndex,
-                CompressionThreshold = _compressionThreshold,
-                UseCompression = _useCompression,
-                MethodInfos = syncSyncInfos.ToArray(),
-                CapabilityFlags = EnableWireV2 ? (int)ProtocolCapabilities.WireV2 : (int)ProtocolCapabilities.None
-            };
-            instance.ServiceSyncInfo = serviceSyncInfo;
-            return instance;
+            return syncSyncInfos.ToArray();
         }
 
         /// <summary>
