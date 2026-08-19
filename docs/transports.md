@@ -142,7 +142,7 @@ public TcpHost(IPEndPoint endpoint, /* same optional arguments */)
 | Property | Default | Notes |
 | --- | --- | --- |
 | `EndPoint` | — | Where to connect |
-| `ConnectTimeOutMs` | `2500` | Constructor argument |
+| `ConnectTimeOutMs` | `2500` | Constructor argument. Measures the connect itself &mdash; see below |
 | `ReceiveTimeoutMs` | `0` (infinite) | **Set this in production** |
 | `SendTimeoutMs` | `0` (infinite) | **Set this in production** |
 | `UseWireV2` | `true` | Set `false` to force the classic wire |
@@ -156,6 +156,14 @@ var endPoint = new TcpEndPoint(new IPEndPoint(ip, 8098), connectTimeOutMs: 5000)
 ```
 
 Timeouts default to infinite so that upgrading ServiceWire never changes the behaviour of an existing application. On a real network you almost certainly want them set: without a receive timeout, a client whose host disappears mid-call blocks forever.
+
+`ConnectTimeOutMs` is different: it has always had a value, and as of 7.0 it measures only the connect. The client performs the connect on your calling thread, so a busy thread pool in your process cannot inflate it. Raise it when the network round trip genuinely warrants more than 2.5 seconds &mdash; a distant or congested link &mdash; not to compensate for load inside your own process.
+
+`TcpClient<T>(IPEndPoint)` uses the default and gives you no way to change it. Construct a `TcpEndPoint` when you want your own value:
+
+```csharp
+using var client = new TcpClient<IMath>(new TcpEndPoint(ipEndPoint, connectTimeOutMs: 10_000));
+```
 
 ### Concurrency on TCP
 

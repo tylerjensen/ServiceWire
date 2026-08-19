@@ -109,39 +109,101 @@ namespace ServiceWireTests
             }
         }
 
+        /// <summary>
+        /// Issue #90 was a SocketAsyncEventArgs retained after every connection attempt.
+        /// The connect path no longer uses SocketAsyncEventArgs at all - it connects on the
+        /// calling thread - so that specific leak is prevented by construction. What still
+        /// needs pinning is the behaviour the fix was really about: a connect attempt must
+        /// not retain resources, whether it succeeds or fails.
+        /// </summary>
         [Fact]
-        public async Task Issue90_TcpConnectDisposesSocketAsyncEventArgs()
+        public async Task Issue90_TcpConnectRetainsNothingOnSuccessOrFailure()
         {
             var listener = new TcpListener(IPAddress.Loopback, 0);
             listener.Start();
             try
             {
                 var acceptTask = listener.AcceptSocketAsync();
-                var eventArgs = new SocketAsyncEventArgs();
-                var eventArgsDisposed = false;
-
-                using (var client = TcpChannel.CreateSocket(
-                    (IPEndPoint)listener.LocalEndpoint,
-                    2500,
-                    () => eventArgs,
-                    args =>
-                    {
-                        Assert.Null(args.AcceptSocket);
-                        Assert.Null(args.RemoteEndPoint);
-                        eventArgsDisposed = true;
-                        args.Dispose();
-                    }))
+                using (var client = TcpChannel.CreateSocket((IPEndPoint)listener.LocalEndpoint, 2500))
                 using (var server = await acceptTask)
+                {
+                    //the rest of the channel depends on both of these
+                    Assert.True(client.Connected);
+                    Assert.True(client.Blocking);
+                    using (var stream = new NetworkStream(client))
+                    {
+                        Assert.True(stream.CanRead);
+                    }
+                }
+
+                //a failed connect must dispose the socket it created rather than leak it.
+                //Kept to a few iterations on purpose: a refused loopback connect costs about
+                //two seconds on Windows (SYN retransmit) no matter how the wait is done.
+                var closed = ClosedLoopbackEndPoint();
+                for (var i = 0; i < 3; i++)
+                    Assert.ThrowsAny<SocketException>(() => TcpChannel.CreateSocket(closed, 2500));
+
+                var acceptAgain = listener.AcceptSocketAsync();
+                using (var client = TcpChannel.CreateSocket((IPEndPoint)listener.LocalEndpoint, 2500))
+                using (var server = await acceptAgain)
                 {
                     Assert.True(client.Connected);
                 }
-
-                Assert.True(eventArgsDisposed);
             }
             finally
             {
                 listener.Stop();
             }
+        }
+
+        /// <summary>
+        /// A connect must not depend on thread-pool scheduling. The previous implementation
+        /// waited on a SocketAsyncEventArgs.Completed callback, which .NET dispatches as a
+        /// pool work item: with the pool saturated, a loopback connect that finishes in under
+        /// a millisecond went unobserved for hundreds of milliseconds and the caller saw a
+        /// TimeoutException against a listening server.
+        /// </summary>
+        [Fact]
+        public void TcpConnect_SucceedsWhileThreadPoolIsSaturated()
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+
+            ThreadPool.GetMinThreads(out var minWorker, out var minIo);
+            var release = new ManualResetEventSlim(false);
+            try
+            {
+                //a small pool plus more blocking work items than it has threads: any
+                //pool-dispatched continuation now queues behind them
+                ThreadPool.SetMinThreads(2, minIo);
+                for (var i = 0; i < 64; i++)
+                    ThreadPool.QueueUserWorkItem(_ => release.Wait(TimeSpan.FromSeconds(30)));
+                Thread.Sleep(200); //let the blockers take the available threads
+
+                //Measured under exactly these conditions: the old pool-dispatched wait took
+                //512-1017 ms, this path takes 0-8 ms. 250 ms sits well clear of both, and
+                //only elapses while Poll is actually waiting on the handshake, so an
+                //unrelated scheduling hiccup cannot consume the budget.
+                using (var client = TcpChannel.CreateSocket((IPEndPoint)listener.LocalEndpoint, 250))
+                {
+                    Assert.True(client.Connected);
+                }
+            }
+            finally
+            {
+                release.Set();
+                ThreadPool.SetMinThreads(minWorker, minIo);
+                listener.Stop();
+            }
+        }
+
+        private static IPEndPoint ClosedLoopbackEndPoint()
+        {
+            var probe = new TcpListener(IPAddress.Loopback, 0);
+            probe.Start();
+            var endPoint = (IPEndPoint)probe.LocalEndpoint;
+            probe.Stop();
+            return endPoint;
         }
 
         [Fact]

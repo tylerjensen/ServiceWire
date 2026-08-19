@@ -28,7 +28,7 @@ namespace ServiceWire.TcpIp
         /// </summary>
         public bool UseWireV2 { get; set; } = true;
 
-        public TcpEndPoint(IPEndPoint endPoint, int connectTimeOutMs = 2500)
+        public TcpEndPoint(IPEndPoint endPoint, int connectTimeOutMs = TcpChannel.DefaultConnectTimeOutMs)
         {
             this.EndPoint = endPoint;
             this.ConnectTimeOutMs = connectTimeOutMs;

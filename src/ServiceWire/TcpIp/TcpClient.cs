@@ -25,13 +25,19 @@ namespace ServiceWire.TcpIp
             Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor, logger, stats);
         }
 
+        /// <summary>
+        /// Connects with the default connect timeout. Construct a <see cref="TcpEndPoint"/>
+        /// instead to choose the connect timeout, or the socket receive and send timeouts.
+        /// </summary>
         public TcpClient(IPEndPoint endpoint, ISerializer serializer = null, ICompressor compressor = null, ILog logger = null, IStats stats = null)
         {
             if (null == serializer) serializer = new DefaultSerializer();
             if (null == compressor) compressor = new DefaultCompressor();
             if (null == logger) logger = new NullLogger();
             if (null == stats) stats = new NullStats();
-            Proxy = TcpProxy.CreateProxy<TInterface>(endpoint, serializer, compressor, logger, stats);
+            //through TcpEndPoint rather than the bare-IPEndPoint channel: identical
+            //defaults, one less proxy type to emit, and one place that owns the timeout
+            Proxy = TcpProxy.CreateProxy<TInterface>(new TcpEndPoint(endpoint), serializer, compressor, logger, stats);
         }
 
         [Obsolete]

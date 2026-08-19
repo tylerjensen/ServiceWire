@@ -120,6 +120,8 @@ Both mixed-version pairings — 6.x client with 7.0 server, and 7.0 client with 
 1. A `string[]` above the compression threshold was written with a type code no receiver could decode; it now uses `CompressedUnknown`, which every release since 1.5.0 can read.
 2. Scalar `Type` parameters crashed the default serializer; they now use the wire format's `Type` code.
 3. Thrown exceptions could not be serialized by System.Text.Json (`TargetSite`), which killed the connection whenever a service method threw with the default serializer; a converter now preserves the exception type, message, HResult, inner chain, and server stack trace.
+4. The TCP client connected with `Socket.ConnectAsync` and waited on its completion callback, which .NET dispatches as a thread-pool work item. An application whose pool was saturated could therefore see `TimeoutException` from `new TcpClient<T>(...)` against a server that was listening the whole time, more often the fewer cores the machine had. The connect now completes on the calling thread, so `ConnectTimeOutMs` measures the network alone. Named pipes were never affected.
+5. `TcpClient<T>(IPEndPoint)` now routes through `TcpEndPoint`, so its connect timeout comes from one place instead of a hard-coded literal; pass a `TcpEndPoint` to choose your own.
 
 **Wire protocol v2** — the default on both transports, negotiated, never sent to a 6.x peer. Frame layouts and rationale: [Wire protocol](docs/wire-protocol.md).
 

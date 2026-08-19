@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 using ServiceWire.NamedPipes;
 using ServiceWire.TcpIp;
 using Xunit;
@@ -120,11 +119,9 @@ namespace ServiceWireTests
             using (var client = CreateTcpClient(port))
             {
                 var proxy = client.Proxy;
-                var tasks = Enumerable.Range(0, 24).Select(i =>
-                    Task.Run(() => new { Sent = i, Received = proxy.EchoAfter(i, 0) })).ToArray();
-                Task.WaitAll(tasks, TimeSpan.FromSeconds(30));
-                foreach (var t in tasks)
-                    Assert.Equal(t.Result.Sent, t.Result.Received);
+                var received = RunConcurrently(24, i => proxy.EchoAfter(i, 0));
+                for (var i = 0; i < received.Length; i++)
+                    Assert.Equal(i, received[i]);
             }
         }
 
@@ -139,11 +136,9 @@ namespace ServiceWireTests
                 using (var client = new NpClient<IConcurrencyTester>(new NpEndPoint(pipeName)))
                 {
                     var proxy = client.Proxy;
-                    var tasks = Enumerable.Range(0, 24).Select(i =>
-                        Task.Run(() => new { Sent = i, Received = proxy.EchoAfter(i, 0) })).ToArray();
-                    Task.WaitAll(tasks, TimeSpan.FromSeconds(30));
-                    foreach (var t in tasks)
-                        Assert.Equal(t.Result.Sent, t.Result.Received);
+                    var received = RunConcurrently(24, i => proxy.EchoAfter(i, 0));
+                    for (var i = 0; i < received.Length; i++)
+                        Assert.Equal(i, received[i]);
                 }
             }
         }
@@ -156,11 +151,7 @@ namespace ServiceWireTests
             {
                 var proxy = client.Proxy;
                 const int callers = 16;
-                var results = new List<int>();
-                var tasks = Enumerable.Range(0, callers).Select(_ =>
-                    Task.Run(() => proxy.Increment())).ToArray();
-                Task.WaitAll(tasks, TimeSpan.FromSeconds(30));
-                foreach (var t in tasks) results.Add(t.Result);
+                var results = RunConcurrently(callers, _ => proxy.Increment());
 
                 //serial execution: no lost updates and every intermediate value distinct
                 Assert.Equal(callers, results.Distinct().Count());
@@ -176,16 +167,24 @@ namespace ServiceWireTests
                 var client = CreateTcpClient(port);
                 var proxy = client.Proxy;
 
-                var pendingCall = Task.Run(() =>
-                    Assert.ThrowsAny<Exception>(() => proxy.EchoAfter(1, 2000)));
+                //a dedicated thread, for the same reason as RunConcurrently
+                Exception thrown = null;
+                var pendingCall = new Thread(() =>
+                {
+                    try { proxy.EchoAfter(1, 2000); }
+                    catch (Exception e) { thrown = e; }
+                })
+                { IsBackground = true };
+                pendingCall.Start();
 
                 //wait for the host to actually start executing the call rather than
                 //sleeping and hoping: disposing before it is in flight tests nothing
                 Assert.True(service.CallStarted.Wait(TimeSpan.FromSeconds(10)),
                     "the call never reached the host");
                 client.Dispose();
-                Assert.True(pendingCall.Wait(TimeSpan.FromSeconds(10)),
+                Assert.True(pendingCall.Join(TimeSpan.FromSeconds(10)),
                     "pending call did not fault after client dispose");
+                Assert.NotNull(thrown);
             }
         }
     }

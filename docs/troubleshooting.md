@@ -79,6 +79,18 @@ Set the matching properties on `TcpHost` too, so a stalled client cannot hold a 
 
 ---
 
+## `TimeoutException: Unable to connect within 2500ms`, but the server is up
+
+If you can reach the host from the same machine and the client still times out, check the ServiceWire version.
+
+Before 7.0 the client connected with `Socket.ConnectAsync` and waited on the completion callback, which .NET dispatches as a **thread-pool work item**. If your process had its pool saturated &mdash; lots of blocking work, `Task.Run` over synchronous I/O, `.Result`/`.Wait()` on async calls &mdash; that callback queued behind the blocked work, and the connect timed out against a server that was listening the whole time. It showed up as an intermittent failure that got worse on machines with few cores.
+
+7.0 connects on the calling thread, so the timeout measures the network only. On an earlier version, the workarounds are to raise `ConnectTimeOutMs`, or to stop blocking pool threads.
+
+Note this was never a named-pipe problem: `NpClient` has always connected synchronously.
+
+---
+
 ## The client cannot connect at all
 
 **TCP:**
